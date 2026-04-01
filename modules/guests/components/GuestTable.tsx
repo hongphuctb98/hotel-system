@@ -1,0 +1,85 @@
+"use client";
+
+import { Button, Space, Tag, Input } from "antd";
+import { IconEye, IconSearch } from "@tabler/icons-react";
+import { useTranslations, useLocale } from "next-intl";
+import { useRouter } from "next/navigation";
+import AppTable from "@/common/components/ui/AppTable";
+import StatusBadge from "@/common/components/ui/StatusBadge";
+import { useGuests } from "../hooks/useGuests";
+import type { Guest } from "@/types/guest.types";
+
+export default function GuestTable() {
+  const t = useTranslations();
+  const locale = useLocale();
+  const router = useRouter();
+  const { data, isLoading, pagination, filters, setFilters } = useGuests();
+
+  const columns = [
+    {
+      key: "name",
+      title: t("guest.lastName"),
+      render: (_: unknown, r: Guest) => `${r.lastName} ${r.firstName}`,
+    },
+    {
+      key: "phone",
+      dataIndex: "phone",
+      title: t("guest.phone"),
+      render: (v: string | null) => v ?? "—",
+    },
+    {
+      key: "idNumber",
+      dataIndex: "idNumber",
+      title: t("guest.idNumber"),
+      render: (v: string | null) => v ?? "—",
+    },
+    {
+      key: "guestType",
+      title: t("guest.guestType"),
+      render: (_: unknown, r: Guest) => (
+        <StatusBadge color={r.guestType.color} label={r.guestType.name} />
+      ),
+      width: 120,
+    },
+    {
+      key: "tags",
+      dataIndex: "tags",
+      title: t("guest.tags"),
+      render: (tags: string[]) =>
+        tags.map((tag) => <Tag key={tag}>{tag}</Tag>),
+    },
+    {
+      key: "actions",
+      title: t("common.actions"),
+      width: 80,
+      render: (_: unknown, r: Guest) => (
+        <Button
+          type="text"
+          size="small"
+          icon={<IconEye size={14} />}
+          onClick={() => router.push(`/${locale}/guests/${r.id}`)}
+        />
+      ),
+    },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <Input
+        prefix={<IconSearch size={16} />}
+        placeholder={t("common.search")}
+        value={filters.search}
+        onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+        style={{ maxWidth: 300 }}
+        allowClear
+      />
+      <AppTable
+        columns={columns}
+        dataSource={data}
+        loading={isLoading}
+        pagination={pagination}
+        rowKey="id"
+      />
+    </div>
+  );
+}

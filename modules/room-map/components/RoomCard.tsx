@@ -1,0 +1,56 @@
+"use client";
+
+import { Card, Typography } from "antd";
+import StatusBadge from "@/common/components/ui/StatusBadge";
+import { useLocaleCurrency } from "@/common/hooks/useLocaleCurrency";
+import type { Room } from "@/types/room.types";
+
+interface RoomCardProps {
+  room: Room;
+  onClick: () => void;
+}
+
+export default function RoomCard({ room, onClick }: RoomCardProps) {
+  const { formatDate } = useLocaleCurrency();
+
+  return (
+    <Card
+      size="small"
+      hoverable
+      onClick={onClick}
+      style={{
+        borderTop: `4px solid ${room.roomStatus.color}`,
+        borderRadius: 12,
+        cursor: "pointer",
+      }}
+    >
+      <div className="flex items-start justify-between mb-1">
+        <Typography.Text strong className="text-base">
+          {room.number}
+        </Typography.Text>
+        <StatusBadge
+          color={room.roomStatus.color}
+          label={room.roomStatus.name}
+        />
+      </div>
+      <Typography.Text type="secondary" className="text-xs block mb-2">
+        {room.roomType.name} · {room.floor.name}
+      </Typography.Text>
+      {room.currentBooking ? (
+        <>
+          <Typography.Text className="text-sm font-medium block truncate">
+            {room.currentBooking.guest.firstName} {room.currentBooking.guest.lastName}
+          </Typography.Text>
+          <Typography.Text type="secondary" className="text-xs">
+            {formatDate(room.currentBooking.checkInDate)} →{" "}
+            {formatDate(room.currentBooking.checkOutDate)}
+          </Typography.Text>
+        </>
+      ) : (
+        <Typography.Text type="secondary" className="text-xs">
+          —
+        </Typography.Text>
+      )}
+    </Card>
+  );
+}
