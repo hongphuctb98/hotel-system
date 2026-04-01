@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { Menu, Divider } from "antd";
+import { Menu } from "antd";
 import Link from "next/link";
 import {
   IconDashboard,
@@ -92,11 +92,17 @@ function getActiveKeys(
   return { selectedKey: "", openKeys: [] };
 }
 
-export default function AppSidebar({ collapsed }: { collapsed: boolean }) {
+export default function AppSidebar({
+  collapsed,
+  initialRole,
+}: {
+  collapsed: boolean;
+  initialRole: string;
+}) {
   const t = useTranslations();
   const pathname = usePathname();
   const locale = useLocale();
-  const { hasPermission } = usePermission();
+  const { hasPermission } = usePermission(initialRole);
 
   const { selectedKey, openKeys } = getActiveKeys(navigationConfig, pathname, locale);
   const menuItems = buildMenuItems(navigationConfig, t, hasPermission, locale);

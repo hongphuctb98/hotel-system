@@ -7,7 +7,13 @@ import AppHeader from "./AppHeader";
 
 const { Sider, Header, Content } = Layout;
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+export default function MainLayout({
+  children,
+  initialRole,
+}: {
+  children: React.ReactNode;
+  initialRole: string;
+}) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -30,7 +36,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           boxShadow: "1px 0 4px rgba(0,0,0,0.06)",
         }}
       >
-        <AppSidebar collapsed={collapsed} />
+        <AppSidebar collapsed={collapsed} initialRole={initialRole} />
       </Sider>
 
       <Layout

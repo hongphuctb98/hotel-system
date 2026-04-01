@@ -1,3 +1,5 @@
+"use client";
+
 import MasterDataTable from "@/modules/master-data/components/MasterDataTable";
 import SimpleCodeNameForm from "@/modules/master-data/forms/SimpleCodeNameForm";
 import StatusBadge from "@/common/components/ui/StatusBadge";

@@ -192,6 +192,7 @@ export default function GuestDetailPage({
               rowKey="id"
               pagination={{ pageSize: 10 }}
               size="small"
+              childrenColumnName="__children"
               onRow={(r) => ({
                 onClick: () =>
                   router.push(`/${locale}/reservations/${r.id}`),

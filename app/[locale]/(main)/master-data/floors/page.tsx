@@ -1,3 +1,5 @@
+"use client";
+
 import MasterDataTable from "@/modules/master-data/components/MasterDataTable";
 import FloorForm from "@/modules/master-data/forms/FloorForm";
 import type { MasterDataConfig } from "@/types/master.types";

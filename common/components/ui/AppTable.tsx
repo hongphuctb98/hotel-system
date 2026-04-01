@@ -19,6 +19,7 @@ export default function AppTable<T extends object>({
       locale={{ emptyText: <EmptyState />, ...locale }}
       scroll={{ x: "max-content" }}
       size="middle"
+      childrenColumnName="__children"
       {...props}
     />
   );

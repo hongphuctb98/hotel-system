@@ -1,3 +1,5 @@
+"use client";
+
 import MasterDataTable from "@/modules/master-data/components/MasterDataTable";
 import type { MasterDataConfig, ServiceItem } from "@/types/master.types";
 import ServiceItemForm from "@/modules/master-data/forms/ServiceItemForm";

@@ -1,3 +1,5 @@
+"use client";
+
 import MasterDataTable from "@/modules/master-data/components/MasterDataTable";
 import RoomStatusForm from "@/modules/master-data/forms/RoomStatusForm";
 import StatusBadge from "@/common/components/ui/StatusBadge";
