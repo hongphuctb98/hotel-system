@@ -62,7 +62,7 @@ export default function MainLayout({
           />
         </Header>
 
-        <Content style={{ margin: "24px", minHeight: "calc(100vh - 88px)" }}>
+        <Content style={{ margin: "24px 24px 0", minHeight: "calc(100vh - 88px)" }}>
           {children}
         </Content>
       </Layout>

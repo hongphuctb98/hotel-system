@@ -7,6 +7,7 @@ import Link from "next/link";
 import {
   IconDashboard,
   IconBuildingSkyscraper,
+  IconDoor,
   IconCalendarEvent,
   IconUsers,
   IconVacuumCleaner,
@@ -27,6 +28,7 @@ import { usePermission } from "@/common/hooks/usePermission";
 const ICON_MAP: Record<string, React.ElementType> = {
   dashboard: IconDashboard,
   "room-map": IconBuildingSkyscraper,
+  rooms: IconDoor,
   reservations: IconCalendarEvent,
   guests: IconUsers,
   housekeeping: IconVacuumCleaner,

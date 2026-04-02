@@ -1,6 +1,7 @@
 export const ROUTES = {
   DASHBOARD: "/dashboard",
   ROOM_MAP: "/room-map",
+  ROOMS: "/rooms",
   RESERVATIONS: "/reservations",
   GUESTS: "/guests",
   HOUSEKEEPING: "/housekeeping",

@@ -13,7 +13,10 @@ export async function GET(
       include: {
         guestType: true,
         bookings: {
-          include: { room: true, bookingStatus: true },
+          include: {
+            room: { include: { roomType: true } },
+            bookingStatus: true,
+          },
           orderBy: { createdAt: "desc" },
         },
       },

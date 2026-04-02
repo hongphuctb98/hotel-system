@@ -1,6 +1,6 @@
 "use client";
 
-import { ConfigProvider } from "antd";
+import { App, ConfigProvider } from "antd";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import viVN from "antd/locale/vi_VN";
 import enUS from "antd/locale/en_US";
@@ -18,7 +18,9 @@ export function AntdProvider({ children }: { children: React.ReactNode }) {
   return (
     <AntdRegistry>
       <ConfigProvider locale={antdLocale} theme={activeTheme}>
-        {children}
+        <App>
+          {children}
+        </App>
       </ConfigProvider>
     </AntdRegistry>
   );

@@ -2,6 +2,7 @@ export type ApiResponse<T> = {
   success: boolean;
   data?: T;
   error?: string;
+  code?: string;
   message?: string;
   meta?: PaginationMeta;
 };

@@ -7,6 +7,7 @@ const roomInclude = {
   roomType: true,
   roomStatus: true,
   amenities: { include: { amenity: true } },
+  images: { orderBy: { order: "asc" as const } },
 };
 
 export async function GET(
@@ -30,18 +31,35 @@ export async function PUT(
   try {
     const { id } = await props.params;
     const body = await req.json();
-    const room = await prisma.room.update({
-      where: { id },
-      data: {
-        ...(body.number && { number: body.number }),
-        ...(body.floorId && { floorId: body.floorId }),
-        ...(body.roomTypeId && { roomTypeId: body.roomTypeId }),
-        ...(body.roomStatusId && { roomStatusId: body.roomStatusId }),
-        ...(body.note !== undefined && { note: body.note }),
-        ...(body.isActive !== undefined && { isActive: body.isActive }),
-      },
-      include: roomInclude,
+
+    const room = await prisma.$transaction(async (tx) => {
+      const updated = await tx.room.update({
+        where: { id },
+        data: {
+          ...(body.number && { number: body.number }),
+          ...(body.floorId && { floorId: body.floorId }),
+          ...(body.roomTypeId && { roomTypeId: body.roomTypeId }),
+          ...(body.roomStatusId && { roomStatusId: body.roomStatusId }),
+          ...(body.basePrice !== undefined && { basePrice: body.basePrice }),
+          ...(body.note !== undefined && { note: body.note }),
+          ...(body.isActive !== undefined && { isActive: body.isActive }),
+        },
+        include: roomInclude,
+      });
+
+      if (body.amenityIds !== undefined) {
+        await tx.roomAmenity.deleteMany({ where: { roomId: id } });
+        if (Array.isArray(body.amenityIds) && body.amenityIds.length > 0) {
+          await tx.roomAmenity.createMany({
+            data: body.amenityIds.map((amenityId: string) => ({ roomId: id, amenityId })),
+            skipDuplicates: true,
+          });
+        }
+      }
+
+      return tx.room.findUnique({ where: { id: updated.id }, include: roomInclude });
     });
+
     return ok(room);
   } catch (e) {
     return serverError(e);

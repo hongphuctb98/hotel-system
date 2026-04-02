@@ -155,24 +155,38 @@ model Amenity {
 // ─── CORE ENTITIES ────────────────────────────────────────────────────────────
 
 model Room {
-  id           String  @id @default(cuid())
-  number       String  @unique
+  id           String   @id @default(cuid())
+  number       String   @unique
   floorId      String
   roomTypeId   String
   roomStatusId String
-  isActive     Boolean @default(true)
+  basePrice    Decimal? @db.Decimal(12, 2)
+  isActive     Boolean  @default(true)
   note         String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  floor      Floor       @relation(fields: [floorId], references: [id])
-  roomType   RoomType    @relation(fields: [roomTypeId], references: [id])
-  roomStatus RoomStatus  @relation(fields: [roomStatusId], references: [id])
+  floor      Floor         @relation(fields: [floorId], references: [id])
+  roomType   RoomType      @relation(fields: [roomTypeId], references: [id])
+  roomStatus RoomStatus    @relation(fields: [roomStatusId], references: [id])
   amenities  RoomAmenity[]
+  images     RoomImage[]
   bookings   Booking[]
 
   @@map("rooms")
+}
+
+model RoomImage {
+  id        String   @id @default(cuid())
+  roomId    String
+  url       String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id])
+
+  @@map("room_images")
 }
 
 model RoomAmenity {

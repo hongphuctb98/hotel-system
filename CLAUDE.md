@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 @AGENTS.md
 
 ## Commands
@@ -6,6 +10,7 @@
 # Development
 npm run dev
 npm run build
+npm run start    # Production server (after build)
 npm run lint
 
 # Docker — PostgreSQL container
@@ -84,10 +89,15 @@ Key differences from earlier Next.js versions:
 - `Card` — `bordered` is deprecated. Use `variant="borderless"` or `variant="outlined"` instead.
 - `Alert` — `message` is deprecated. Use `title` instead.
 - `Statistic` — `valueStyle` is deprecated. Use `styles.content` instead.
+- `Space` — `direction` is deprecated. Use `orientation` instead.
 - `List` is deprecated and will be removed in the next major version. Do not use it for new code; prefer plain layout with `div`, `Flex`, `Space`, `Card`, `Table`, or custom markup depending on the UI.
 - When touching older UI files, expect Ant Design v6 deprecation warnings and update the callsite instead of suppressing the warning.
 
 ## Architecture
+
+### Tests
+
+There is no test infrastructure in this project (no jest, vitest, or similar). Do not add test scripts or test files unless explicitly asked.
 
 ### Layer structure (top to bottom)
 
@@ -100,11 +110,37 @@ app/api/[route]/route.ts              ← Route Handlers
 lib/prisma.ts → PostgreSQL            ← database
 ```
 
+### Module ↔ API naming
+
+Module directory names do not always match their API route counterparts:
+
+| Module (`modules/`) | API route (`app/api/`) |
+|---|---|
+| `reservations/` | `bookings/` |
+| `billing/` | `invoices/` |
+| `room-map/` | *(uses `rooms/` API — no dedicated route)* |
+| `master-data/` | `master/` |
+
 ### Key design rules
 - **Pages are thin** — they only compose module components and pass no data directly
 - **Never fetch inside UI components** — use hooks from `common/hooks/` or `modules/*/hooks/`
 - **Master data is never hardcoded** — room statuses, booking statuses, floors, etc. come from the DB via `useMasterData()` hook with `staleTime: Infinity`
 - **All navigation is driven by `configs/navigation.config.ts`** — do not hardcode routes or menu items in components. Route constants live in `common/constants/routes.ts`
+
+### Data model
+
+Core entities in `prisma/schema.prisma`:
+
+- **User** — system accounts with `UserRole` enum (ADMIN, MANAGER, RECEPTIONIST, HOUSEKEEPING)
+- **Room** → belongs to **Floor**, **RoomType**, **RoomStatus**; many-to-many **Amenity** via `RoomAmenity`
+- **Guest** — personal details (name, email, phone, ID number, nationality, DOB, tags)
+- **Booking** → links Guest + Room + BookingStatus; holds check-in/out dates and pricing
+- **BookingService** — services added to a booking (quantity + price snapshot from **ServiceItem**)
+- **Invoice** → one per booking; subtotal, tax, discount, paid flag
+- **Payment** → linked to Invoice via **PaymentMethod**
+- **HousekeepingTask** → assigned to a Room with status and assignee (User)
+
+8 master-data lookup tables (all CRUD via `/api/master/*`): **Floor**, **RoomType**, **RoomStatus**, **BookingStatus**, **PaymentMethod**, **ServiceItem**, **GuestType**, **Amenity**.
 
 ### Navigation config
 `configs/navigation.config.ts` exports `navigationConfig: NavItem[]`. Each item has `key`, `labelKey` (i18n key), `href`, `permission`, optional `roles`, optional `children`. The sidebar reads this at runtime; adding a new page means adding an entry here.
@@ -117,7 +153,12 @@ lib/prisma.ts → PostgreSQL            ← database
 - `common/components/form/` — TextField, SelectField, DateField, CurrencyField, etc. (all wrap Ant Design Form.Item)
 - `common/components/layout/` — MainLayout, AppSidebar, AppHeader, AppBreadcrumb
 - `common/hooks/` — useTableQuery, useMasterData, useLocaleCurrency, useDisclosure, useConfirm, usePagination, usePermission
-- `common/services/` — roomService, bookingService, guestService, masterDataService, apiClient
+- `common/services/` — roomService, bookingService, guestService, invoiceService, masterDataService, apiClient
+- `common/utils/` — currency, date, enumHelpers, queryParams
+- **Date library:** `dayjs` (not date-fns or moment) — used throughout for date manipulation and formatting
+
+### React Query defaults
+Configured in `providers/QueryProvider.tsx`: `staleTime: 5min`, `retry: 1`, `refetchOnWindowFocus: false`. Override per-query as needed. Master data queries use `staleTime: Infinity`.
 
 ### API response standard
 All route handlers use helpers from `lib/response.ts`: `ok(data, meta?)`, `created(data)`, `badRequest(msg)`, `notFound()`, `serverError(e)`. All return `ApiResponse<T>` from `types/api.types.ts`.
@@ -127,7 +168,7 @@ All 8 master data pages (floors, room-types, room-statuses, booking-statuses, pa
 - Because `MasterDataConfig<T>` contains `columns.render` and `FormComponent`, the page that constructs this config must be `"use client"` unless that config is moved fully inside a Client Component.
 
 ### Auth flow
-Login → `POST /api/auth/login` → sets `access_token` (httpOnly, 15min) + `refresh_token` (httpOnly, 7d) cookies. `apiClient.ts` auto-retries with `POST /api/auth/refresh` on 401. The `proxy.ts` redirects unauthenticated requests to `/{locale}/login`.
+Login → `POST /api/auth/login` → sets `access_token` (httpOnly, 1d) + `refresh_token` (httpOnly, 7d) cookies. `apiClient.ts` auto-retries with `POST /api/auth/refresh` on 401. The `proxy.ts` redirects unauthenticated requests to `/{locale}/login`.
 
 ## Tabler Icons
 

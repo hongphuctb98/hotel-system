@@ -94,7 +94,7 @@ export default function RoomActionDrawer({
         )}
 
         <Divider />
-        <Space direction="vertical" className="w-full">
+        <Space orientation="vertical" className="w-full">
           {room.currentBooking && (
             <>
               <Button type="primary" block onClick={handleCheckIn}>

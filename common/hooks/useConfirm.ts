@@ -1,10 +1,11 @@
 "use client";
 
-import { Modal } from "antd";
+import { App } from "antd";
 import { useTranslations } from "next-intl";
 
 export function useConfirm() {
   const t = useTranslations();
+  const { modal } = App.useApp();
 
   const confirm = ({
     title,
@@ -17,7 +18,7 @@ export function useConfirm() {
     onOk: () => void | Promise<void>;
     danger?: boolean;
   }) => {
-    Modal.confirm({
+    modal.confirm({
       title: title ?? t("common.confirmTitle"),
       content: content ?? t("common.confirmContent"),
       okType: danger ? "danger" : "primary",

@@ -40,6 +40,13 @@ export function notFound(error = "Not found") {
   );
 }
 
+export function conflict<T = never>(error: string, code?: string, data?: T) {
+  return NextResponse.json<ApiResponse<T>>(
+    { success: false, error, code, data },
+    { status: 409 }
+  );
+}
+
 export function serverError(error: unknown) {
   console.error("[API Error]", error);
   return NextResponse.json<ApiResponse<never>>(

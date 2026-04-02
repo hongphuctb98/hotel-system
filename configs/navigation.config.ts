@@ -30,6 +30,13 @@ export const navigationConfig: NavItem[] = [
     permission: PERMISSIONS.ROOM_MAP_VIEW,
   },
   {
+    key: "rooms",
+    labelKey: "nav.rooms",
+    icon: undefined,
+    href: ROUTES.ROOMS,
+    permission: PERMISSIONS.ROOMS_VIEW,
+  },
+  {
     key: "reservations",
     labelKey: "nav.reservations",
     icon: undefined,

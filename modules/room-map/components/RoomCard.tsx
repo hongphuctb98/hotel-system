@@ -34,7 +34,7 @@ export default function RoomCard({ room, onClick }: RoomCardProps) {
         />
       </div>
       <Typography.Text type="secondary" className="text-xs block mb-2">
-        {room.roomType.name} · {room.floor.name}
+        {room.roomType.name}
       </Typography.Text>
       {room.currentBooking ? (
         <>

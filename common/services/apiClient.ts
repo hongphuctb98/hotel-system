@@ -1,5 +1,17 @@
 import type { ApiResponse } from "@/types/api.types";
 
+export class ApiError extends Error {
+  code?: string;
+  data?: unknown;
+
+  constructor(message: string, code?: string, data?: unknown) {
+    super(message);
+    this.name = "ApiError";
+    this.code = code;
+    this.data = data;
+  }
+}
+
 const BASE_URL =
   typeof window !== "undefined"
     ? ""
@@ -7,14 +19,15 @@ const BASE_URL =
 
 async function request<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  skipContentType = false
 ): Promise<ApiResponse<T>> {
+  const headers: Record<string, string> = skipContentType
+    ? {}
+    : { "Content-Type": "application/json" };
   const res = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
+    headers: { ...headers, ...(options.headers as Record<string, string>) },
     credentials: "include",
   });
 
@@ -30,11 +43,11 @@ async function request<T>(
       }
       throw new Error("Session expired");
     }
-    return request<T>(endpoint, options);
+    return request<T>(endpoint, options, skipContentType);
   }
 
   const json: ApiResponse<T> = await res.json();
-  if (!json.success) throw new Error(json.error ?? "Request failed");
+  if (!json.success) throw new ApiError(json.error ?? "Request failed", json.code, json.data);
   return json;
 }
 
@@ -51,4 +64,6 @@ export const apiClient = {
       method: "DELETE",
       ...(body ? { body: JSON.stringify(body) } : {}),
     }),
+  upload: <T>(url: string, formData: FormData) =>
+    request<T>(url, { method: "POST", body: formData }, true),
 };
