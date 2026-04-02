@@ -52,12 +52,12 @@ export async function POST(req: NextRequest) {
       path: "/api/auth/refresh",
     });
 
-    // Store role in a readable cookie for permission checks
+    // Store role in a readable cookie for permission checks — must match access_token lifetime
     response.cookies.set("user_role", user.role, {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 15,
+      maxAge: 60 * 60 * 24, // 1 day — same as access_token
       path: "/",
     });
 

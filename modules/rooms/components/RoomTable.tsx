@@ -1,38 +1,31 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { App, Button, Select, Space, Switch, Tag } from "antd";
 import { IconEdit, IconPlus, IconPower, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import AppTable from "@/common/components/ui/AppTable";
 import StatusBadge from "@/common/components/ui/StatusBadge";
-import { useLocaleCurrency } from "@/common/hooks/useLocaleCurrency";
+import PriceDisplay from "@/common/components/ui/PriceDisplay";
 import { useMasterData } from "@/common/hooks/useMasterData";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { usePermission } from "@/common/hooks/usePermission";
 import { PERMISSIONS } from "@/common/constants/permissions";
+import { useAuthRole } from "@/providers/AuthRoleProvider";
 import { useRooms } from "../hooks/useRooms";
 import { useDeleteRoom } from "../hooks/useRoomMutations";
 import RoomFormDrawer from "./RoomFormDrawer";
 import type { Room } from "@/types/room.types";
 
-function getRoleFromCookie(): string {
-  if (typeof document === "undefined") return "RECEPTIONIST";
-  const match = document.cookie.match(/(?:^|;\s*)user_role=([^;]+)/);
-  return match ? match[1] : "RECEPTIONIST";
-}
-
 export default function RoomTable() {
   const t = useTranslations();
   const { message } = App.useApp();
-  const { format } = useLocaleCurrency();
+  const { role } = useAuthRole();
   const { floors, roomTypes, roomStatuses } = useMasterData();
   const { data, isLoading, pagination, filters, setFilters } = useRooms();
   const deleteRoom = useDeleteRoom();
   const { confirm } = useConfirm();
 
-  const [role, setRole] = useState<string>("RECEPTIONIST");
-  useEffect(() => { setRole(getRoleFromCookie()); }, []);
   const { hasPermission } = usePermission(role);
   const canManage = hasPermission(PERMISSIONS.ROOMS_MANAGE);
 
@@ -97,11 +90,12 @@ export default function RoomTable() {
     {
       key: "price",
       title: t("room.effectivePrice"),
-      render: (_: unknown, r: Room) => {
-        const price =
-          r.basePrice != null ? Number(r.basePrice) : Number(r.roomType.defaultPrice);
-        return format(price);
-      },
+      render: (_: unknown, r: Room) => (
+        <PriceDisplay
+          amount={r.basePrice ?? r.roomType.defaultPrice}
+          isFallback={r.basePrice == null}
+        />
+      ),
       width: 130,
     },
     {

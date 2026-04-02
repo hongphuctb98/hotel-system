@@ -87,16 +87,8 @@
     "doCheckOut": "Trả phòng"
   },
   "room": {
-    "number": "Số phòng",
-    "floor": "Tầng",
-    "type": "Loại",
-    "status": "Trạng thái",
     "capacity": "Sức chứa",
-    "amenities": "Tiện nghi",
-    "note": "Ghi chú",
-    "currentGuest": "Khách hiện tại"
-  },
-  "room": {
+    "currentGuest": "Khách hiện tại", 
     "title": "Quản lý phòng",
     "number": "Số phòng",
     "floor": "Tầng",

@@ -87,16 +87,8 @@
     "doCheckOut": "Check Out"
   },
   "room": {
-    "number": "Room Number",
-    "floor": "Floor",
-    "type": "Type",
-    "status": "Status",
     "capacity": "Capacity",
-    "amenities": "Amenities",
-    "note": "Note",
-    "currentGuest": "Current Guest"
-  },
-  "room": {
+    "currentGuest": "Current Guest", 
     "title": "Rooms",
     "number": "Room Number",
     "floor": "Floor",

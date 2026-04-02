@@ -1,13 +1,20 @@
-import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { getAuthUser } from "@/lib/auth";
 import MainLayout from "@/common/components/layout/MainLayout";
 
 export default async function MainGroupLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }) {
-  const cookieStore = await cookies();
-  const initialRole = cookieStore.get("user_role")?.value ?? "RECEPTIONIST";
+  const { locale } = await params;
+  const user = await getAuthUser();
 
-  return <MainLayout initialRole={initialRole}>{children}</MainLayout>;
+  if (!user) {
+    redirect(`/${locale}/login`);
+  }
+
+  return <MainLayout role={user.role}>{children}</MainLayout>;
 }

@@ -19,13 +19,14 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 15,
+      maxAge: 60 * 60 * 24, // 1 day — matches login
       path: "/",
     });
     response.cookies.set("user_role", payload.role, {
       httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 15,
+      maxAge: 60 * 60 * 24, // 1 day — matches access_token
       path: "/",
     });
     return response;

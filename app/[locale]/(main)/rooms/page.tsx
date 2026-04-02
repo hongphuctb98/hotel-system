@@ -1,5 +1,3 @@
-"use client";
-
 import AppPageHeader from "@/common/components/ui/AppPageHeader";
 import RoomTable from "@/modules/rooms/components/RoomTable";
 

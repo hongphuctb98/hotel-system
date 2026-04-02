@@ -67,9 +67,15 @@ The `user_role` cookie is read client-side via `document.cookie` inside `RoomTab
 The existing DELETE handler sets `isActive: false`. The UI confirmation dialog must communicate this is a deactivation, not a permanent erasure.
 
 ### 7. Base price display fallback
-The `Room` model gains a nullable `basePrice` field. The table price column renders `room.basePrice ?? room.roomType.defaultPrice`. The `roomType` relation is already included in the `roomInclude` object used by all API handlers, so no extra query is needed. The `Room` TypeScript type in `types/room.types.ts` must be updated to add `basePrice?: Decimal | null`.
+The `Room` model gains a nullable `basePrice` field. The table price column uses `<PriceDisplay amount={room.basePrice ?? room.roomType.defaultPrice} isFallback={room.basePrice == null} />`. The `roomType` relation is already included in the `roomInclude` object, so no extra query is needed. The `Room` TypeScript type in `types/room.types.ts` must be updated to add `basePrice?: string | null` (Decimal serializes to string in JSON).
+
+**Fallback visual convention:** When `isFallback={true}`, `PriceDisplay` renders the amount in muted gray (`#9ca3af`) with a tooltip indicating the price is inherited from the room type. This communicates to staff that the room has no individually-set price.
+
+**Currency conversion:** `PriceDisplay` reads the current locale from next-intl and converts from the DB base currency (VND) to the locale's display currency (USD for `en`, VND for `vi`) using `EXCHANGE_RATES` in `common/constants/currency.ts`. Exchange rates are a static constant — replace with a live feed if needed.
 
 *Alternative considered:* compute effective price server-side and return it as a synthetic field. Rejected — adds unnecessary transformation logic; the client has all it needs via the existing include.
+
+*Alternative considered:* extend `useLocaleCurrency().format()` with a fallback flag. Rejected — hooks cannot render JSX; a component (`PriceDisplay`) is the correct abstraction for a value that needs conditional styling.
 
 ### 8. Inactive room toggle filter
 The `GET /api/rooms` handler currently hard-codes `where.isActive = true`. The filter is changed to: when the `showInactive=true` query param is present, omit the `isActive` filter entirely (return all rooms). Default behaviour (no param or `showInactive=false`) stays as-is. The `useRooms` hook adds a `showInactive: boolean` filter field. The UI renders a Toggle/Switch above the table labeled "Show inactive rooms".

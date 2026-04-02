@@ -24,6 +24,7 @@ import {
 } from "@tabler/icons-react";
 import { navigationConfig, type NavItem } from "@/configs/navigation.config";
 import { usePermission } from "@/common/hooks/usePermission";
+import { useAuthRole } from "@/providers/AuthRoleProvider";
 
 const ICON_MAP: Record<string, React.ElementType> = {
   dashboard: IconDashboard,
@@ -94,17 +95,12 @@ function getActiveKeys(
   return { selectedKey: "", openKeys: [] };
 }
 
-export default function AppSidebar({
-  collapsed,
-  initialRole,
-}: {
-  collapsed: boolean;
-  initialRole: string;
-}) {
+export default function AppSidebar({ collapsed }: { collapsed: boolean }) {
   const t = useTranslations();
   const pathname = usePathname();
   const locale = useLocale();
-  const { hasPermission } = usePermission(initialRole);
+  const { role } = useAuthRole();
+  const { hasPermission } = usePermission(role);
 
   const { selectedKey, openKeys } = getActiveKeys(navigationConfig, pathname, locale);
   const menuItems = buildMenuItems(navigationConfig, t, hasPermission, locale);

@@ -52,6 +52,8 @@ npm run dev
 The app runs locally on `http://localhost:3000`. PostgreSQL runs in Docker on `localhost:5432`.
 Default admin login: `admin@hotel.com` / `admin123`.
 
+After running `npm run db:generate`, **restart the dev server** so Next.js picks up the newly compiled Prisma client. The singleton in `lib/prisma.ts` caches across hot reloads; a full restart is required.
+
 ## Critical: This is Next.js 16 — Breaking Changes
 
 **Always read `node_modules/next/dist/docs/` before making changes to routing, layouts, or middleware.**
@@ -90,8 +92,9 @@ Key differences from earlier Next.js versions:
 - `Alert` — `message` is deprecated. Use `title` instead.
 - `Statistic` — `valueStyle` is deprecated. Use `styles.content` instead.
 - `Space` — `direction` is deprecated. Use `orientation` instead.
-- `List` is deprecated and will be removed in the next major version. Do not use it for new code; prefer plain layout with `div`, `Flex`, `Space`, `Card`, `Table`, or custom markup depending on the UI.
+- `List` is deprecated. Prefer `div`, `Flex`, `Space`, `Card`, `Table`, or custom markup.
 - When touching older UI files, expect Ant Design v6 deprecation warnings and update the callsite instead of suppressing the warning.
+- **`message` / `modal` / `notification` must come from `App.useApp()`** — never import and call the static versions. `<App>` wraps the tree in `providers/AntdProvider.tsx`.
 
 ## Architecture
 
@@ -132,7 +135,7 @@ Module directory names do not always match their API route counterparts:
 Core entities in `prisma/schema.prisma`:
 
 - **User** — system accounts with `UserRole` enum (ADMIN, MANAGER, RECEPTIONIST, HOUSEKEEPING)
-- **Room** → belongs to **Floor**, **RoomType**, **RoomStatus**; many-to-many **Amenity** via `RoomAmenity`
+- **Room** → belongs to **Floor**, **RoomType**, **RoomStatus**; many-to-many **Amenity** via `RoomAmenity`; one-to-many **RoomImage**
 - **Guest** — personal details (name, email, phone, ID number, nationality, DOB, tags)
 - **Booking** → links Guest + Room + BookingStatus; holds check-in/out dates and pricing
 - **BookingService** — services added to a booking (quantity + price snapshot from **ServiceItem**)
@@ -142,6 +145,8 @@ Core entities in `prisma/schema.prisma`:
 
 8 master-data lookup tables (all CRUD via `/api/master/*`): **Floor**, **RoomType**, **RoomStatus**, **BookingStatus**, **PaymentMethod**, **ServiceItem**, **GuestType**, **Amenity**.
 
+All prices are stored in **VND**. `common/constants/currency.ts` exports `BASE_CURRENCY` and `EXCHANGE_RATES` for display-time conversion.
+
 ### Navigation config
 `configs/navigation.config.ts` exports `navigationConfig: NavItem[]`. Each item has `key`, `labelKey` (i18n key), `href`, `permission`, optional `roles`, optional `children`. The sidebar reads this at runtime; adding a new page means adding an entry here.
 
@@ -149,26 +154,82 @@ Core entities in `prisma/schema.prisma`:
 `common/constants/permissions.ts` defines `PERMISSIONS` constants and `ROLE_PERMISSIONS` map (ADMIN → all, MANAGER → most, RECEPTIONIST → operational, HOUSEKEEPING → limited). `usePermission()` hook reads role from the `user_role` cookie.
 
 ### Common layer
-- `common/components/ui/` — AppTable, AppModal, AppDrawer, AppCard, AppPageHeader, StatusBadge, etc.
+- `common/components/ui/` — AppTable, AppModal, AppDrawer, AppCard, AppPageHeader, StatusBadge, **PriceDisplay**, etc.
 - `common/components/form/` — TextField, SelectField, DateField, CurrencyField, etc. (all wrap Ant Design Form.Item)
 - `common/components/layout/` — MainLayout, AppSidebar, AppHeader, AppBreadcrumb
 - `common/hooks/` — useTableQuery, useMasterData, useLocaleCurrency, useDisclosure, useConfirm, usePagination, usePermission
 - `common/services/` — roomService, bookingService, guestService, invoiceService, masterDataService, apiClient
 - `common/utils/` — currency, date, enumHelpers, queryParams
+- `common/constants/` — permissions, routes, locale.config, currency
 - **Date library:** `dayjs` (not date-fns or moment) — used throughout for date manipulation and formatting
 
 ### React Query defaults
 Configured in `providers/QueryProvider.tsx`: `staleTime: 5min`, `retry: 1`, `refetchOnWindowFocus: false`. Override per-query as needed. Master data queries use `staleTime: Infinity`.
 
 ### API response standard
-All route handlers use helpers from `lib/response.ts`: `ok(data, meta?)`, `created(data)`, `badRequest(msg)`, `notFound()`, `serverError(e)`. All return `ApiResponse<T>` from `types/api.types.ts`.
+All route handlers use helpers from `lib/response.ts`:
+
+| Helper | Status | Notes |
+|--------|--------|-------|
+| `ok(data, meta?)` | 200 | |
+| `created(data)` | 201 | |
+| `badRequest(msg)` | 400 | |
+| `notFound()` | 404 | |
+| `conflict(error, code?, data?)` | 409 | Structured conflict with optional error code and payload |
+| `serverError(e)` | 500 | Logs via `console.error("[API Error]", e)` |
+
+All return `ApiResponse<T>` from `types/api.types.ts`, which includes an optional `code?: string` field for structured error codes.
+
+### Error handling in the client
+
+`apiClient.ts` exports `ApiError extends Error` with `code?: string` and `data?: unknown`. It throws `ApiError` (not plain `Error`) on non-2xx responses, preserving the `code` from the response body. Callers can do:
+
+```ts
+} catch (err) {
+  if (err instanceof ApiError && err.code === "ROOM_INACTIVE_EXISTS") { ... }
+}
+```
+
+### Soft-delete conflict handling
+
+Entities use soft delete (`isActive: false`). When creating an entity whose unique key matches a soft-deleted record, the API returns `conflict("...", "ENTITY_INACTIVE_EXISTS", { id })` (HTTP 409). The UI shows `modal.confirm` offering to reactivate via `PUT /api/.../[id]` with `{ isActive: true }`. For an active duplicate, return `conflict("...", "ENTITY_NUMBER_TAKEN")` and set a form field error with `form.setFields`.
+
+### UX standards for API-interacting actions
+
+Every Create / Update / Delete / Upload action must:
+
+1. **Loading state** — wire `mutation.isPending` to the button's `loading` prop
+2. **Toast feedback** — use `const { message, modal } = App.useApp()` for `message.success` / `message.error`
+3. **Cache invalidation** — call `queryClient.invalidateQueries`:
+   - `["entity"]` — always (list cache)
+   - `["entity", id]` — on update / upload / image-delete (detail cache); `removeQueries` on delete
+4. **Mode-aware submit buttons** — form drawers serving both Create and Edit must use distinct labels (`"Create X"` / `"Update X"`) and distinct success messages. i18n keys: `entity.createAction`, `entity.updateAction`, `entity.createSuccess`, `entity.updateSuccess`.
+5. **Deactivate feedback** — pass `onSuccess`/`onError` callbacks to `mutate()` at the call site; mutation hooks do not have access to `message`.
+
+### Price display
+
+Use `<PriceDisplay amount={value} isFallback={boolean} />` from `common/components/ui/PriceDisplay.tsx` for all monetary values in new code. It handles locale-aware formatting and VND→USD conversion via `EXCHANGE_RATES`. When an entity has an optional price override that falls back to a parent type's price, set `isFallback={entityPrice == null}` — this renders the amount in muted gray to signal to staff that the price is inherited.
+
+Do not call `useLocaleCurrency().format()` in new components; it has no fallback-styling support.
 
 ### Master data CRUD
-All 8 master data pages (floors, room-types, room-statuses, booking-statuses, payment-methods, service-items, guest-types, amenities) use the generic `MasterDataTable<T>` component driven by a `MasterDataConfig<T>` object. To add a new master data entity: create API routes, add a config object and form component, create a page that passes the config to `MasterDataTable`.
-- Because `MasterDataConfig<T>` contains `columns.render` and `FormComponent`, the page that constructs this config must be `"use client"` unless that config is moved fully inside a Client Component.
+All 8 master data pages use the generic `MasterDataTable<T>` component driven by a `MasterDataConfig<T>` object. To add a new master data entity: create API routes, add a config object and form component, create a page that passes the config to `MasterDataTable`.
+- Because `MasterDataConfig<T>` contains `columns.render` and `FormComponent`, the page must be `"use client"`.
 
 ### Auth flow
-Login → `POST /api/auth/login` → sets `access_token` (httpOnly, 1d) + `refresh_token` (httpOnly, 7d) cookies. `apiClient.ts` auto-retries with `POST /api/auth/refresh` on 401. The `proxy.ts` redirects unauthenticated requests to `/{locale}/login`.
+Login → `POST /api/auth/login` → sets `access_token` (httpOnly, 1d) + `refresh_token` (httpOnly, 7d) + `user_role` (readable, 1d) cookies. `apiClient.ts` auto-retries with `POST /api/auth/refresh` on 401; refresh also reissues all three cookies with the same lifetimes. The `proxy.ts` redirects unauthenticated requests to `/{locale}/login`.
+
+### RBAC / role propagation
+
+The protected layout (`app/[locale]/(main)/layout.tsx`) verifies the session using `getAuthUser()` from `lib/auth.ts` (JWT verification via `access_token` — **not** the readable `user_role` cookie). If the token is absent or invalid it redirects to `/{locale}/login`. The verified `role` is passed into `MainLayout` as a prop.
+
+`MainLayout` wraps the entire protected UI in `<AuthRoleProvider role={role}>` (`providers/AuthRoleProvider.tsx`). Client components that need the role call `useAuthRole()` to get it from context, then pass it to `usePermission(role)`.
+
+**Do not read `document.cookie` for role in client components.** Do not pass `initialRole` through individual page props. The context is the single source of truth for role within the protected layout tree.
+
+## OpenSpec
+
+`openspec/` contains design decisions and task lists for implemented changes. Each change lives in `openspec/changes/[change-name]/` with `design.md`, `tasks.md`, and `proposal.md`. `openspec/ui-standards.md` documents project-wide UI conventions (price display, feedback, soft-delete conflict). Consult these before making architectural decisions in the areas they cover.
 
 ## Tabler Icons
 
