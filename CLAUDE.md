@@ -96,6 +96,20 @@ Key differences from earlier Next.js versions:
 - When touching older UI files, expect Ant Design v6 deprecation warnings and update the callsite instead of suppressing the warning.
 - **`message` / `modal` / `notification` must come from `App.useApp()`** — never import and call the static versions. `<App>` wraps the tree in `providers/AntdProvider.tsx`.
 
+## Styling Conventions
+
+- **Ant Design components** (`Button`, `Card`, `Form`, `Table`, `Modal`, `Drawer`, `Select`, `Upload`, `Typography`, etc.) should be styled using **Ant Design APIs first**:
+  - component props
+  - `variant`
+  - `styles`
+  - theme tokens via `theme.useToken()`
+- **Plain HTML elements** (`div`, `section`, `main`, `header`, `p`, `span`, etc.) should use **Tailwind classes** for layout, spacing, typography, flex/grid, and responsive behavior.
+- **Avoid inline `style`** when Tailwind classes or Ant Design props/tokens can express the same thing.
+- Use inline `style` only when:
+  - the value is runtime-dynamic from JavaScript
+  - an Ant Design token must be applied directly
+  - a component API requires a style object and there is no clean class-based alternative
+
 ## Architecture
 
 ### Tests
@@ -205,6 +219,7 @@ Every Create / Update / Delete / Upload action must:
    - `["entity", id]` — on update / upload / image-delete (detail cache); `removeQueries` on delete
 4. **Mode-aware submit buttons** — form drawers serving both Create and Edit must use distinct labels (`"Create X"` / `"Update X"`) and distinct success messages. i18n keys: `entity.createAction`, `entity.updateAction`, `entity.createSuccess`, `entity.updateSuccess`.
 5. **Deactivate feedback** — pass `onSuccess`/`onError` callbacks to `mutate()` at the call site; mutation hooks do not have access to `message`.
+6. **Inline destructive actions** — for row/file/image deletes, prefer `await mutation.mutateAsync(...)` inside the click handler, then show `message.success` / `message.error` there. Do not assume invalidation is sufficient feedback; keep loading scoped to the clicked control when possible.
 
 ### Price display
 

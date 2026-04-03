@@ -19,6 +19,7 @@ import {
   IconCreditCard,
   IconToolsKitchen2,
   IconUserStar,
+  IconIdBadge2,
   IconStairs,
   IconSparkles,
 } from "@tabler/icons-react";
@@ -34,6 +35,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   guests: IconUsers,
   housekeeping: IconVacuumCleaner,
   billing: IconReceipt,
+  staff: IconIdBadge2,
   "master-data": IconSettings,
   "master-floors": IconStairs,
   "master-room-types": IconBed,

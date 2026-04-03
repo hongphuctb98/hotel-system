@@ -5,19 +5,22 @@ import type { UserRole } from "@/types/auth.types";
 
 type AuthRoleContextValue = {
   role: UserRole;
+  userId: string;
 };
 
 const AuthRoleContext = createContext<AuthRoleContextValue | null>(null);
 
 export function AuthRoleProvider({
   role,
+  userId,
   children,
 }: {
   role: UserRole;
+  userId: string;
   children: React.ReactNode;
 }) {
   return (
-    <AuthRoleContext.Provider value={{ role }}>
+    <AuthRoleContext.Provider value={{ role, userId }}>
       {children}
     </AuthRoleContext.Provider>
   );

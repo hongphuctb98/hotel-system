@@ -16,5 +16,5 @@ export default async function MainGroupLayout({
     redirect(`/${locale}/login`);
   }
 
-  return <MainLayout role={user.role}>{children}</MainLayout>;
+  return <MainLayout role={user.role} userId={user.sub}>{children}</MainLayout>;
 }

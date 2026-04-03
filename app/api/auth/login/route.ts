@@ -12,7 +12,10 @@ export async function POST(req: NextRequest) {
       return badRequest("Email and password are required");
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { staff: true },
+    });
     if (!user || !user.isActive) {
       return unauthorized("Invalid credentials");
     }
@@ -30,9 +33,9 @@ export async function POST(req: NextRequest) {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        name: user.staff?.name ?? null,
         role: user.role,
-        avatarUrl: user.avatarUrl,
+        avatarUrl: user.staff?.avatarUrl ?? null,
       },
     });
 

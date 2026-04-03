@@ -15,6 +15,8 @@ export const PERMISSIONS = {
   BILLING_MANAGE: "billing:manage",
   MASTER_DATA_VIEW: "master_data:view",
   MASTER_DATA_MANAGE: "master_data:manage",
+  STAFF_VIEW: "staff:view",
+  STAFF_MANAGE: "staff:manage",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -38,6 +40,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.BILLING_MANAGE,
     PERMISSIONS.MASTER_DATA_VIEW,
     PERMISSIONS.MASTER_DATA_MANAGE,
+    PERMISSIONS.STAFF_VIEW,
   ],
   RECEPTIONIST: [
     PERMISSIONS.DASHBOARD_VIEW,

@@ -12,14 +12,16 @@ const { Sider, Header, Content } = Layout;
 export default function MainLayout({
   children,
   role,
+  userId,
 }: {
   children: React.ReactNode;
   role: UserRole;
+  userId: string;
 }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <AuthRoleProvider role={role}>
+    <AuthRoleProvider role={role} userId={userId}>
       <Layout style={{ minHeight: "100vh" }}>
         <Sider
           collapsible

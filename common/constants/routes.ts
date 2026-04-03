@@ -6,6 +6,7 @@ export const ROUTES = {
   GUESTS: "/guests",
   HOUSEKEEPING: "/housekeeping",
   BILLING: "/billing",
+  STAFF: "/staff",
   MASTER: {
     FLOORS: "/master-data/floors",
     ROOM_TYPES: "/master-data/room-types",

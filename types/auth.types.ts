@@ -3,7 +3,7 @@ export type UserRole = "ADMIN" | "MANAGER" | "RECEPTIONIST" | "HOUSEKEEPING";
 export type AuthUser = {
   id: string;
   email: string;
-  name: string;
+  name: string | null;
   role: UserRole;
   avatarUrl?: string | null;
 };

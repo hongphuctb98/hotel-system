@@ -65,6 +65,15 @@ export const navigationConfig: NavItem[] = [
     permission: PERMISSIONS.BILLING_VIEW,
   },
   {
+    key: "staff",
+    labelKey: "nav.staff",
+    icon: undefined,
+    href: ROUTES.STAFF,
+    permission: PERMISSIONS.STAFF_VIEW,
+    roles: ["ADMIN", "MANAGER"],
+    dividerBefore: true,
+  },
+  {
     key: "master-data",
     labelKey: "nav.masterData.title",
     icon: undefined,

@@ -13,16 +13,21 @@ export async function GET(_req: NextRequest) {
       select: {
         id: true,
         email: true,
-        name: true,
         role: true,
-        avatarUrl: true,
         isActive: true,
+        staff: { select: { name: true, avatarUrl: true } },
       },
     });
 
     if (!user || !user.isActive) return notFound();
 
-    return ok(user);
+    return ok({
+      id: user.id,
+      email: user.email,
+      name: user.staff?.name ?? null,
+      role: user.role,
+      avatarUrl: user.staff?.avatarUrl ?? null,
+    });
   } catch (e) {
     return serverError(e);
   }

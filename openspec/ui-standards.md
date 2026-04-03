@@ -81,6 +81,11 @@ All API-interacting actions (Create, Update, Delete, Upload) must:
    - List query `["entity"]` — always
    - Detail query `["entity", id]` — on update, upload, image-delete; use `removeQueries` on delete
 
+For inline destructive actions such as remove avatar, remove image, or delete document:
+- Await the mutation at the call site (`await mutateAsync(...)`) and fire `message.success` / `message.error` there.
+- Do not rely on cache invalidation alone for user feedback.
+- If the action is row-scoped, show loading on the exact button being clicked.
+
 ### Mode-aware submit buttons
 
 Form drawers that serve both Create and Edit modes must use distinct labels and messages:
