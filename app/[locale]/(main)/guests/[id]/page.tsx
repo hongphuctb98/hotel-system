@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  App,
   Button,
   Descriptions,
   Spin,
@@ -33,6 +34,7 @@ export default function GuestDetailPage({
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
+  const { message } = App.useApp();
   const { data: guest, isLoading } = useGuest(id);
   const { update } = useGuestActions(id);
   const editDrawer = useDisclosure();
@@ -105,9 +107,16 @@ export default function GuestDetailPage({
   ];
 
   const handleEditSubmit = async () => {
-    const values = await form.validateFields();
-    await update.mutateAsync(values);
-    editDrawer.close();
+    try {
+      const values = await form.validateFields();
+      await update.mutateAsync(values);
+      message.success("Guest updated");
+      editDrawer.close();
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to update guest";
+      message.error(errorMessage);
+    }
   };
 
   return (

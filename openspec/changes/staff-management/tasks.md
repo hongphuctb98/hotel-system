@@ -105,10 +105,10 @@
 ## 12. Verification
 
 - [x] 12.1 Run `npm run build` — no TypeScript errors
-- [ ] 12.2 Verify staff can be created without a login account
-- [ ] 12.3 Verify "Create Account" modal provisions a User and links it to Staff
-- [ ] 12.4 Verify staff with no account shows "No account" badge and "Create Account" action
-- [ ] 12.5 Verify staff with an account shows "Reset Password" and "Deactivate" actions
-- [ ] 12.6 Verify full-page create/edit forms at `/staff/new` and `/staff/[id]/edit`
-- [ ] 12.7 Verify self-deactivation and self-reset are blocked on client and server
-- [ ] 12.8 Verify `contactEmail` backfills from `accountEmail` on account creation when null
+- [x] 12.2 Verify staff can be created without a login account
+- [x] 12.3 Verify "Create Account" modal provisions a User and links it to Staff
+- [x] 12.4 Verify staff with no account shows "No account" badge and "Create Account" action
+- [x] 12.5 Verify staff with an account shows "Reset Password" and "Deactivate" actions
+- [x] 12.6 Verify full-page create/edit forms at `/staff/new` and `/staff/[id]/edit`
+- [x] 12.7 Verify self-deactivation and self-reset are blocked on client and server
+- [x] 12.8 Verify `contactEmail` backfills from `accountEmail` on account creation when null

@@ -8,10 +8,12 @@ import Link from "next/link";
 const SEGMENT_KEYS: Record<string, string> = {
   dashboard: "nav.dashboard",
   "room-map": "nav.roomMap",
+  rooms: "nav.rooms",
   reservations: "nav.reservations",
   guests: "nav.guests",
   housekeeping: "nav.housekeeping",
   billing: "nav.billing",
+  staff: "nav.staff",
   "master-data": "nav.masterData.title",
   floors: "nav.masterData.floors",
   "room-types": "nav.masterData.roomTypes",
@@ -21,7 +23,11 @@ const SEGMENT_KEYS: Record<string, string> = {
   "service-items": "nav.masterData.serviceItems",
   "guest-types": "nav.masterData.guestTypes",
   amenities: "nav.masterData.amenities",
+  new: "common.add",
+  edit: "common.edit",
 };
+
+const ACTION_SEGMENTS = new Set(["new", "edit"]);
 
 export default function AppBreadcrumb() {
   const t = useTranslations();
@@ -33,14 +39,23 @@ export default function AppBreadcrumb() {
     .split("/")
     .filter(Boolean);
 
-  const items = segments.map((seg, idx) => {
+  const visibleSegments = segments
+    .map((seg, idx) => ({ seg, idx }))
+    .filter(({ seg, idx }) => {
+      const nextSegment = segments[idx + 1];
+      const isOpaqueDynamicSegment = !SEGMENT_KEYS[seg];
+
+      return !(isOpaqueDynamicSegment && nextSegment && ACTION_SEGMENTS.has(nextSegment));
+    });
+
+  const items = visibleSegments.map(({ seg, idx }, visibleIdx) => {
     const href = `/${locale}/${segments.slice(0, idx + 1).join("/")}`;
     const labelKey = SEGMENT_KEYS[seg];
     const label = labelKey ? t(labelKey) : seg;
-    const isLast = idx === segments.length - 1;
+    const isLast = visibleIdx === visibleSegments.length - 1;
 
     return {
-      key: seg,
+      key: href,
       title: isLast ? label : <Link href={href}>{label}</Link>,
     };
   });
