@@ -1,8 +1,7 @@
 import { NextRequest } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
+import { storage } from "@/lib/storage";
 import { ok, badRequest, notFound, serverError } from "@/lib/response";
 
 export async function POST(
@@ -20,12 +19,9 @@ export async function POST(
     if (!file || typeof file === "string") return badRequest("No file provided");
 
     const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase();
-    const filename = `${randomUUID()}.${ext}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "rooms", roomId);
-    await fs.mkdir(uploadDir, { recursive: true });
-    const filePath = path.join(uploadDir, filename);
+    const key = `rooms/${roomId}/${randomUUID()}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
-    await fs.writeFile(filePath, buffer);
+    const url = await storage.upload(key, buffer, file.type || "image/jpeg");
 
     const lastImage = await prisma.roomImage.findFirst({
       where: { roomId },
@@ -34,11 +30,7 @@ export async function POST(
     const order = (lastImage?.order ?? -1) + 1;
 
     const image = await prisma.roomImage.create({
-      data: {
-        roomId,
-        url: `/uploads/rooms/${roomId}/${filename}`,
-        order,
-      },
+      data: { roomId, url, order },
     });
 
     return ok(image);

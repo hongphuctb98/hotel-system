@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import { prisma } from "@/lib/prisma";
+import { storage, urlToKey } from "@/lib/storage";
 import { ok, notFound, serverError } from "@/lib/response";
 
 export async function DELETE(
@@ -14,8 +13,7 @@ export async function DELETE(
     const image = await prisma.roomImage.findUnique({ where: { id: imageId } });
     if (!image) return notFound();
 
-    const filePath = path.join(process.cwd(), "public", image.url);
-    await fs.unlink(filePath).catch(() => {
+    await storage.delete(urlToKey(image.url)).catch(() => {
       // File may already be missing — proceed with DB cleanup
     });
 

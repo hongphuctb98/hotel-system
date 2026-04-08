@@ -1,8 +1,7 @@
 import { NextRequest } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
+import { storage } from "@/lib/storage";
 import { ok, badRequest, notFound, serverError } from "@/lib/response";
 
 export async function POST(
@@ -21,13 +20,9 @@ export async function POST(
 
     const type = (formData.get("type") as string | null) ?? "OTHER";
     const ext = (file.name.split(".").pop() ?? "bin").toLowerCase();
-    const filename = `${randomUUID()}.${ext}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "staff", id, "documents");
-    await fs.mkdir(uploadDir, { recursive: true });
-
-    const filePath = path.join(uploadDir, filename);
+    const key = `staff/${id}/documents/${randomUUID()}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
-    await fs.writeFile(filePath, buffer);
+    const url = await storage.upload(key, buffer, file.type || "application/octet-stream");
 
     const lastDoc = await prisma.staffDocument.findFirst({
       where: { staffId: id },
@@ -37,13 +32,7 @@ export async function POST(
     const order = (lastDoc?.order ?? -1) + 1;
 
     const doc = await prisma.staffDocument.create({
-      data: {
-        staffId: id,
-        url: `/uploads/staff/${id}/documents/${filename}`,
-        name: file.name,
-        type,
-        order,
-      },
+      data: { staffId: id, url, name: file.name, type, order },
     });
 
     return ok({ ...doc, createdAt: doc.createdAt.toISOString() });

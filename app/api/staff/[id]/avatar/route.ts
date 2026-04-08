@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import { prisma } from "@/lib/prisma";
+import { storage, urlToKey } from "@/lib/storage";
 import { ok, badRequest, notFound, serverError } from "@/lib/response";
 
 export async function POST(
@@ -18,22 +17,16 @@ export async function POST(
     const file = formData.get("file");
     if (!file || typeof file === "string") return badRequest("No file provided");
 
-    const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase();
-    const filename = `avatar.${ext}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "staff", id);
-    await fs.mkdir(uploadDir, { recursive: true });
-
-    // Remove old avatar file if it exists and has a different extension
+    // Remove old avatar if exists
     if (staff.avatarUrl) {
-      const oldFile = path.join(process.cwd(), "public", staff.avatarUrl);
-      await fs.rm(oldFile, { force: true });
+      await storage.delete(urlToKey(staff.avatarUrl)).catch(() => {});
     }
 
-    const filePath = path.join(uploadDir, filename);
+    const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase();
+    const key = `staff/${id}/avatar.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
-    await fs.writeFile(filePath, buffer);
+    const avatarUrl = await storage.upload(key, buffer, file.type || "image/jpeg");
 
-    const avatarUrl = `/uploads/staff/${id}/${filename}`;
     const updated = await prisma.staff.update({
       where: { id },
       data: { avatarUrl },
@@ -57,8 +50,7 @@ export async function DELETE(
     if (!staff) return notFound();
 
     if (staff.avatarUrl) {
-      const filePath = path.join(process.cwd(), "public", staff.avatarUrl);
-      await fs.rm(filePath, { force: true });
+      await storage.delete(urlToKey(staff.avatarUrl)).catch(() => {});
     }
 
     await prisma.staff.update({ where: { id }, data: { avatarUrl: null } });
