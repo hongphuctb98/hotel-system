@@ -12,17 +12,10 @@ const config: MasterDataConfig<RoomType> = {
     { key: "name", dataIndex: "name", title: "Name" },
     { key: "capacity", dataIndex: "capacity", title: "Capacity", width: 90 },
     {
-      key: "defaultPrice",
-      dataIndex: "defaultPrice",
-      title: "Default Price",
-      width: 140,
-      render: (v: number) => v?.toLocaleString() ?? "—",
-    },
-    {
       key: "description",
       dataIndex: "description",
       title: "Description",
-      render: (v) => v ?? "—",
+      render: (v: string | null) => v ?? "—",
     },
   ],
   FormComponent: RoomTypeForm,

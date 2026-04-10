@@ -2,19 +2,15 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ok, created, conflict, serverError } from "@/lib/response";
 import { parseQueryParams } from "@/common/utils/queryParams";
-
-const roomInclude = {
-  floor: true,
-  roomType: true,
-  roomStatus: true,
-  amenities: { include: { amenity: true } },
-  images: { orderBy: { order: "asc" as const } },
-};
+import { buildBookingInclude, roomBaseInclude, toRoomDTO } from "./_utils";
 
 export async function GET(req: NextRequest) {
   try {
     const { page, limit, filters } = parseQueryParams(req.nextUrl.searchParams);
     const showInactive = req.nextUrl.searchParams.get("showInactive") === "true";
+    const date =
+      req.nextUrl.searchParams.get("date") ??
+      new Date().toISOString().slice(0, 10);
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
@@ -22,6 +18,8 @@ export async function GET(req: NextRequest) {
     if (filters.floorId) where.floorId = filters.floorId;
     if (filters.roomTypeId) where.roomTypeId = filters.roomTypeId;
     if (filters.statusId) where.roomStatusId = filters.statusId;
+
+    const roomInclude = { ...roomBaseInclude, ...buildBookingInclude(date) };
 
     const [rooms, total] = await Promise.all([
       prisma.room.findMany({
@@ -34,7 +32,7 @@ export async function GET(req: NextRequest) {
       prisma.room.count({ where }),
     ]);
 
-    return ok(rooms, { total, page, limit, totalPages: Math.ceil(total / limit) });
+    return ok(rooms.map(toRoomDTO), { total, page, limit, totalPages: Math.ceil(total / limit) });
   } catch (e) {
     return serverError(e);
   }
@@ -59,6 +57,9 @@ export async function POST(req: NextRequest) {
       return conflict("A room with this number is already taken.", "ROOM_NUMBER_TAKEN");
     }
 
+    const today = new Date().toISOString().slice(0, 10);
+    const postInclude = { ...roomBaseInclude, ...buildBookingInclude(today) };
+
     const room = await prisma.room.create({
       data: {
         number: body.number,
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
         basePrice: body.basePrice != null ? body.basePrice : null,
         note: body.note,
       },
-      include: roomInclude,
+      include: postInclude,
     });
 
     if (Array.isArray(body.amenityIds) && body.amenityIds.length > 0) {
@@ -80,10 +81,10 @@ export async function POST(req: NextRequest) {
 
     const roomWithRelations = await prisma.room.findUnique({
       where: { id: room.id },
-      include: roomInclude,
+      include: postInclude,
     });
 
-    return created(roomWithRelations);
+    return created(toRoomDTO(roomWithRelations));
   } catch (e) {
     return serverError(e);
   }

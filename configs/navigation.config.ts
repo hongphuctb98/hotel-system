@@ -128,6 +128,12 @@ export const navigationConfig: NavItem[] = [
         href: ROUTES.MASTER.AMENITIES,
         permission: PERMISSIONS.MASTER_DATA_MANAGE,
       },
+      {
+        key: "master-room-type-pricing",
+        labelKey: "nav.masterData.roomTypePricing",
+        href: ROUTES.MASTER.ROOM_TYPE_PRICING,
+        permission: PERMISSIONS.MASTER_DATA_MANAGE,
+      },
     ],
   },
 ];

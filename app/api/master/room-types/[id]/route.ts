@@ -8,7 +8,7 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
     const body = await req.json();
     const item = await prisma.roomType.update({
       where: { id },
-      data: { code: body.code, name: body.name, capacity: body.capacity, defaultPrice: body.defaultPrice, description: body.description, isActive: body.isActive },
+      data: { code: body.code, name: body.name, capacity: body.capacity, description: body.description, isActive: body.isActive },
     });
     return ok(item);
   } catch (e) { return serverError(e); }

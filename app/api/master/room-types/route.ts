@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     if (!body.code || !body.name) return badRequest("code and name are required");
     const item = await prisma.roomType.create({
-      data: { code: body.code, name: body.name, capacity: body.capacity ?? 2, defaultPrice: body.defaultPrice, description: body.description },
+      data: { code: body.code, name: body.name, capacity: body.capacity ?? 2, description: body.description },
     });
     return created(item);
   } catch (e) { return serverError(e); }

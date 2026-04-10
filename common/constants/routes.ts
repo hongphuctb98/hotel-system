@@ -16,5 +16,6 @@ export const ROUTES = {
     SERVICE_ITEMS: "/master-data/service-items",
     GUEST_TYPES: "/master-data/guest-types",
     AMENITIES: "/master-data/amenities",
+    ROOM_TYPE_PRICING: "/master-data/room-type-pricing",
   },
 } as const;

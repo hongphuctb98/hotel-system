@@ -39,9 +39,18 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+
+    // guestTypeId is required in the schema — default to NORMAL when not provided
+    let guestTypeId = body.guestTypeId;
+    if (!guestTypeId) {
+      const normalType = await prisma.guestType.findFirst({ where: { code: "NORMAL" } });
+      if (!normalType) return serverError(new Error("GuestType NORMAL not found in master data"));
+      guestTypeId = normalType.id;
+    }
+
     const guest = await prisma.guest.create({
       data: {
-        guestTypeId: body.guestTypeId,
+        guestTypeId,
         firstName: body.firstName,
         lastName: body.lastName,
         email: body.email,

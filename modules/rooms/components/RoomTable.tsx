@@ -92,7 +92,7 @@ export default function RoomTable() {
       title: t("room.effectivePrice"),
       render: (_: unknown, r: Room) => (
         <PriceDisplay
-          amount={r.basePrice ?? r.roomType.defaultPrice}
+          amount={r.basePrice ?? r.roomType.pricing?.nightlyPrice ?? null}
           isFallback={r.basePrice == null}
         />
       ),

@@ -1,6 +1,7 @@
 import { apiClient } from "./apiClient";
 import type { Booking, BookingService, CreateBookingPayload } from "@/types/booking.types";
 import type { ApiResponse, PaginationParams } from "@/types/api.types";
+import type { ServiceRow } from "@/types/check-in.types";
 
 export type AddServicePayload = {
   serviceItemId: string;
@@ -36,4 +37,7 @@ export const bookingService = {
     apiClient.post<BookingService>(`/api/bookings/${id}/services`, data),
   removeService: (id: string, serviceId: string): Promise<ApiResponse<{ deleted: boolean }>> =>
     apiClient.delete<{ deleted: boolean }>(`/api/bookings/${id}/services`, { serviceId }),
+  /** Full-sync: replaces the entire service list for a booking in one transaction. */
+  syncServices: (id: string, services: Pick<ServiceRow, "id" | "serviceItemId" | "quantity">[]): Promise<ApiResponse<BookingService[]>> =>
+    apiClient.put<BookingService[]>(`/api/bookings/${id}/services`, { services }),
 };

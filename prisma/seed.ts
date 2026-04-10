@@ -46,26 +46,60 @@ async function main() {
 
   // Room Types
   const roomTypes = [
-    { code: "STD", name: "Standard", capacity: 2, defaultPrice: 800000 },
-    { code: "DLX", name: "Deluxe", capacity: 2, defaultPrice: 1200000 },
-    { code: "SUT", name: "Suite", capacity: 4, defaultPrice: 2500000 },
-    { code: "FAM", name: "Family", capacity: 4, defaultPrice: 1800000 },
+    { code: "STD", name: "Standard", capacity: 2 },
+    { code: "DLX", name: "Deluxe",   capacity: 2 },
+    { code: "SUT", name: "Suite",    capacity: 4 },
+    { code: "FAM", name: "Family",   capacity: 4 },
   ];
   for (const rt of roomTypes) {
     await prisma.roomType.upsert({ where: { code: rt.code }, update: {}, create: rt });
   }
 
+  // Room Type Pricing
+  const roomTypePricingData = [
+    { code: "STD", nightlyPrice: 800000,  dailyPrice: 400000,  hourlyBlockHours: 3, hourlyBlockPrice: 150000, hourlyExtraPrice: 50000 },
+    { code: "DLX", nightlyPrice: 1200000, dailyPrice: 600000,  hourlyBlockHours: 3, hourlyBlockPrice: 220000, hourlyExtraPrice: 70000 },
+    { code: "SUT", nightlyPrice: 2500000, dailyPrice: 1200000, hourlyBlockHours: 3, hourlyBlockPrice: 450000, hourlyExtraPrice: 120000 },
+    { code: "FAM", nightlyPrice: 1800000, dailyPrice: 900000,  hourlyBlockHours: 3, hourlyBlockPrice: 320000, hourlyExtraPrice: 90000 },
+  ];
+  for (const p of roomTypePricingData) {
+    const roomType = await prisma.roomType.findUnique({ where: { code: p.code } });
+    if (!roomType) continue;
+    await prisma.roomTypePricing.upsert({
+      where: { roomTypeId: roomType.id },
+      update: {
+        nightlyPrice:     p.nightlyPrice,
+        dailyPrice:       p.dailyPrice,
+        hourlyBlockHours: p.hourlyBlockHours,
+        hourlyBlockPrice: p.hourlyBlockPrice,
+        hourlyExtraPrice: p.hourlyExtraPrice,
+      },
+      create: {
+        roomTypeId:       roomType.id,
+        nightlyPrice:     p.nightlyPrice,
+        dailyPrice:       p.dailyPrice,
+        hourlyBlockHours: p.hourlyBlockHours,
+        hourlyBlockPrice: p.hourlyBlockPrice,
+        hourlyExtraPrice: p.hourlyExtraPrice,
+      },
+    });
+  }
+
   // Room Statuses
   const roomStatuses = [
-    { code: "AVAILABLE", name: "Available", color: "#52c41a", isSellable: true },
-    { code: "OCCUPIED", name: "Occupied", color: "#1677ff", isSellable: false },
-    { code: "RESERVED", name: "Reserved", color: "#722ed1", isSellable: false },
-    { code: "CLEANING", name: "Cleaning", color: "#fa8c16", isSellable: false },
-    { code: "MAINTENANCE", name: "Maintenance", color: "#f5222d", isSellable: false },
-    { code: "OUT_OF_SERVICE", name: "Out of Service", color: "#8c8c8c", isSellable: false },
+    { code: "AVAILABLE", name: "Trống", color: "#52c41a", isSellable: true },
+    { code: "OCCUPIED", name: "Đang có khách", color: "#1677ff", isSellable: false },
+    { code: "RESERVED", name: "Đã đặt", color: "#722ed1", isSellable: false },
+    { code: "CLEANING", name: "Đang dọn phòng", color: "#fa8c16", isSellable: false },
+    { code: "MAINTENANCE", name: "Bảo trì", color: "#f5222d", isSellable: false },
+    { code: "OUT_OF_SERVICE", name: "Ngưng khai thác", color: "#8c8c8c", isSellable: false },
   ];
   for (const rs of roomStatuses) {
-    await prisma.roomStatus.upsert({ where: { code: rs.code }, update: {}, create: rs });
+    await prisma.roomStatus.upsert({
+      where: { code: rs.code },
+      update: { name: rs.name, color: rs.color },
+      create: rs,
+    });
   }
 
   // Booking Statuses
@@ -146,10 +180,8 @@ async function main() {
     prisma.roomType.findUnique({ where: { code: "SUT" } }),
     prisma.roomType.findUnique({ where: { code: "FAM" } }),
   ]);
-  const [rsAVAIL, rsOCCUPIED, rsRESERVED, rsCLEANING, rsMOINT] = await Promise.all([
+  const [rsAVAIL, rsCLEANING, rsMOINT] = await Promise.all([
     prisma.roomStatus.findUnique({ where: { code: "AVAILABLE" } }),
-    prisma.roomStatus.findUnique({ where: { code: "OCCUPIED" } }),
-    prisma.roomStatus.findUnique({ where: { code: "RESERVED" } }),
     prisma.roomStatus.findUnique({ where: { code: "CLEANING" } }),
     prisma.roomStatus.findUnique({ where: { code: "MAINTENANCE" } }),
   ]);
@@ -158,17 +190,12 @@ async function main() {
     prisma.guestType.findUnique({ where: { code: "VIP" } }),
     prisma.guestType.findUnique({ where: { code: "CORPORATE" } }),
   ]);
-  const [bsPENDING, bsCONFIRMED, bsCHECKED_IN, bsCHECKED_OUT, bsCANCELLED] = await Promise.all([
-    prisma.bookingStatus.findUnique({ where: { code: "PENDING" } }),
+  const [bsCONFIRMED, bsCHECKED_IN, bsCHECKED_OUT] = await Promise.all([
     prisma.bookingStatus.findUnique({ where: { code: "CONFIRMED" } }),
     prisma.bookingStatus.findUnique({ where: { code: "CHECKED_IN" } }),
     prisma.bookingStatus.findUnique({ where: { code: "CHECKED_OUT" } }),
-    prisma.bookingStatus.findUnique({ where: { code: "CANCELLED" } }),
   ]);
-  const [pmCASH, pmCREDIT] = await Promise.all([
-    prisma.paymentMethod.findUnique({ where: { code: "CASH" } }),
-    prisma.paymentMethod.findUnique({ where: { code: "CREDIT_CARD" } }),
-  ]);
+  const pmCASH = await prisma.paymentMethod.findUnique({ where: { code: "CASH" } });
   const [siBREAKFAST, siLAUNDRY, siSPA] = await Promise.all([
     prisma.serviceItem.findUnique({ where: { code: "BREAKFAST" } }),
     prisma.serviceItem.findUnique({ where: { code: "LAUNDRY" } }),
@@ -176,22 +203,25 @@ async function main() {
   ]);
 
   // Rooms
+  // Occupancy state is derived from Booking records (currentBooking.bookingState).
+  // roomStatus here represents operational state only — CLEANING and MAINTENANCE are intentional.
+  // All other rooms default to AVAILABLE regardless of whether a booking exists.
   const roomDefs = [
     { number: "101", floorId: f1!.id, roomTypeId: rtSTD!.id, roomStatusId: rsAVAIL!.id },
     { number: "102", floorId: f1!.id, roomTypeId: rtSTD!.id, roomStatusId: rsAVAIL!.id },
     { number: "103", floorId: f1!.id, roomTypeId: rtSTD!.id, roomStatusId: rsCLEANING!.id },
     { number: "104", floorId: f1!.id, roomTypeId: rtSTD!.id, roomStatusId: rsMOINT!.id },
     { number: "201", floorId: f2!.id, roomTypeId: rtSTD!.id, roomStatusId: rsAVAIL!.id },
-    { number: "202", floorId: f2!.id, roomTypeId: rtSTD!.id, roomStatusId: rsOCCUPIED!.id },
-    { number: "203", floorId: f2!.id, roomTypeId: rtDLX!.id, roomStatusId: rsOCCUPIED!.id },
+    { number: "202", floorId: f2!.id, roomTypeId: rtSTD!.id, roomStatusId: rsAVAIL!.id },
+    { number: "203", floorId: f2!.id, roomTypeId: rtDLX!.id, roomStatusId: rsAVAIL!.id },
     { number: "204", floorId: f2!.id, roomTypeId: rtDLX!.id, roomStatusId: rsAVAIL!.id },
-    { number: "301", floorId: f3!.id, roomTypeId: rtDLX!.id, roomStatusId: rsOCCUPIED!.id },
-    { number: "302", floorId: f3!.id, roomTypeId: rtDLX!.id, roomStatusId: rsRESERVED!.id },
+    { number: "301", floorId: f3!.id, roomTypeId: rtDLX!.id, roomStatusId: rsAVAIL!.id },
+    { number: "302", floorId: f3!.id, roomTypeId: rtDLX!.id, roomStatusId: rsAVAIL!.id },
     { number: "303", floorId: f3!.id, roomTypeId: rtFAM!.id, roomStatusId: rsAVAIL!.id },
     { number: "304", floorId: f3!.id, roomTypeId: rtFAM!.id, roomStatusId: rsAVAIL!.id },
-    { number: "401", floorId: f4!.id, roomTypeId: rtSUT!.id, roomStatusId: rsOCCUPIED!.id },
+    { number: "401", floorId: f4!.id, roomTypeId: rtSUT!.id, roomStatusId: rsAVAIL!.id },
     { number: "402", floorId: f4!.id, roomTypeId: rtSUT!.id, roomStatusId: rsAVAIL!.id },
-    { number: "403", floorId: f4!.id, roomTypeId: rtDLX!.id, roomStatusId: rsRESERVED!.id },
+    { number: "403", floorId: f4!.id, roomTypeId: rtDLX!.id, roomStatusId: rsAVAIL!.id },
     { number: "404", floorId: f4!.id, roomTypeId: rtDLX!.id, roomStatusId: rsAVAIL!.id },
   ];
   for (const r of roomDefs) {
@@ -221,126 +251,115 @@ async function main() {
     guests.push(guest);
   }
 
-  // Rooms lookup for bookings
-  const rooms = await prisma.room.findMany({ where: { number: { in: ["202", "203", "301", "401", "302", "403"] } } });
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const atDayOffset = (days: number, hours = 12, minutes = 0) => {
+    const value = new Date(today);
+    value.setDate(value.getDate() + days);
+    value.setHours(hours, minutes, 0, 0);
+    return value;
+  };
+
+  const rooms = await prisma.room.findMany({
+    where: { number: { in: ["102", "201", "202", "204", "303", "401"] } },
+  });
   const roomByNumber = Object.fromEntries(rooms.map((r) => [r.number, r]));
 
-  // Bookings (today = 2026-04-01)
+  // Bookings for room-map validation (relative to today)
   const bookingDefs = [
-    // Đang ở (CHECKED_IN)
+    // Room 102: reserved and overlapping today
     {
-      bookingNumber: "BK-2026-0001",
+      bookingNumber: "BK-RMAP-0102",
       guestId: guests[0].id,
-      roomId: roomByNumber["202"].id,
-      bookingStatusId: bsCHECKED_IN!.id,
-      checkInDate: new Date("2026-03-29"),
-      checkOutDate: new Date("2026-04-03"),
-      actualCheckIn: new Date("2026-03-29T14:00:00"),
+      roomId: roomByNumber["102"].id,
+      bookingStatusId: bsCONFIRMED!.id,
+      checkInDate: atDayOffset(-1, 14),
+      checkOutDate: atDayOffset(3, 12),
       adults: 2, children: 0,
-      ratePerNight: 800000,
-      totalAmount: 800000 * 5,
+      baseRate: 800000,
+      totalAmount: 800000 * 4,
       depositAmount: 800000,
       source: "Direct",
+      note: "Room-map reserved test\n[META] chargeType=nightly",
     },
+    // Room 201: checked in and overlapping today
     {
-      bookingNumber: "BK-2026-0002",
+      bookingNumber: "BK-RMAP-0201",
       guestId: guests[2].id,
-      roomId: roomByNumber["203"].id,
+      roomId: roomByNumber["201"].id,
       bookingStatusId: bsCHECKED_IN!.id,
-      checkInDate: new Date("2026-03-31"),
-      checkOutDate: new Date("2026-04-04"),
-      actualCheckIn: new Date("2026-03-31T15:30:00"),
+      checkInDate: atDayOffset(-2, 14),
+      checkOutDate: atDayOffset(2, 12),
+      actualCheckIn: atDayOffset(-2, 14),
       adults: 2, children: 0,
-      ratePerNight: 1200000,
-      totalAmount: 1200000 * 4,
-      depositAmount: 1200000,
-      source: "Booking.com",
+      baseRate: 800000,
+      totalAmount: 800000 * 4,
+      depositAmount: 800000,
+      source: "Direct",
+      note: "Room-map checked-in test\n[META] chargeType=nightly",
     },
+    // Extra occupied room with services
     {
-      bookingNumber: "BK-2026-0003",
+      bookingNumber: "BK-RMAP-0202",
+      guestId: guests[6].id,
+      roomId: roomByNumber["202"].id,
+      bookingStatusId: bsCHECKED_IN!.id,
+      checkInDate: atDayOffset(-1, 15),
+      checkOutDate: atDayOffset(1, 11),
+      actualCheckIn: atDayOffset(-1, 15),
+      adults: 2, children: 0,
+      baseRate: 800000,
+      totalAmount: 800000 * 2,
+      depositAmount: 400000,
+      source: "Walk-in",
+      note: "Extra occupied sample\n[META] chargeType=nightly",
+    },
+    // Extra occupied suite
+    {
+      bookingNumber: "BK-RMAP-0401",
       guestId: guests[7].id,
       roomId: roomByNumber["401"].id,
       bookingStatusId: bsCHECKED_IN!.id,
-      checkInDate: new Date("2026-03-30"),
-      checkOutDate: new Date("2026-04-05"),
-      actualCheckIn: new Date("2026-03-30T13:00:00"),
+      checkInDate: atDayOffset(-2, 13),
+      checkOutDate: atDayOffset(3, 11),
+      actualCheckIn: atDayOffset(-2, 13),
       adults: 2, children: 1,
-      ratePerNight: 2500000,
-      totalAmount: 2500000 * 6,
+      baseRate: 2500000,
+      totalAmount: 2500000 * 5,
       depositAmount: 2500000,
       source: "Agoda",
     },
+    // Room 303: future booking, non-overlap for today
     {
-      bookingNumber: "BK-2026-0004",
+      bookingNumber: "BK-RMAP-0303",
       guestId: guests[4].id,
-      roomId: roomByNumber["301"].id,
-      bookingStatusId: bsCHECKED_IN!.id,
-      checkInDate: new Date("2026-04-01"),
-      checkOutDate: new Date("2026-04-03"),
-      actualCheckIn: new Date("2026-04-01T10:00:00"),
-      adults: 1, children: 0,
-      ratePerNight: 1200000,
-      totalAmount: 1200000 * 2,
-      depositAmount: 0,
-      source: "Corporate",
-    },
-    // Đã đặt (CONFIRMED - chưa check-in)
-    {
-      bookingNumber: "BK-2026-0005",
-      guestId: guests[1].id,
-      roomId: roomByNumber["302"].id,
+      roomId: roomByNumber["303"].id,
       bookingStatusId: bsCONFIRMED!.id,
-      checkInDate: new Date("2026-04-05"),
-      checkOutDate: new Date("2026-04-08"),
-      adults: 2, children: 0,
-      ratePerNight: 1200000,
-      totalAmount: 1200000 * 3,
+      checkInDate: atDayOffset(7, 14),
+      checkOutDate: atDayOffset(10, 11),
+      adults: 2, children: 1,
+      baseRate: 1800000,
+      totalAmount: 1800000 * 3,
       depositAmount: 600000,
-      source: "Direct",
+      source: "Corporate",
+      note: "Future reservation test\n[META] chargeType=daily",
     },
+    // Room 204: checked out today
     {
-      bookingNumber: "BK-2026-0006",
-      guestId: guests[8].id,
-      roomId: roomByNumber["403"].id,
-      bookingStatusId: bsCONFIRMED!.id,
-      checkInDate: new Date("2026-04-10"),
-      checkOutDate: new Date("2026-04-15"),
-      adults: 2, children: 2,
-      ratePerNight: 1200000,
-      totalAmount: 1200000 * 5,
-      depositAmount: 1200000,
-      source: "Booking.com",
-    },
-    // Đã trả phòng (CHECKED_OUT)
-    {
-      bookingNumber: "BK-2026-0007",
-      guestId: guests[3].id,
-      roomId: roomByNumber["202"].id,
-      bookingStatusId: bsCHECKED_OUT!.id,
-      checkInDate: new Date("2026-03-20"),
-      checkOutDate: new Date("2026-03-25"),
-      actualCheckIn: new Date("2026-03-20T14:00:00"),
-      actualCheckOut: new Date("2026-03-25T11:00:00"),
-      adults: 2, children: 0,
-      ratePerNight: 800000,
-      totalAmount: 800000 * 5,
-      depositAmount: 800000,
-      source: "Direct",
-    },
-    {
-      bookingNumber: "BK-2026-0008",
+      bookingNumber: "BK-RMAP-0204",
       guestId: guests[5].id,
-      roomId: roomByNumber["203"].id,
+      roomId: roomByNumber["204"].id,
       bookingStatusId: bsCHECKED_OUT!.id,
-      checkInDate: new Date("2026-03-22"),
-      checkOutDate: new Date("2026-03-28"),
-      actualCheckIn: new Date("2026-03-22T15:00:00"),
-      actualCheckOut: new Date("2026-03-28T10:30:00"),
+      checkInDate: atDayOffset(-3, 14),
+      checkOutDate: atDayOffset(0, 11),
+      actualCheckIn: atDayOffset(-3, 14),
+      actualCheckOut: new Date(),
       adults: 1, children: 0,
-      ratePerNight: 1200000,
-      totalAmount: 1200000 * 6,
+      baseRate: 1200000,
+      totalAmount: 1200000 * 3,
       depositAmount: 1200000,
-      source: "Agoda",
+      source: "Direct",
     },
   ];
 
@@ -353,50 +372,78 @@ async function main() {
   }
 
   // Services cho booking đang ở
-  const bk1 = await prisma.booking.findUnique({ where: { bookingNumber: "BK-2026-0001" } });
-  const bk3 = await prisma.booking.findUnique({ where: { bookingNumber: "BK-2026-0003" } });
-  const bk7 = await prisma.booking.findUnique({ where: { bookingNumber: "BK-2026-0007" } });
+  const bk201 = await prisma.booking.findUnique({ where: { bookingNumber: "BK-RMAP-0201" } });
+  const bk202 = await prisma.booking.findUnique({ where: { bookingNumber: "BK-RMAP-0202" } });
+  const bk204 = await prisma.booking.findUnique({ where: { bookingNumber: "BK-RMAP-0204" } });
 
-  if (bk1) {
+  if (bk201) {
     await prisma.bookingService.createMany({
       data: [
-        { bookingId: bk1.id, serviceItemId: siBREAKFAST!.id, quantity: 4, unitPrice: 120000, totalPrice: 480000, serviceDate: new Date("2026-03-30") },
-        { bookingId: bk1.id, serviceItemId: siLAUNDRY!.id, quantity: 1, unitPrice: 50000, totalPrice: 50000, serviceDate: new Date("2026-03-31") },
+        {
+          bookingId: bk201.id,
+          serviceItemId: siBREAKFAST!.id,
+          quantity: 2,
+          unitPrice: 120000,
+          totalPrice: 240000,
+          serviceDate: atDayOffset(-1, 8),
+        },
+        {
+          bookingId: bk201.id,
+          serviceItemId: siLAUNDRY!.id,
+          quantity: 1,
+          unitPrice: 50000,
+          totalPrice: 50000,
+          serviceDate: atDayOffset(0, 9),
+        },
       ],
       skipDuplicates: true,
     });
   }
-  if (bk3) {
+  if (bk202) {
     await prisma.bookingService.createMany({
       data: [
-        { bookingId: bk3.id, serviceItemId: siSPA!.id, quantity: 2, unitPrice: 350000, totalPrice: 700000, serviceDate: new Date("2026-03-31") },
-        { bookingId: bk3.id, serviceItemId: siBREAKFAST!.id, quantity: 6, unitPrice: 120000, totalPrice: 720000, serviceDate: new Date("2026-04-01") },
+        {
+          bookingId: bk202.id,
+          serviceItemId: siSPA!.id,
+          quantity: 1,
+          unitPrice: 350000,
+          totalPrice: 350000,
+          serviceDate: atDayOffset(0, 14),
+        },
+        {
+          bookingId: bk202.id,
+          serviceItemId: siBREAKFAST!.id,
+          quantity: 2,
+          unitPrice: 120000,
+          totalPrice: 240000,
+          serviceDate: atDayOffset(0, 7),
+        },
       ],
       skipDuplicates: true,
     });
   }
 
   // Invoice + payment cho booking đã checkout
-  if (bk7) {
-    const existingInvoice = await prisma.invoice.findFirst({ where: { bookingId: bk7.id } });
+  if (bk204) {
+    const existingInvoice = await prisma.invoice.findFirst({ where: { bookingId: bk204.id } });
     if (!existingInvoice) {
       const invoice = await prisma.invoice.create({
         data: {
-          bookingId: bk7.id,
-          subtotal: 4000000,
-          taxAmount: 400000,
+          bookingId: bk204.id,
+          subtotal: 3600000,
+          taxAmount: 360000,
           discountAmount: 0,
-          totalAmount: 4400000,
+          totalAmount: 3960000,
           isPaid: true,
-          issuedAt: new Date("2026-03-25"),
+          issuedAt: atDayOffset(0, 10),
         },
       });
       await prisma.payment.create({
         data: {
           invoiceId: invoice.id,
           paymentMethodId: pmCASH!.id,
-          amount: 4400000,
-          paidAt: new Date("2026-03-25T10:30:00"),
+          amount: 3960000,
+          paidAt: atDayOffset(0, 10, 30),
         },
       });
     }

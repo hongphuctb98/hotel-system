@@ -12,14 +12,24 @@ export type Floor = {
   updatedAt: string;
 };
 
+export type RoomTypePricing = {
+  id: string;
+  roomTypeId: string;
+  nightlyPrice: number | null;
+  dailyPrice: number | null;
+  hourlyBlockHours: number | null;
+  hourlyBlockPrice: number | null;
+  hourlyExtraPrice: number | null;
+};
+
 export type RoomType = {
   id: string;
   code: string;
   name: string;
   capacity: number;
-  defaultPrice: number;
   description?: string | null;
   isActive: boolean;
+  pricing?: RoomTypePricing | null;
 };
 
 export type RoomStatus = {

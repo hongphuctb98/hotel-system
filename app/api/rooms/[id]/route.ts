@@ -1,24 +1,25 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ok, notFound, serverError } from "@/lib/response";
+import { buildBookingInclude, roomBaseInclude, toRoomDTO } from "../_utils";
 
-const roomInclude = {
-  floor: true,
-  roomType: true,
-  roomStatus: true,
-  amenities: { include: { amenity: true } },
-  images: { orderBy: { order: "asc" as const } },
-};
+function getRoomInclude(req: NextRequest) {
+  const date =
+    req.nextUrl.searchParams.get("date") ??
+    new Date().toISOString().slice(0, 10);
+  return { ...roomBaseInclude, ...buildBookingInclude(date) };
+}
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   props: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await props.params;
-    const room = await prisma.room.findUnique({ where: { id }, include: roomInclude });
+    const include = getRoomInclude(req);
+    const room = await prisma.room.findUnique({ where: { id }, include });
     if (!room) return notFound();
-    return ok(room);
+    return ok(toRoomDTO(room));
   } catch (e) {
     return serverError(e);
   }
@@ -31,6 +32,7 @@ export async function PUT(
   try {
     const { id } = await props.params;
     const body = await req.json();
+    const include = getRoomInclude(req);
 
     const room = await prisma.$transaction(async (tx) => {
       const updated = await tx.room.update({
@@ -44,7 +46,7 @@ export async function PUT(
           ...(body.note !== undefined && { note: body.note }),
           ...(body.isActive !== undefined && { isActive: body.isActive }),
         },
-        include: roomInclude,
+        include,
       });
 
       if (body.amenityIds !== undefined) {
@@ -57,10 +59,10 @@ export async function PUT(
         }
       }
 
-      return tx.room.findUnique({ where: { id: updated.id }, include: roomInclude });
+      return tx.room.findUnique({ where: { id: updated.id }, include });
     });
 
-    return ok(room);
+    return ok(toRoomDTO(room));
   } catch (e) {
     return serverError(e);
   }

@@ -280,9 +280,9 @@ export default function ReservationDetailPage({
             </AppCard>
           )}
 
-          <AppCard title={t("booking.ratePerNight")}>
+          <AppCard title={t("booking.baseRate")}>
             <Typography.Text>
-              {format(Number(booking.ratePerNight))} / night
+              {format(Number(booking.baseRate))} / night
             </Typography.Text>
             <br />
             <Typography.Text type="secondary" className="text-xs">

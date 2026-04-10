@@ -9,6 +9,7 @@ export const roomService = {
       roomTypeId?: string;
       statusId?: string;
       showInactive?: boolean;
+      date?: string;
     }
   ): Promise<ApiResponse<Room[]>> => {
     const query = new URLSearchParams();
