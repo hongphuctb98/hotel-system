@@ -354,8 +354,18 @@
     "preArrivalNote": "Note this booking will be checked in using the existing reservation",
     "bookRoom": "Book Room",
     "validation": {
+      "required": "This field is required",
+      "phoneRequired": "Phone number is required",
+      "checkOutAfterCheckIn": "Check-out time must be after check-in time",
       "dailySameDayRequired": "Daily stays must check out on the same day.",
       "nightlyOvernightRequired": "Nightly stays require at least one overnight."
+    },
+    "errors": {
+      "bookingOverlap": "This room is already booked for the selected dates.",
+      "bookingNotConfirmed": "This booking cannot be checked in from its current status.",
+      "bookingNotCheckedIn": "This booking cannot be checked out from its current status.",
+      "roomNotReady": "This room is not ready to receive guests.",
+      "saveFailed": "Failed to save changes. Please try again."
     }
   }
 }

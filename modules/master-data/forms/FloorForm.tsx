@@ -1,12 +1,14 @@
 "use client";
 
 import { Form, Button } from "antd";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import TextField from "@/common/components/form/TextField";
 import NumberField from "@/common/components/form/NumberField";
 import TextAreaField from "@/common/components/form/TextAreaField";
 import { apiClient } from "@/common/services/apiClient";
 import type { Floor } from "@/types/master.types";
+import { invalidateMasterDataQueries } from "../utils/queryKeys";
 
 interface FloorFormProps {
   initialValues?: Floor | null;
@@ -17,6 +19,7 @@ interface FloorFormProps {
 export default function FloorForm({ initialValues, onSuccess, endpoint }: FloorFormProps) {
   const t = useTranslations();
   const [form] = Form.useForm();
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (values: Partial<Floor>) => {
     if (initialValues?.id) {
@@ -24,6 +27,7 @@ export default function FloorForm({ initialValues, onSuccess, endpoint }: FloorF
     } else {
       await apiClient.post(endpoint, values);
     }
+    await invalidateMasterDataQueries(queryClient, endpoint);
     onSuccess();
   };
 

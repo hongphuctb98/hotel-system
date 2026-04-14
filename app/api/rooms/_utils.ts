@@ -1,20 +1,13 @@
 import type { BookingState } from "@/types/room.types";
-
-/** Build UTC day-boundary Date objects from a YYYY-MM-DD string */
-export function buildDateBounds(dateStr: string) {
-  const start = new Date(dateStr);
-  start.setUTCHours(0, 0, 0, 0);
-  const end = new Date(dateStr);
-  end.setUTCHours(23, 59, 59, 999);
-  return { start, end };
-}
+import { buildLocalDayBoundsUTC } from "@/common/utils/hotelDate";
 
 /**
  * Prisma `include` that attaches the one booking overlapping `date` to a room.
+ * `date` is a YYYY-MM-DD string in the hotel's local timezone.
  * Excludes CANCELLED / NO_SHOW. Picks the most-recently-created one if multiple overlap.
  */
 export function buildBookingInclude(date: string) {
-  const { start, end } = buildDateBounds(date);
+  const { start, end } = buildLocalDayBoundsUTC(date);
   return {
     bookings: {
       where: {
@@ -34,18 +27,6 @@ export function buildBookingInclude(date: string) {
           },
         },
         bookingStatus: { select: { id: true, code: true, name: true, color: true } },
-        // Load the earliest invoice's earliest payment so we can prefill paymentMethodId.
-        invoices: {
-          take: 1,
-          orderBy: { createdAt: "asc" as const },
-          include: {
-            payments: {
-              take: 1,
-              orderBy: { paidAt: "asc" as const },
-              select: { paymentMethodId: true },
-            },
-          },
-        },
       },
     },
   };
@@ -73,13 +54,22 @@ export function toRoomDTO(room: any) {
   const { bookings, ...rest } = room;
   const booking = bookings?.[0] ?? null;
   if (!booking) return { ...rest, currentBooking: null };
+
+  // A CHECKED_OUT booking on an AVAILABLE room is a stale same-day record from a
+  // completed stay. The room has been cleaned and is ready for the next guest — suppress
+  // the old booking so the room renders as a fresh available room everywhere (card body,
+  // modal form, stay-mode derivation). A new booking for this room will have a more
+  // recent createdAt and will replace this record when it is created.
+  const bookingState = deriveBookingState(booking);
+  if (bookingState === "checked_out" && rest.roomStatus?.code === "AVAILABLE") {
+    return { ...rest, currentBooking: null };
+  }
   const {
-    guest, bookingStatus, invoices,
+    guest, bookingStatus,
     baseRate, depositAmount, discountAmount, surchargeAmount,
     hourlyRatePerHour,
     ...bookingRest
   } = booking;
-  const paymentMethodId = invoices?.[0]?.payments?.[0]?.paymentMethodId ?? null;
   return {
     ...rest,
     currentBooking: {
@@ -89,7 +79,7 @@ export function toRoomDTO(room: any) {
       discountAmount:    discountAmount    != null ? Number(discountAmount)    : null,
       surchargeAmount:   surchargeAmount   != null ? Number(surchargeAmount)   : null,
       hourlyRatePerHour: hourlyRatePerHour != null ? Number(hourlyRatePerHour) : null,
-      paymentMethodId,
+      paymentMethodId: null,
       guest,
       bookingStatus,
       bookingState: deriveBookingState(booking),

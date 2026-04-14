@@ -2,11 +2,12 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ok, notFound, serverError } from "@/lib/response";
 import { buildBookingInclude, roomBaseInclude, toRoomDTO } from "../_utils";
+import { hotelLocalDate } from "@/common/utils/hotelDate";
 
 function getRoomInclude(req: NextRequest) {
   const date =
     req.nextUrl.searchParams.get("date") ??
-    new Date().toISOString().slice(0, 10);
+    hotelLocalDate();
   return { ...roomBaseInclude, ...buildBookingInclude(date) };
 }
 
@@ -34,8 +35,8 @@ export async function PUT(
     const body = await req.json();
     const include = getRoomInclude(req);
 
-    const room = await prisma.$transaction(async (tx) => {
-      const updated = await tx.room.update({
+    await prisma.$transaction(async (tx) => {
+      await tx.room.update({
         where: { id },
         data: {
           ...(body.number && { number: body.number }),
@@ -46,7 +47,6 @@ export async function PUT(
           ...(body.note !== undefined && { note: body.note }),
           ...(body.isActive !== undefined && { isActive: body.isActive }),
         },
-        include,
       });
 
       if (body.amenityIds !== undefined) {
@@ -58,9 +58,10 @@ export async function PUT(
           });
         }
       }
+    }, { maxWait: 10000, timeout: 15000 });
 
-      return tx.room.findUnique({ where: { id: updated.id }, include });
-    });
+    const room = await prisma.room.findUnique({ where: { id }, include });
+    if (!room) return notFound();
 
     return ok(toRoomDTO(room));
   } catch (e) {

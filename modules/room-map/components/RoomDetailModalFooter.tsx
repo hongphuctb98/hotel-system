@@ -50,6 +50,17 @@ export default function RoomDetailModalFooter({
   const t = useTranslations("roomMap");
 
   if (mode === "operational") {
+    // OCCUPIED = just checked out, awaiting cleaning — only "Clean Room" makes sense.
+    if (room.roomStatus.code === ROOM_STATUS_CODES.OCCUPIED) {
+      return (
+        <Space>
+          <Button type="primary" loading={isCleaningRoom} onClick={onCleanRoom}>
+            {t("cleanRoom")}
+          </Button>
+          <Button onClick={onClose}>{t("close")}</Button>
+        </Space>
+      );
+    }
     return (
       <Space>
         <Button type="primary" loading={isMarkingAvailable} onClick={onMarkAvailable}>

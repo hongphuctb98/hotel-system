@@ -152,7 +152,12 @@ export function useRoomModalActions({
         stayMode === "reserved" ? booking?.id : undefined
       );
     } catch (err) {
-      if (err instanceof ApiError) message.error(err.message);
+      if (err instanceof ApiError) message.error(apiErrorMessage(err, t));
+      else if (err && typeof err === "object" && "errorFields" in err) {
+        // form.validateFields rejection — Ant Design handles field-level display; no toast needed
+      } else {
+        message.error(t("checkInFailed"));
+      }
     }
   };
 
@@ -186,7 +191,7 @@ export function useRoomModalActions({
       queryClient.invalidateQueries({ queryKey: ["booking-services", booking.id] });
       message.success(t("saveChangesSuccess"));
     } catch (err) {
-      message.error(err instanceof ApiError ? err.message : t("checkInFailed"));
+      message.error(err instanceof ApiError ? apiErrorMessage(err, t) : t("errors.saveFailed"));
     } finally {
       setIsSavingStay(false);
     }
@@ -234,7 +239,7 @@ export function useRoomModalActions({
       queryClient.invalidateQueries({ queryKey: ["booking-services", booking.id] });
       message.success(t("saveChangesSuccess"));
     } catch (err) {
-      message.error(err instanceof ApiError ? err.message : t("checkInFailed"));
+      message.error(err instanceof ApiError ? apiErrorMessage(err, t) : t("errors.saveFailed"));
     } finally {
       setIsSavingStay(false);
     }
@@ -266,4 +271,21 @@ export function useRoomModalActions({
     isCancellingBooking,
     isPending,
   };
+}
+
+/**
+ * Map a structured API error code to a translated user-facing message.
+ * Falls back to a generic "check-in failed" message for unrecognised codes.
+ */
+function apiErrorMessage(
+  err: ApiError,
+  t: ReturnType<typeof useTranslations<"roomMap">>
+): string {
+  switch (err.code) {
+    case "BOOKING_OVERLAP":        return t("errors.bookingOverlap");
+    case "BOOKING_NOT_CONFIRMED":  return t("errors.bookingNotConfirmed");
+    case "BOOKING_NOT_CHECKED_IN": return t("errors.bookingNotCheckedIn");
+    case "ROOM_NOT_READY":         return t("errors.roomNotReady");
+    default:                       return t("checkInFailed");
+  }
 }

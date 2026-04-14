@@ -1,9 +1,11 @@
 "use client";
 
 import { Form, Button, ColorPicker } from "antd";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import TextField from "@/common/components/form/TextField";
 import { apiClient } from "@/common/services/apiClient";
+import { invalidateMasterDataQueries } from "../utils/queryKeys";
 
 interface SimpleCodeNameFormProps {
   initialValues?: { id?: string; code?: string; name?: string; color?: string } | null;
@@ -20,6 +22,7 @@ export default function SimpleCodeNameForm({
 }: SimpleCodeNameFormProps) {
   const t = useTranslations();
   const [form] = Form.useForm();
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (values: Record<string, unknown>) => {
     if (initialValues?.id) {
@@ -27,6 +30,7 @@ export default function SimpleCodeNameForm({
     } else {
       await apiClient.post(endpoint, values);
     }
+    await invalidateMasterDataQueries(queryClient, endpoint);
     onSuccess();
   };
 

@@ -11,21 +11,31 @@ export async function POST(
 
     const booking = await prisma.booking.findUnique({
       where: { id },
-      include: { services: true, invoices: { include: { payments: true } }, bookingStatus: true },
+      include: {
+        services: true,
+        invoices: { include: { payments: true } },
+        bookingStatus: true,
+        room: { include: { roomStatus: true } },
+      },
     });
     if (!booking) return notFound();
 
     // ── Status guard — only CHECKED_IN bookings can be checked out ────────
     if (booking.bookingStatus.code !== "CHECKED_IN") {
       return badRequest(
-        `Cannot check out: booking is currently '${booking.bookingStatus.code}'. Only CHECKED_IN bookings can be checked out.`
+        `Cannot check out: booking is currently '${booking.bookingStatus.code}'. Only CHECKED_IN bookings can be checked out.`,
+        "BOOKING_NOT_CHECKED_IN"
       );
     }
 
-    // Find the "Checked-out" status
-    const checkedOutStatus = await prisma.bookingStatus.findFirst({
-      where: { code: "CHECKED_OUT" },
-    });
+    // Find the "Checked-out" booking status and the OCCUPIED room status in parallel.
+    // On checkout the room moves to OCCUPIED (non-sellable) so it is distinguishable
+    // from a cleaned-and-ready AVAILABLE room. The receptionist then clicks "Clean Room"
+    // (→ CLEANING) and "Cleaning Done" (→ AVAILABLE) as separate explicit steps.
+    const [checkedOutStatus, occupiedRoomStatus] = await Promise.all([
+      prisma.bookingStatus.findFirst({ where: { code: "CHECKED_OUT" } }),
+      prisma.roomStatus.findFirst({ where: { code: "OCCUPIED" } }),
+    ]);
 
     // ── Calculate final totals using stored discount/surcharge ────────────
     const servicesTotal  = booking.services.reduce(
@@ -64,6 +74,18 @@ export async function POST(
       },
       include: { guest: true, bookingStatus: true },
     });
+
+    // ── Auto-transition room to OCCUPIED ─────────────────────────────────
+    // Only override sellable statuses (AVAILABLE, RESERVED). Rooms already in
+    // MAINTENANCE or OUT_OF_SERVICE keep their operational lock.
+    // OCCUPIED is non-sellable, so the room-map shows it in operational mode
+    // where the receptionist can explicitly trigger "Clean Room" → CLEANING.
+    if (occupiedRoomStatus && booking.room.roomStatus.isSellable) {
+      await prisma.room.update({
+        where: { id: booking.roomId },
+        data: { roomStatusId: occupiedRoomStatus.id },
+      });
+    }
 
     return ok({ booking: updatedBooking, invoice });
   } catch (e) {

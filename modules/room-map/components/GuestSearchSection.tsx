@@ -86,7 +86,7 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
             name="customerName"
             label={t("customerName")}
             style={ITEM_STYLE}
-            rules={[{ required: true, message: "Required" }]}
+            rules={[{ required: true, message: t("validation.required") }]}
           >
             <AutoComplete
               options={options}
@@ -109,9 +109,9 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
             name="phone"
             label={t("phone")}
             style={ITEM_STYLE}
-            rules={disabled ? [] : [{ required: true, message: "Phone number is required" }]}
+            rules={disabled ? [] : [{ required: true, message: t("validation.phoneRequired") }]}
           >
-            <Input disabled={disabled || isGuestLocked} />
+            <Input />
           </Form.Item>
         </Col>
         <Col span={7}>
@@ -120,7 +120,7 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
             label={t("idNumber")}
             style={ITEM_STYLE}
           >
-            <Input disabled={disabled || isGuestLocked} />
+            <Input />
           </Form.Item>
         </Col>
       </Row>
@@ -149,7 +149,7 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
             name="checkInDate"
             label={t("checkInTime")}
             style={ITEM_STYLE}
-            rules={[{ required: true, message: "Required" }]}
+            rules={[{ required: true, message: t("validation.required") }]}
           >
             <DatePicker
               showTime={{ format: "HH:mm" }}
@@ -166,7 +166,7 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
             style={ITEM_STYLE}
             dependencies={["chargeType", "checkInDate"]}
             rules={[
-              { required: true, message: "Required" },
+              { required: true, message: t("validation.required") },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   const chargeType = getFieldValue("chargeType");
@@ -180,7 +180,7 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
                     if (!value.isAfter(checkIn, "day")) return Promise.reject(new Error(t("validation.nightlyOvernightRequired")));
                   } else {
                     // hourly — no date-range constraint
-                    if (!value.isAfter(checkIn)) return Promise.reject(new Error("Check-out must be after check-in"));
+                    if (!value.isAfter(checkIn)) return Promise.reject(new Error(t("validation.checkOutAfterCheckIn")));
                   }
 
                   return Promise.resolve();

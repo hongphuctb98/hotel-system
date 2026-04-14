@@ -1,12 +1,14 @@
 "use client";
 
 import { Form, Button } from "antd";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import TextField from "@/common/components/form/TextField";
 import NumberField from "@/common/components/form/NumberField";
 import TextAreaField from "@/common/components/form/TextAreaField";
 import { apiClient } from "@/common/services/apiClient";
 import type { RoomType } from "@/types/master.types";
+import { invalidateMasterDataQueries } from "../utils/queryKeys";
 
 interface RoomTypeFormProps {
   initialValues?: RoomType | null;
@@ -21,6 +23,7 @@ export default function RoomTypeForm({
 }: RoomTypeFormProps) {
   const t = useTranslations();
   const [form] = Form.useForm();
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (values: Partial<RoomType>) => {
     if (initialValues?.id) {
@@ -28,6 +31,7 @@ export default function RoomTypeForm({
     } else {
       await apiClient.post(endpoint, values);
     }
+    await invalidateMasterDataQueries(queryClient, endpoint);
     onSuccess();
   };
 

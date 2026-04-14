@@ -1,11 +1,13 @@
 "use client";
 
 import { Form, Button } from "antd";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import TextField from "@/common/components/form/TextField";
 import CurrencyField from "@/common/components/form/CurrencyField";
 import { apiClient } from "@/common/services/apiClient";
 import type { ServiceItem } from "@/types/master.types";
+import { invalidateMasterDataQueries } from "../utils/queryKeys";
 
 interface ServiceItemFormProps {
   initialValues?: ServiceItem | null;
@@ -20,6 +22,7 @@ export default function ServiceItemForm({
 }: ServiceItemFormProps) {
   const t = useTranslations();
   const [form] = Form.useForm();
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (values: Partial<ServiceItem>) => {
     if (initialValues?.id) {
@@ -27,6 +30,7 @@ export default function ServiceItemForm({
     } else {
       await apiClient.post(endpoint, values);
     }
+    await invalidateMasterDataQueries(queryClient, endpoint);
     onSuccess();
   };
 

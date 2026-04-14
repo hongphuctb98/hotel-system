@@ -3,14 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { ok, created, conflict, serverError } from "@/lib/response";
 import { parseQueryParams } from "@/common/utils/queryParams";
 import { buildBookingInclude, roomBaseInclude, toRoomDTO } from "./_utils";
+import { hotelLocalDate } from "@/common/utils/hotelDate";
 
 export async function GET(req: NextRequest) {
   try {
     const { page, limit, filters } = parseQueryParams(req.nextUrl.searchParams);
     const showInactive = req.nextUrl.searchParams.get("showInactive") === "true";
-    const date =
-      req.nextUrl.searchParams.get("date") ??
-      new Date().toISOString().slice(0, 10);
+    const date = req.nextUrl.searchParams.get("date") ?? hotelLocalDate();
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
@@ -57,7 +56,7 @@ export async function POST(req: NextRequest) {
       return conflict("A room with this number is already taken.", "ROOM_NUMBER_TAKEN");
     }
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = hotelLocalDate();
     const postInclude = { ...roomBaseInclude, ...buildBookingInclude(today) };
 
     const room = await prisma.room.create({

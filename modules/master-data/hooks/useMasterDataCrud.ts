@@ -5,6 +5,7 @@ import { useState } from "react";
 import { apiClient } from "@/common/services/apiClient";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { message } from "antd";
+import { invalidateMasterDataQueries } from "../utils/queryKeys";
 
 export function useMasterDataCrud<T extends { id: string; isActive: boolean }>(
   endpoint: string
@@ -29,8 +30,8 @@ export function useMasterDataCrud<T extends { id: string; isActive: boolean }>(
 
   const createMutation = useMutation({
     mutationFn: (body: Partial<T>) => apiClient.post(endpoint, body),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
+    onSuccess: async () => {
+      await invalidateMasterDataQueries(queryClient, endpoint);
       message.success("Saved successfully");
     },
   });
@@ -38,16 +39,16 @@ export function useMasterDataCrud<T extends { id: string; isActive: boolean }>(
   const updateMutation = useMutation({
     mutationFn: ({ id, body }: { id: string; body: Partial<T> }) =>
       apiClient.put(`${endpoint}/${id}`, body),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
+    onSuccess: async () => {
+      await invalidateMasterDataQueries(queryClient, endpoint);
       message.success("Updated successfully");
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`${endpoint}/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
+    onSuccess: async () => {
+      await invalidateMasterDataQueries(queryClient, endpoint);
       message.success("Deleted");
     },
   });

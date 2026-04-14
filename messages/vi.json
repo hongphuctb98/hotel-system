@@ -354,8 +354,18 @@
     "preArrivalNote": "Phòng sẽ được nhận theo đặt phòng hiện có",
     "bookRoom": "Đặt phòng",
     "validation": {
+      "required": "Trường này là bắt buộc",
+      "phoneRequired": "Số điện thoại là bắt buộc",
+      "checkOutAfterCheckIn": "Giờ trả phòng phải sau giờ nhận phòng",
       "dailySameDayRequired": "Thuê theo ngày phải trả phòng trong ngày.",
       "nightlyOvernightRequired": "Thuê theo đêm yêu cầu ít nhất 1 đêm."
+    },
+    "errors": {
+      "bookingOverlap": "Phòng này đã được đặt trong khoảng thời gian đã chọn.",
+      "bookingNotConfirmed": "Đặt phòng này không thể nhận khách từ trạng thái hiện tại.",
+      "bookingNotCheckedIn": "Đặt phòng này không thể trả phòng từ trạng thái hiện tại.",
+      "roomNotReady": "Phòng này chưa sẵn sàng để nhận khách.",
+      "saveFailed": "Lưu thay đổi thất bại. Vui lòng thử lại."
     }
   }
 }

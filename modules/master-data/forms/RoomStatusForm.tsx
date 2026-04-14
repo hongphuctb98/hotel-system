@@ -1,10 +1,12 @@
 "use client";
 
 import { Form, Button, ColorPicker, Switch } from "antd";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import TextField from "@/common/components/form/TextField";
 import { apiClient } from "@/common/services/apiClient";
 import type { RoomStatus } from "@/types/master.types";
+import { invalidateMasterDataQueries } from "../utils/queryKeys";
 
 interface RoomStatusFormProps {
   initialValues?: RoomStatus | null;
@@ -19,6 +21,7 @@ export default function RoomStatusForm({
 }: RoomStatusFormProps) {
   const t = useTranslations();
   const [form] = Form.useForm();
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (values: Partial<RoomStatus>) => {
     if (initialValues?.id) {
@@ -26,6 +29,7 @@ export default function RoomStatusForm({
     } else {
       await apiClient.post(endpoint, values);
     }
+    await invalidateMasterDataQueries(queryClient, endpoint);
     onSuccess();
   };
 

@@ -22,14 +22,16 @@ export async function POST(
     // ── Status guard — only CONFIRMED bookings can be checked in ─────────
     if (booking.bookingStatus.code !== "CONFIRMED") {
       return badRequest(
-        `Cannot check in: booking is currently '${booking.bookingStatus.code}'. Only CONFIRMED bookings can be checked in.`
+        `Cannot check in: booking is currently '${booking.bookingStatus.code}'. Only CONFIRMED bookings can be checked in.`,
+        "BOOKING_NOT_CONFIRMED"
       );
     }
 
     // ── Room operational state guard ──────────────────────────────────────
     if (!booking.room.roomStatus.isSellable) {
       return badRequest(
-        `Cannot check in: room is currently '${booking.room.roomStatus.name}' and is not ready for guests.`
+        `Cannot check in: room is currently '${booking.room.roomStatus.name}' and is not ready for guests.`,
+        "ROOM_NOT_READY"
       );
     }
 
