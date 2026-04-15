@@ -46,6 +46,7 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
         const res = await guestService.findAll({ search: value, limit: 10 } as Parameters<typeof guestService.findAll>[0]);
         setOptions(
           (res.data ?? []).map((g) => ({
+            key: g.id,
             // value = what appears in the input after the user selects an option
             value: `${g.firstName} ${g.lastName}`,
             label: [`${g.firstName} ${g.lastName}`, g.phone, g.idNumber].filter(Boolean).join(" – "),

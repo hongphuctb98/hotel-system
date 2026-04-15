@@ -20,6 +20,8 @@ export type Booking = {
   discountAmount: number;
   surchargeAmount: number;
   chargeType: string;
+  hourlyBlockHours?: number | null;
+  hourlyRatePerHour?: number | null;
   source?: string | null;
   note?: string | null;
   createdAt: string;

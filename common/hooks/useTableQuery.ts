@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePagination } from "./usePagination";
 import type { TablePaginationConfig } from "antd";
 import type { ApiResponse } from "@/types/api.types";
@@ -14,19 +14,31 @@ interface UseTableQueryOptions<T, TFilters> {
     filters: TFilters;
   }) => Promise<ApiResponse<T[]>>;
   initialFilters?: TFilters;
+  /** When provided, these filters are used directly (external filter state management). */
+  externalFilters?: TFilters;
 }
 
 export function useTableQuery<T, TFilters extends object = Record<string, unknown>>({
   queryKey,
   fetcher,
   initialFilters = {} as TFilters,
+  externalFilters,
 }: UseTableQueryOptions<T, TFilters>) {
   const { page, limit, setPage } = usePagination();
   const [filters, setFilters] = useState<TFilters>(initialFilters);
 
+  const activeFilters = externalFilters ?? filters;
+  const filtersKey = JSON.stringify(activeFilters);
+
+  useEffect(() => {
+    if (page !== 1) {
+      setPage(1, limit);
+    }
+  }, [filtersKey, limit, page, setPage]);
+
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: [...queryKey, page, limit, filters],
-    queryFn: () => fetcher({ page, limit, filters }),
+    queryKey: [...queryKey, page, limit, activeFilters],
+    queryFn: () => fetcher({ page, limit, filters: activeFilters }),
     placeholderData: (prev) => prev,
   });
 

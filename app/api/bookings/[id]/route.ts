@@ -50,6 +50,7 @@ export async function PUT(
       },
       include: bookingInclude,
     });
+
     return ok(booking);
   } catch (e) {
     return serverError(e);

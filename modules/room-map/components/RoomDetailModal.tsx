@@ -6,11 +6,10 @@ import AppModal from "@/common/components/ui/AppModal";
 import PriceDisplay from "@/common/components/ui/PriceDisplay";
 import GuestSearchSection from "./GuestSearchSection";
 import ServiceItemsSection from "./ServiceItemsSection";
-import PaymentSummarySection from "./PaymentSummarySection";
 import RoomDetailModalFooter from "./RoomDetailModalFooter";
 import { useRoomModalForm } from "../hooks/useRoomModalForm";
 import { useRoomModalActions } from "../hooks/useRoomModalActions";
-import { resolveModalMode, resolveStayMode } from "../utils/roomModalMode";
+import { resolveModalMode, resolveStayMode, resolveStatusDisplay } from "../utils/roomModalMode";
 import { useMasterData } from "@/common/hooks/useMasterData";
 import type { Room, BookingState } from "@/types/room.types";
 
@@ -22,13 +21,16 @@ interface RoomDetailModalProps {
 
 export default function RoomDetailModal({ open, room, onClose }: RoomDetailModalProps) {
   const t = useTranslations("roomMap");
-  const { serviceItems, paymentMethods } = useMasterData();
+  const { serviceItems } = useMasterData();
 
 
   const mode      = room ? resolveModalMode(room) : "stay";
   const stayMode  = room ? resolveStayMode(room)  : "vacant";
   const booking   = room?.currentBooking ?? null;
   const bookingState: BookingState = booking?.bookingState ?? "none";
+  const { label: statusLabel, color: statusColor } = room
+    ? resolveStatusDisplay(room)
+    : { label: "", color: "" };
 
   const {
     form,
@@ -86,10 +88,10 @@ export default function RoomDetailModal({ open, room, onClose }: RoomDetailModal
           <span style={{ color: "#8c8c8c", fontSize: 12, fontWeight: 400 }}>
             {room.floor.name} · {room.roomType.name}
           </span>
-          <Tag color={room.roomStatus.color} style={{ margin: 0, fontSize: 11 }}>
-            {room.roomStatus.name}
+          <Tag color={statusColor} style={{ margin: 0, fontSize: 11 }}>
+            {statusLabel}
           </Tag>
-          {bookingState !== "none" && (
+          {(bookingState === "reserved" || bookingState === "checked_in") && (
             <BookingStateTag bookingState={bookingState} booking={booking} t={t} />
           )}
         </div>
@@ -144,7 +146,9 @@ export default function RoomDetailModal({ open, room, onClose }: RoomDetailModal
       </div>
 
       {/* ── Operational mode (CLEANING / MAINTENANCE) ──────────────────────── */}
-      {mode === "operational" && <OperationalModeBody room={room} />}
+      {mode === "operational" && (
+        <OperationalModeBody room={room} roomStatusLabel={statusLabel} />
+      )}
 
       {/* ── Unified stay form ──────────────────────────────────────────────── */}
       {mode === "stay" && (
@@ -207,13 +211,19 @@ export default function RoomDetailModal({ open, room, onClose }: RoomDetailModal
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function OperationalModeBody({ room }: { room: Room }) {
+function OperationalModeBody({
+  room,
+  roomStatusLabel,
+}: {
+  room: Room;
+  roomStatusLabel: string;
+}) {
   const t = useTranslations("roomMap");
   return (
     <div style={{ textAlign: "center", padding: "32px 0 24px" }}>
       <div style={{ marginBottom: 12 }}>
         <Tag color={room.roomStatus.color} style={{ fontSize: 14, padding: "4px 16px" }}>
-          {room.roomStatus.name}
+          {roomStatusLabel}
         </Tag>
       </div>
       {room.note && (

@@ -22,20 +22,16 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <>
-      {/* Set the lang attribute on the root <html> element for this locale */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `document.documentElement.lang = "${locale}";`,
-        }}
-      />
-      <NextIntlClientProvider locale={locale} messages={messages}>
-        <QueryProvider>
-          <ThemeProvider>
-            <AntdProvider>{children}</AntdProvider>
-          </ThemeProvider>
-        </QueryProvider>
-      </NextIntlClientProvider>
-    </>
+    <html lang={locale}>
+      <body>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <QueryProvider>
+            <ThemeProvider>
+              <AntdProvider>{children}</AntdProvider>
+            </ThemeProvider>
+          </QueryProvider>
+        </NextIntlClientProvider>
+      </body>
+    </html>
   );
 }

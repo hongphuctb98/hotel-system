@@ -1,8 +1,9 @@
 "use client";
 
-import { Button, Descriptions, Spin, Table, Popconfirm, Typography, Tag } from "antd";
+import { Button, Descriptions, Spin, Table, Popconfirm, Typography, Tag, App } from "antd";
 import {
   IconArrowLeft,
+  IconEdit,
   IconLogin,
   IconLogout,
   IconPlus,
@@ -11,13 +12,15 @@ import {
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { use } from "react";
+import dayjs from "dayjs";
 import AppPageHeader from "@/common/components/ui/AppPageHeader";
 import AppCard from "@/common/components/ui/AppCard";
 import StatusBadge from "@/common/components/ui/StatusBadge";
+import PriceDisplay from "@/common/components/ui/PriceDisplay";
 import { useReservation, useReservationActions } from "@/modules/reservations/hooks/useReservation";
 import { useDisclosure } from "@/common/hooks/useDisclosure";
-import { useLocaleCurrency } from "@/common/hooks/useLocaleCurrency";
 import AddServiceModal from "@/modules/billing/components/AddServiceModal";
+import BookingEditModal from "@/modules/reservations/components/BookingEditModal";
 import type { BookingService } from "@/types/booking.types";
 
 export default function ReservationDetailPage({
@@ -29,10 +32,11 @@ export default function ReservationDetailPage({
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
+  const { message } = App.useApp();
   const { data: booking, isLoading } = useReservation(id);
   const { checkIn, checkOut, removeService } = useReservationActions(id);
   const addServiceModal = useDisclosure();
-  const { format, formatDate, formatDateTime } = useLocaleCurrency();
+  const editModal = useDisclosure();
 
   if (isLoading) {
     return (
@@ -51,14 +55,14 @@ export default function ReservationDetailPage({
   const serviceColumns = [
     {
       key: "service",
-      title: "Service",
+      title: t("booking.servicesSection"),
       render: (_: unknown, r: BookingService) => r.serviceItem.name,
     },
     {
       key: "serviceDate",
       dataIndex: "serviceDate",
       title: t("billing.serviceDate"),
-      render: (v: string) => formatDate(v),
+      render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
       width: 120,
     },
     {
@@ -71,14 +75,14 @@ export default function ReservationDetailPage({
       key: "unitPrice",
       dataIndex: "unitPrice",
       title: t("billing.unitPrice"),
-      render: (v: number) => format(v),
+      render: (v: number) => <PriceDisplay amount={v} isFallback={false} />,
       width: 120,
     },
     {
       key: "totalPrice",
       dataIndex: "totalPrice",
-      title: "Total",
-      render: (v: number) => format(v),
+      title: t("booking.total"),
+      render: (v: number) => <PriceDisplay amount={v} isFallback={false} />,
       width: 120,
     },
     {
@@ -87,7 +91,12 @@ export default function ReservationDetailPage({
       render: (_: unknown, r: BookingService) => (
         <Popconfirm
           title={t("common.confirmTitle")}
-          onConfirm={() => removeService.mutate(r.id)}
+          onConfirm={() =>
+            removeService.mutate(r.id, {
+              onSuccess: () => message.success("Service removed"),
+              onError: (e: Error) => message.error(e.message),
+            })
+          }
           okText={t("common.yes")}
           cancelText={t("common.no")}
         >
@@ -119,14 +128,25 @@ export default function ReservationDetailPage({
               icon={<IconArrowLeft size={16} />}
               onClick={() => router.push(`/${locale}/reservations`)}
             >
-              Back
+              {t("common.cancel")}
             </Button>
+            {/* <Button
+              icon={<IconEdit size={16} />}
+              onClick={editModal.open}
+            >
+              {t("common.edit")}
+            </Button> */}
             {canCheckIn && (
               <Button
                 type="primary"
                 icon={<IconLogin size={16} />}
                 loading={checkIn.isPending}
-                onClick={() => checkIn.mutate()}
+                onClick={() =>
+                  checkIn.mutate(undefined, {
+                    onSuccess: () => message.success(t("booking.doCheckIn")),
+                    onError: (e: Error) => message.error(e.message),
+                  })
+                }
               >
                 {t("booking.doCheckIn")}
               </Button>
@@ -137,7 +157,12 @@ export default function ReservationDetailPage({
                 danger
                 icon={<IconLogout size={16} />}
                 loading={checkOut.isPending}
-                onClick={() => checkOut.mutate()}
+                onClick={() =>
+                  checkOut.mutate(undefined, {
+                    onSuccess: () => message.success(t("booking.doCheckOut")),
+                    onError: (e: Error) => message.error(e.message),
+                  })
+                }
               >
                 {t("booking.doCheckOut")}
               </Button>
@@ -148,28 +173,28 @@ export default function ReservationDetailPage({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
-          <AppCard title="Booking Info">
+          <AppCard title={t("booking.bookingInfo")}>
             <Descriptions column={2} size="small">
-              <Descriptions.Item label="Guest">
+              <Descriptions.Item label={t("booking.guest")}>
                 {booking.guest.firstName} {booking.guest.lastName}
               </Descriptions.Item>
-              <Descriptions.Item label="Room">
+              <Descriptions.Item label={t("booking.room")}>
                 {booking.room.number} · {booking.room.roomType.name}
               </Descriptions.Item>
               <Descriptions.Item label={t("booking.checkIn")}>
-                {formatDate(booking.checkInDate)}
+                {dayjs(booking.checkInDate).format("DD/MM/YYYY")}
               </Descriptions.Item>
               <Descriptions.Item label={t("booking.checkOut")}>
-                {formatDate(booking.checkOutDate)}
+                {dayjs(booking.checkOutDate).format("DD/MM/YYYY")}
               </Descriptions.Item>
               <Descriptions.Item label="Actual Check-in">
                 {booking.actualCheckIn
-                  ? formatDateTime(booking.actualCheckIn)
+                  ? dayjs(booking.actualCheckIn).format("DD/MM/YYYY HH:mm")
                   : "—"}
               </Descriptions.Item>
               <Descriptions.Item label="Actual Check-out">
                 {booking.actualCheckOut
-                  ? formatDateTime(booking.actualCheckOut)
+                  ? dayjs(booking.actualCheckOut).format("DD/MM/YYYY HH:mm")
                   : "—"}
               </Descriptions.Item>
               <Descriptions.Item label={t("booking.adults")}>
@@ -193,7 +218,7 @@ export default function ReservationDetailPage({
           </AppCard>
 
           <AppCard
-            title="Services"
+            title={t("booking.servicesSection")}
             extra={
               <Button
                 size="small"
@@ -213,10 +238,10 @@ export default function ReservationDetailPage({
               summary={() => (
                 <Table.Summary.Row>
                   <Table.Summary.Cell index={0} colSpan={4} align="right">
-                    <strong>Services Total</strong>
+                    <strong>{t("booking.servicesTotal")}</strong>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={1}>
-                    <strong>{format(servicesTotal)}</strong>
+                    <strong><PriceDisplay amount={servicesTotal} isFallback={false} /></strong>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={2} />
                 </Table.Summary.Row>
@@ -226,27 +251,26 @@ export default function ReservationDetailPage({
         </div>
 
         <div className="space-y-4">
-          <AppCard title="Charges">
+          <AppCard title={t("booking.charges")}>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span>Room ({booking.adults + booking.children} pax)</span>
-                <span>{format(Number(booking.totalAmount))}</span>
+                <span>{t("booking.room")} ({booking.adults + booking.children} pax)</span>
+                <PriceDisplay amount={Number(booking.totalAmount)} isFallback={false} />
               </div>
               <div className="flex justify-between">
-                <span>Services</span>
-                <span>{format(servicesTotal)}</span>
+                <span>{t("booking.servicesSection")}</span>
+                <PriceDisplay amount={servicesTotal} isFallback={false} />
               </div>
               <div className="flex justify-between border-t pt-2">
                 <span>Subtotal</span>
-                <span>{format(Number(booking.totalAmount) + servicesTotal)}</span>
+                <PriceDisplay amount={Number(booking.totalAmount) + servicesTotal} isFallback={false} />
               </div>
               <div className="flex justify-between font-semibold text-base border-t pt-2">
-                <span>Est. Total (incl. 10% tax)</span>
-                <span>
-                  {format(
-                    (Number(booking.totalAmount) + servicesTotal) * 1.1
-                  )}
-                </span>
+                <span>{t("booking.estimatedTotal")}</span>
+                <PriceDisplay
+                  amount={(Number(booking.totalAmount) + servicesTotal) * 1.1}
+                  isFallback={false}
+                />
               </div>
             </div>
           </AppCard>
@@ -258,12 +282,12 @@ export default function ReservationDetailPage({
                   <div className="flex justify-between">
                     <span>#{inv.invoiceNumber}</span>
                     <Tag color={inv.isPaid ? "success" : "warning"}>
-                      {inv.isPaid ? t("billing.paid") : t("billing.unpaid")}
+                      {inv.isPaid ? t("booking.paid") : t("booking.unpaid")}
                     </Tag>
                   </div>
                   <div className="flex justify-between font-semibold">
-                    <span>Total</span>
-                    <span>{format(Number(inv.totalAmount))}</span>
+                    <span>{t("booking.total")}</span>
+                    <PriceDisplay amount={Number(inv.totalAmount)} isFallback={false} />
                   </div>
                   <Button
                     size="small"
@@ -281,12 +305,10 @@ export default function ReservationDetailPage({
           )}
 
           <AppCard title={t("booking.baseRate")}>
-            <Typography.Text>
-              {format(Number(booking.baseRate))} / night
-            </Typography.Text>
+            <PriceDisplay amount={Number(booking.baseRate)} isFallback={false} />
             <br />
             <Typography.Text type="secondary" className="text-xs">
-              Deposit: {format(Number(booking.depositAmount))}
+              {t("booking.deposit")}: <PriceDisplay amount={Number(booking.depositAmount)} isFallback={false} />
             </Typography.Text>
           </AppCard>
         </div>
@@ -296,6 +318,12 @@ export default function ReservationDetailPage({
         bookingId={id}
         open={addServiceModal.isOpen}
         onClose={addServiceModal.close}
+      />
+
+      <BookingEditModal
+        open={editModal.isOpen}
+        onClose={editModal.close}
+        booking={booking}
       />
     </div>
   );

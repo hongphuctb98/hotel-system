@@ -28,7 +28,11 @@ export async function POST(
     }
 
     // ── Room operational state guard ──────────────────────────────────────
-    if (!booking.room.roomStatus.isSellable) {
+    // Block only on physical operational locks. RESERVED is non-sellable but is
+    // the correct pre-checkin state (set when the booking was confirmed), so it
+    // must not be blocked here. AVAILABLE is also valid (e.g. walk-in same-day).
+    const OPERATIONAL_LOCK_CODES = new Set(["CLEANING", "MAINTENANCE", "OUT_OF_SERVICE"]);
+    if (OPERATIONAL_LOCK_CODES.has(booking.room.roomStatus.code)) {
       return badRequest(
         `Cannot check in: room is currently '${booking.room.roomStatus.name}' and is not ready for guests.`,
         "ROOM_NOT_READY"
@@ -57,18 +61,31 @@ export async function POST(
     }
 
     // ── Perform check-in ──────────────────────────────────────────────────
-    const updated = await prisma.booking.update({
-      where: { id },
-      data: {
-        actualCheckIn:   new Date(),
-        ...(checkedInStatus && { bookingStatusId: checkedInStatus.id }),
-      },
-      include: {
-        guest: true,
-        room:  { include: { roomStatus: true } },
-        bookingStatus: true,
-      },
-    });
+    // Resolve OCCUPIED room status in parallel with the booking update.
+    const [updated, occupiedRoomStatus] = await Promise.all([
+      prisma.booking.update({
+        where: { id },
+        data: {
+          actualCheckIn:   new Date(),
+          ...(checkedInStatus && { bookingStatusId: checkedInStatus.id }),
+        },
+        include: {
+          guest: true,
+          room:  { include: { roomStatus: true } },
+          bookingStatus: true,
+        },
+      }),
+      prisma.roomStatus.findFirst({ where: { code: "OCCUPIED" } }),
+    ]);
+
+    // Business rule: CHECKED_IN booking must move the room to OCCUPIED so the
+    // room-map card reflects an active stay rather than a reserved/available room.
+    if (occupiedRoomStatus) {
+      await prisma.room.update({
+        where: { id: booking.roomId },
+        data: { roomStatusId: occupiedRoomStatus.id },
+      });
+    }
 
     return ok(updated);
   } catch (e) {

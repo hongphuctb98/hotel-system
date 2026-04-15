@@ -3,50 +3,17 @@
 import { Card, Typography } from "antd";
 import StatusBadge from "@/common/components/ui/StatusBadge";
 import { useLocaleCurrency } from "@/common/hooks/useLocaleCurrency";
-import type { Room, BookingState } from "@/types/room.types";
-import { ROOM_STATUS_CODES } from "@/common/constants/roomStatus";
+import type { Room } from "@/types/room.types";
+import { resolveStatusDisplay } from "../utils/roomModalMode";
 
 interface RoomCardProps {
   room: Room;
   onClick: () => void;
 }
 
-// Booking-state colors mirror the room status palette for consistency
-const BOOKING_STATE_DISPLAY: Record<
-  Exclude<BookingState, "none">,
-  { label: string; color: string; bg: string }
-> = {
-  checked_in:  { label: "Có khách",      color: "#52c41a", bg: "#f6ffed" },
-  reserved:    { label: "Đã đặt",        color: "#722ed1", bg: "#f9f0ff" },
-  checked_out: { label: "Đã trả phòng",  color: "#8c8c8c", bg: "#f5f5f5" },
-};
-
-function resolveDisplayState(room: Room): { label: string; color: string; bg: string } {
-  const bookingState = room.currentBooking?.bookingState;
-
-  // Active booking states take priority for sellable rooms.
-  if (bookingState === "checked_in") return BOOKING_STATE_DISPLAY.checked_in;
-  if (bookingState === "reserved")   return BOOKING_STATE_DISPLAY.reserved;
-
-  // Operational lock (CLEANING / MAINTENANCE / etc.) always beats a stale checked_out.
-  if (!room.roomStatus.isSellable) {
-    return { label: room.roomStatus.name, color: room.roomStatus.color, bg: "#ffffff" };
-  }
-
-  // AVAILABLE is the explicit "cleaning done, room ready" signal. It overrides a
-  // same-day stale checked_out booking so the room shows as ready for the next guest.
-  if (room.roomStatus.code === ROOM_STATUS_CODES.AVAILABLE) {
-    return { label: room.roomStatus.name, color: room.roomStatus.color, bg: "#ffffff" };
-  }
-
-  if (bookingState === "checked_out") return BOOKING_STATE_DISPLAY.checked_out;
-
-  return { label: room.roomStatus.name, color: room.roomStatus.color, bg: "#ffffff" };
-}
-
 export default function RoomCard({ room, onClick }: RoomCardProps) {
   const { formatDate } = useLocaleCurrency();
-  const { label, color, bg } = resolveDisplayState(room);
+  const { label, color } = resolveStatusDisplay(room);
 
   return (
     <Card
@@ -57,7 +24,6 @@ export default function RoomCard({ room, onClick }: RoomCardProps) {
         borderTop: `4px solid ${color}`,
         borderRadius: 12,
         cursor: "pointer",
-        background: bg,
       }}
     >
       <div className="flex items-start justify-between mb-1">
