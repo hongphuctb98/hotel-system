@@ -1,5 +1,6 @@
 import type { Room, BookingState } from "@/types/room.types";
 import type { CheckInFormValues } from "@/types/check-in.types";
+import type { RoomStatus } from "@/types/master.types";
 import type { Dayjs } from "dayjs";
 import { ROOM_STATUS_CODES } from "@/common/constants/roomStatus";
 
@@ -20,20 +21,48 @@ const OPERATIONAL_CODES: ReadonlySet<string> = new Set([
  *  3. everything else (no booking, reserved, checked_in) → show roomStatus
  */
 export function resolveStatusDisplay(room: Room): { label: string; color: string } {
-  // Rule 1 — operational override
+  return resolveStatusDisplayWithMasterData(room, []);
+}
+
+export function resolveStatusDisplayWithMasterData(
+  room: Room,
+  roomStatuses: RoomStatus[],
+): { label: string; color: string } {
+  // Rule 1 — operational override always wins.
   if (OPERATIONAL_CODES.has(room.roomStatus.code)) {
     return { label: room.roomStatus.name, color: room.roomStatus.color };
   }
 
-  // Rule 2 — post-checkout: show booking status so staff sees "Checked Out" not "Occupied"
   const bookingState: BookingState = room.currentBooking?.bookingState ?? "none";
+
+  // Rule 2 — date-filtered booking state overrides current room status.
+  if (bookingState === "reserved") {
+    return resolveRoomStatusByCode(roomStatuses, ROOM_STATUS_CODES.RESERVED, room.roomStatus);
+  }
+
+  if (bookingState === "checked_in") {
+    return resolveRoomStatusByCode(roomStatuses, ROOM_STATUS_CODES.OCCUPIED, room.roomStatus);
+  }
+
   if (bookingState === "checked_out") {
     const bs = room.currentBooking!.bookingStatus;
     return { label: bs.name, color: bs.color };
   }
 
-  // Rule 3 — all other states: room status is authoritative
-  return { label: room.roomStatus.name, color: room.roomStatus.color };
+  // Rule 3 — no booking for the filtered day means the room is available unless
+  // an operational lock has already overridden above.
+  return resolveRoomStatusByCode(roomStatuses, ROOM_STATUS_CODES.AVAILABLE, room.roomStatus);
+}
+
+function resolveRoomStatusByCode(
+  roomStatuses: RoomStatus[],
+  code: string,
+  fallback: Pick<RoomStatus, "code" | "name" | "color">,
+): { label: string; color: string } {
+  const status = roomStatuses.find((item) => item.code === code);
+  if (status) return { label: status.name, color: status.color };
+  if (fallback.code === code) return { label: fallback.name, color: fallback.color };
+  return { label: code, color: fallback.color };
 }
 
 export type ModalMode = "operational" | "stay";

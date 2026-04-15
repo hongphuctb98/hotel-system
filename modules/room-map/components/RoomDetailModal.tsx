@@ -9,7 +9,7 @@ import ServiceItemsSection from "./ServiceItemsSection";
 import RoomDetailModalFooter from "./RoomDetailModalFooter";
 import { useRoomModalForm } from "../hooks/useRoomModalForm";
 import { useRoomModalActions } from "../hooks/useRoomModalActions";
-import { resolveModalMode, resolveStayMode, resolveStatusDisplay } from "../utils/roomModalMode";
+import { resolveModalMode, resolveStayMode, resolveStatusDisplayWithMasterData } from "../utils/roomModalMode";
 import { useMasterData } from "@/common/hooks/useMasterData";
 import type { Room, BookingState } from "@/types/room.types";
 
@@ -21,7 +21,7 @@ interface RoomDetailModalProps {
 
 export default function RoomDetailModal({ open, room, onClose }: RoomDetailModalProps) {
   const t = useTranslations("roomMap");
-  const { serviceItems } = useMasterData();
+  const { serviceItems, roomStatuses } = useMasterData();
 
 
   const mode      = room ? resolveModalMode(room) : "stay";
@@ -29,7 +29,7 @@ export default function RoomDetailModal({ open, room, onClose }: RoomDetailModal
   const booking   = room?.currentBooking ?? null;
   const bookingState: BookingState = booking?.bookingState ?? "none";
   const { label: statusLabel, color: statusColor } = room
-    ? resolveStatusDisplay(room)
+    ? resolveStatusDisplayWithMasterData(room, roomStatuses)
     : { label: "", color: "" };
 
   const {

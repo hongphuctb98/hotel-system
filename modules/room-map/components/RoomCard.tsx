@@ -3,8 +3,9 @@
 import { Card, Typography } from "antd";
 import StatusBadge from "@/common/components/ui/StatusBadge";
 import { useLocaleCurrency } from "@/common/hooks/useLocaleCurrency";
+import { useMasterData } from "@/common/hooks/useMasterData";
 import type { Room } from "@/types/room.types";
-import { resolveStatusDisplay } from "../utils/roomModalMode";
+import { resolveStatusDisplayWithMasterData } from "../utils/roomModalMode";
 
 interface RoomCardProps {
   room: Room;
@@ -13,7 +14,8 @@ interface RoomCardProps {
 
 export default function RoomCard({ room, onClick }: RoomCardProps) {
   const { formatDate } = useLocaleCurrency();
-  const { label, color } = resolveStatusDisplay(room);
+  const { roomStatuses } = useMasterData();
+  const { label, color } = resolveStatusDisplayWithMasterData(room, roomStatuses);
 
   return (
     <Card
