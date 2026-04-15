@@ -4,8 +4,11 @@ import { Form, Input, Select, DatePicker, AutoComplete, Button, Row, Col } from 
 import { useTranslations } from "next-intl";
 import { useState, useCallback, useRef } from "react";
 import type { FormInstance } from "antd";
+import type { Dayjs } from "dayjs";
 import { guestService } from "@/common/services/guestService";
 import type { Guest } from "@/types/guest.types";
+import { useTimezone } from "@/providers/TimezoneProvider";
+import { toHotelDayjs, fromHotelDayjs, todayInTimezone } from "@/common/utils/clientTimezone";
 
 interface GuestOption {
   value: string;
@@ -34,6 +37,7 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
   // When checkOutDateDisabled is explicitly provided it wins; otherwise inherit disabled.
   const coDisabled = checkOutDateDisabled !== undefined ? checkOutDateDisabled : !!disabled;
   const t = useTranslations("roomMap");
+  const tz = useTimezone();
   const [options, setOptions] = useState<GuestOption[]>([]);
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -151,12 +155,19 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
             label={t("checkInTime")}
             style={ITEM_STYLE}
             rules={[{ required: true, message: t("validation.required") }]}
+            getValueFromEvent={(d: Dayjs | null) => {
+              if (!d) return null;
+              // Re-interpret wall-clock time from picker as hotel timezone
+              const utcIso = fromHotelDayjs(d, tz);
+              return utcIso ? toHotelDayjs(utcIso, tz) : null;
+            }}
           >
             <DatePicker
               showTime={{ format: "HH:mm" }}
               format="DD/MM/YYYY HH:mm"
               style={{ width: "100%" }}
               disabled={disabled}
+              disabledDate={(d) => d.isBefore(todayInTimezone(tz))}
             />
           </Form.Item>
         </Col>
@@ -188,12 +199,18 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
                 },
               }),
             ]}
+            getValueFromEvent={(d: Dayjs | null) => {
+              if (!d) return null;
+              const utcIso = fromHotelDayjs(d, tz);
+              return utcIso ? toHotelDayjs(utcIso, tz) : null;
+            }}
           >
             <DatePicker
               showTime={{ format: "HH:mm" }}
               format="DD/MM/YYYY HH:mm"
               style={{ width: "100%" }}
               disabled={coDisabled}
+              disabledDate={(d) => d.isBefore(todayInTimezone(tz))}
             />
           </Form.Item>
         </Col>

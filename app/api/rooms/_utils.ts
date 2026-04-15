@@ -6,8 +6,8 @@ import { buildLocalDayBoundsUTC } from "@/common/utils/hotelDate";
  * `date` is a YYYY-MM-DD string in the hotel's local timezone.
  * Excludes CANCELLED / NO_SHOW. Picks the most-recently-created one if multiple overlap.
  */
-export function buildBookingInclude(date: string) {
-  const { start, end } = buildLocalDayBoundsUTC(date);
+export async function buildBookingInclude(date: string) {
+  const { start, end } = await buildLocalDayBoundsUTC(date);
   return {
     bookings: {
       where: {

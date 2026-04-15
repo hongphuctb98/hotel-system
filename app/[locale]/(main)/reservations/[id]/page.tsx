@@ -12,7 +12,8 @@ import {
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { use } from "react";
-import dayjs from "dayjs";
+import { useTimezone } from "@/providers/TimezoneProvider";
+import { formatInTimezone } from "@/common/utils/clientTimezone";
 import AppPageHeader from "@/common/components/ui/AppPageHeader";
 import AppCard from "@/common/components/ui/AppCard";
 import StatusBadge from "@/common/components/ui/StatusBadge";
@@ -34,6 +35,7 @@ export default function ReservationDetailPage({
   const router = useRouter();
   const { message } = App.useApp();
   const { data: booking, isLoading } = useReservation(id);
+  const tz = useTimezone();
   const { checkIn, checkOut, removeService } = useReservationActions(id);
   const addServiceModal = useDisclosure();
   const editModal = useDisclosure();
@@ -62,7 +64,7 @@ export default function ReservationDetailPage({
       key: "serviceDate",
       dataIndex: "serviceDate",
       title: t("billing.serviceDate"),
-      render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
+      render: (v: string) => formatInTimezone(v, tz, "DD/MM/YYYY"),
       width: 120,
     },
     {
@@ -182,20 +184,16 @@ export default function ReservationDetailPage({
                 {booking.room.number} · {booking.room.roomType.name}
               </Descriptions.Item>
               <Descriptions.Item label={t("booking.checkIn")}>
-                {dayjs(booking.checkInDate).format("DD/MM/YYYY")}
+                {formatInTimezone(booking.checkInDate, tz, "DD/MM/YYYY HH:mm")}
               </Descriptions.Item>
               <Descriptions.Item label={t("booking.checkOut")}>
-                {dayjs(booking.checkOutDate).format("DD/MM/YYYY")}
+                {formatInTimezone(booking.checkOutDate, tz, "DD/MM/YYYY HH:mm")}
               </Descriptions.Item>
               <Descriptions.Item label="Actual Check-in">
-                {booking.actualCheckIn
-                  ? dayjs(booking.actualCheckIn).format("DD/MM/YYYY HH:mm")
-                  : "—"}
+                {formatInTimezone(booking.actualCheckIn, tz, "DD/MM/YYYY HH:mm")}
               </Descriptions.Item>
               <Descriptions.Item label="Actual Check-out">
-                {booking.actualCheckOut
-                  ? dayjs(booking.actualCheckOut).format("DD/MM/YYYY HH:mm")
-                  : "—"}
+                {formatInTimezone(booking.actualCheckOut, tz, "DD/MM/YYYY HH:mm")}
               </Descriptions.Item>
               <Descriptions.Item label={t("booking.adults")}>
                 {booking.adults}

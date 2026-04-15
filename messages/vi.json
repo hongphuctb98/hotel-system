@@ -9,6 +9,7 @@
     "housekeeping": "Buồng phòng",
     "billing": "Dịch vụ & Hóa đơn",
     "staff": "Nhân viên",
+    "settings": "Cài đặt",
     "masterData": {
       "title": "Danh mục",
       "floors": "Tầng",
@@ -396,5 +397,13 @@
       "roomNotReady": "Phòng này chưa sẵn sàng để nhận khách.",
       "saveFailed": "Lưu thay đổi thất bại. Vui lòng thử lại."
     }
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "timezone": "Múi giờ khách sạn",
+    "timezoneHelp": "Tất cả ngày đặt phòng được hiển thị và nhập theo múi giờ này.",
+    "saveSuccess": "Đã lưu cài đặt.",
+    "saveError": "Lưu cài đặt thất bại. Vui lòng thử lại.",
+    "save": "Lưu cài đặt"
   }
 }

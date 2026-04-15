@@ -24,8 +24,8 @@ export async function GET(req: NextRequest) {
     if (filters.bookingStatusId) where.bookingStatusId = filters.bookingStatusId;
     if (filters.roomTypeId) where.room = { roomTypeId: filters.roomTypeId };
     if (filters.checkInFrom || filters.checkInTo) {
-      const fromBounds = filters.checkInFrom ? buildLocalDayBoundsUTC(filters.checkInFrom) : null;
-      const toBounds = filters.checkInTo ? buildLocalDayBoundsUTC(filters.checkInTo) : null;
+      const fromBounds = filters.checkInFrom ? await buildLocalDayBoundsUTC(filters.checkInFrom) : null;
+      const toBounds = filters.checkInTo ? await buildLocalDayBoundsUTC(filters.checkInTo) : null;
       where.checkInDate = {
         ...(fromBounds ? { gte: fromBounds.start } : {}),
         ...(toBounds ? { lte: toBounds.end } : {}),

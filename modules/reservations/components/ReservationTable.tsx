@@ -10,6 +10,8 @@ import StatusBadge from "@/common/components/ui/StatusBadge";
 import PriceDisplay from "@/common/components/ui/PriceDisplay";
 import { useReservations, type BookingFilters } from "../hooks/useReservations";
 import { useMasterData } from "@/common/hooks/useMasterData";
+import { useTimezone } from "@/providers/TimezoneProvider";
+import { formatInTimezone } from "@/common/utils/clientTimezone";
 import type { Booking } from "@/types/booking.types";
 
 interface ReservationTableProps {
@@ -26,6 +28,7 @@ export default function ReservationTable({
   const router = useRouter();
   const { data, isLoading, pagination } = useReservations(filters);
   const { bookingStatuses, roomTypes } = useMasterData();
+  const tz = useTimezone();
 
   function updateFilter(patch: Partial<BookingFilters>) {
     onFiltersChange({ ...filters, ...patch });
@@ -62,14 +65,14 @@ export default function ReservationTable({
       key: "checkInDate",
       dataIndex: "checkInDate",
       title: t("booking.checkIn"),
-      render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
+      render: (v: string) => formatInTimezone(v, tz, "DD/MM/YYYY"),
       width: 110,
     },
     {
       key: "checkOutDate",
       dataIndex: "checkOutDate",
       title: t("booking.checkOut"),
-      render: (v: string) => dayjs(v).format("DD/MM/YYYY"),
+      render: (v: string) => formatInTimezone(v, tz, "DD/MM/YYYY"),
       width: 110,
     },
     {

@@ -17,6 +17,7 @@ export const PERMISSIONS = {
   MASTER_DATA_MANAGE: "master_data:manage",
   STAFF_VIEW: "staff:view",
   STAFF_MANAGE: "staff:manage",
+  SETTINGS_MANAGE: "settings:manage",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

@@ -4,11 +4,11 @@ import { ok, notFound, serverError } from "@/lib/response";
 import { buildBookingInclude, roomBaseInclude, toRoomDTO } from "../_utils";
 import { hotelLocalDate } from "@/common/utils/hotelDate";
 
-function getRoomInclude(req: NextRequest) {
+async function getRoomInclude(req: NextRequest) {
   const date =
     req.nextUrl.searchParams.get("date") ??
-    hotelLocalDate();
-  return { ...roomBaseInclude, ...buildBookingInclude(date) };
+    await hotelLocalDate();
+  return { ...roomBaseInclude, ...await buildBookingInclude(date) };
 }
 
 export async function GET(
@@ -17,7 +17,7 @@ export async function GET(
 ) {
   try {
     const { id } = await props.params;
-    const include = getRoomInclude(req);
+    const include = await getRoomInclude(req);
     const room = await prisma.room.findUnique({ where: { id }, include });
     if (!room) return notFound();
     return ok(toRoomDTO(room));
@@ -33,7 +33,7 @@ export async function PUT(
   try {
     const { id } = await props.params;
     const body = await req.json();
-    const include = getRoomInclude(req);
+    const include = await getRoomInclude(req);
 
     await prisma.$transaction(async (tx) => {
       await tx.room.update({

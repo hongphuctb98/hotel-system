@@ -3,9 +3,10 @@
 import { useEffect } from "react";
 import { Form } from "antd";
 import { useQuery } from "@tanstack/react-query";
-import dayjs from "dayjs";
 import { bookingService } from "@/common/services/bookingService";
 import { calculateStayPrice, buildStayPriceInput, countNights } from "@/common/utils/stayPricing";
+import { useTimezone } from "@/providers/TimezoneProvider";
+import { toHotelDayjs } from "@/common/utils/clientTimezone";
 import type { Room } from "@/types/room.types";
 import type { ServiceItem } from "@/types/master.types";
 import type { StayMode, FormValues } from "../utils/roomModalMode";
@@ -24,6 +25,7 @@ export function useRoomModalForm(
 ) {
   const booking = room?.currentBooking ?? null;
   const pricing = room?.roomType?.pricing ?? null;
+  const tz = useTimezone();
 
   const [form] = Form.useForm<FormValues>();
 
@@ -149,8 +151,8 @@ export function useRoomModalForm(
         idNumber:         booking.guest.idNumber  ?? "",
         source:           booking.source          ?? "",
         chargeType:       (booking.chargeType     ?? "nightly") as "nightly" | "hourly" | "daily",
-        checkInDate:      dayjs(booking.checkInDate),
-        checkOutDate:     dayjs(booking.checkOutDate),
+        checkInDate:      toHotelDayjs(booking.checkInDate, tz) ?? undefined,
+        checkOutDate:     toHotelDayjs(booking.checkOutDate, tz) ?? undefined,
         baseRate:         Number(booking.baseRate ?? 0),
         hourlyBlockHours:  booking.hourlyBlockHours  ?? undefined,
         hourlyRatePerHour: booking.hourlyRatePerHour ?? undefined,

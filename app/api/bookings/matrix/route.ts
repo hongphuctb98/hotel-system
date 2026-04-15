@@ -13,8 +13,8 @@ export async function GET(req: NextRequest) {
     // a booking with checkInDate near UTC midnight is counted consistently.
     const where: Record<string, unknown> = {};
     if (checkInFrom || checkInTo) {
-      const fromBounds = checkInFrom ? buildLocalDayBoundsUTC(checkInFrom) : null;
-      const toBounds   = checkInTo   ? buildLocalDayBoundsUTC(checkInTo)   : null;
+      const fromBounds = checkInFrom ? await buildLocalDayBoundsUTC(checkInFrom) : null;
+      const toBounds   = checkInTo   ? await buildLocalDayBoundsUTC(checkInTo)   : null;
       where.checkInDate = {
         ...(fromBounds ? { gte: fromBounds.start } : {}),
         ...(toBounds   ? { lte: toBounds.end }     : {}),

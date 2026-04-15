@@ -449,6 +449,16 @@ async function main() {
     }
   }
 
+  // Hotel settings — seed timezone from env, default to Asia/Ho_Chi_Minh
+  await prisma.hotelSettings.upsert({
+    where: { id: "singleton" },
+    update: {},
+    create: {
+      id: "singleton",
+      timezone: process.env.HOTEL_TIMEZONE ?? "Asia/Ho_Chi_Minh",
+    },
+  });
+
   console.log("✅ Seed complete!");
 }
 

@@ -9,6 +9,7 @@
     "housekeeping": "Housekeeping",
     "billing": "Billing & Services",
     "staff": "Staff Management",
+    "settings": "Settings",
     "masterData": {
       "title": "Master Data",
       "floors": "Floors",
@@ -396,5 +397,13 @@
       "roomNotReady": "This room is not ready to receive guests.",
       "saveFailed": "Failed to save changes. Please try again."
     }
+  },
+  "settings": {
+    "title": "Settings",
+    "timezone": "Hotel Timezone",
+    "timezoneHelp": "All booking dates are interpreted and displayed in this timezone.",
+    "saveSuccess": "Settings saved.",
+    "saveError": "Failed to save settings. Please try again.",
+    "save": "Save Settings"
   }
 }

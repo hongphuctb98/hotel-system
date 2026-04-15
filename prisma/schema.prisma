@@ -377,3 +377,11 @@ model HousekeepingTask {
 
   @@map("housekeeping_tasks")
 }
+
+model HotelSettings {
+  id        String   @id @default("singleton")
+  timezone  String   @default("Asia/Ho_Chi_Minh")
+  updatedAt DateTime @updatedAt
+
+  @@map("hotel_settings")
+}

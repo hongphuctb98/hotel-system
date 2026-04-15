@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   try {
     const { page, limit, filters } = parseQueryParams(req.nextUrl.searchParams);
     const showInactive = req.nextUrl.searchParams.get("showInactive") === "true";
-    const date = req.nextUrl.searchParams.get("date") ?? hotelLocalDate();
+    const date = req.nextUrl.searchParams.get("date") ?? await hotelLocalDate();
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     if (filters.roomTypeId) where.roomTypeId = filters.roomTypeId;
     if (filters.statusId) where.roomStatusId = filters.statusId;
 
-    const roomInclude = { ...roomBaseInclude, ...buildBookingInclude(date) };
+    const roomInclude = { ...roomBaseInclude, ...await buildBookingInclude(date) };
 
     const [rooms, total] = await Promise.all([
       prisma.room.findMany({
@@ -56,8 +56,8 @@ export async function POST(req: NextRequest) {
       return conflict("A room with this number is already taken.", "ROOM_NUMBER_TAKEN");
     }
 
-    const today = hotelLocalDate();
-    const postInclude = { ...roomBaseInclude, ...buildBookingInclude(today) };
+    const today = await hotelLocalDate();
+    const postInclude = { ...roomBaseInclude, ...await buildBookingInclude(today) };
 
     const room = await prisma.room.create({
       data: {

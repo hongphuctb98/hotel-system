@@ -49,7 +49,7 @@ export default function RoomGrid({ rooms, loading, onRoomClick }: RoomGridProps)
           <Typography.Title level={5} className="!mb-0">
             {group.floorName}
           </Typography.Title>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6">
             {group.rooms.map((room) => (
               <RoomCard key={room.id} room={room} onClick={() => onRoomClick(room)} />
             ))}

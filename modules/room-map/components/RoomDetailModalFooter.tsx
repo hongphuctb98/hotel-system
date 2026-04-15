@@ -99,14 +99,18 @@ export default function RoomDetailModalFooter({
         </>
       )}
       {stayMode === "checked_out" && (
-        <Button loading={isCleaningRoom} onClick={onCleanRoom}>
+        <Button loading={isCleaningRoom} onClick={onCleanRoom}  color="orange" variant="outlined">
           {t("cleanRoom")}
         </Button>
       )}
       {stayMode !== "vacant" && (
-        <Button onClick={onViewReservation}>{t("viewReservation")}</Button>
+        <Button onClick={onViewReservation} variant="outlined" color="blue">
+          {t("viewReservation")}
+        </Button>
       )}
-      <Button onClick={onClose}>{t("close")}</Button>
+      <Button onClick={onClose} color="danger" variant="outlined">
+        {t("close")}
+      </Button>
     </Space>
   );
 }

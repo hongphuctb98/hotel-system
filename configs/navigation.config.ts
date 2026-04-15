@@ -74,6 +74,15 @@ export const navigationConfig: NavItem[] = [
     dividerBefore: true,
   },
   {
+    key: "settings",
+    labelKey: "nav.settings",
+    icon: undefined,
+    href: ROUTES.SETTINGS,
+    permission: PERMISSIONS.SETTINGS_MANAGE,
+    roles: ["ADMIN"],
+    dividerBefore: true,
+  },
+  {
     key: "master-data",
     labelKey: "nav.masterData.title",
     icon: undefined,

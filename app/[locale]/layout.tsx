@@ -3,6 +3,7 @@ import { getMessages } from "next-intl/server";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AntdProvider } from "@/providers/AntdProvider";
+import { TimezoneProvider } from "@/providers/TimezoneProvider";
 import "@/app/globals.css";
 import type { Metadata } from "next";
 
@@ -27,7 +28,9 @@ export default async function LocaleLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <QueryProvider>
             <ThemeProvider>
-              <AntdProvider>{children}</AntdProvider>
+              <AntdProvider>
+                <TimezoneProvider>{children}</TimezoneProvider>
+              </AntdProvider>
             </ThemeProvider>
           </QueryProvider>
         </NextIntlClientProvider>

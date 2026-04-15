@@ -22,6 +22,8 @@ import {
   IconIdBadge2,
   IconStairs,
   IconSparkles,
+  IconReportMoneyFilled,
+  IconClipboardList,
 } from "@tabler/icons-react";
 import { navigationConfig, type NavItem } from "@/configs/navigation.config";
 import { usePermission } from "@/common/hooks/usePermission";
@@ -36,7 +38,8 @@ const ICON_MAP: Record<string, React.ElementType> = {
   housekeeping: IconVacuumCleaner,
   billing: IconReceipt,
   staff: IconIdBadge2,
-  "master-data": IconSettings,
+  settings: IconSettings,
+  "master-data": IconClipboardList,
   "master-floors": IconStairs,
   "master-room-types": IconBed,
   "master-room-statuses": IconLayersLinked,
@@ -45,6 +48,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   "master-service-items": IconToolsKitchen2,
   "master-guest-types": IconUserStar,
   "master-amenities": IconSparkles,
+  "master-room-type-pricing": IconReportMoneyFilled,
 };
 
 function buildMenuItems(

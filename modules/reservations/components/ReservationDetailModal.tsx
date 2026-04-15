@@ -5,7 +5,8 @@ import { Modal, Descriptions, Spin, Tag, Button, App } from "antd";
 import { IconEdit, IconX, IconExternalLink } from "@tabler/icons-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
-import dayjs from "dayjs";
+import { useTimezone } from "@/providers/TimezoneProvider";
+import { formatInTimezone, toHotelDayjs } from "@/common/utils/clientTimezone";
 import StatusBadge from "@/common/components/ui/StatusBadge";
 import PriceDisplay from "@/common/components/ui/PriceDisplay";
 import { useReservation } from "../hooks/useReservation";
@@ -34,6 +35,7 @@ export default function ReservationDetailModal({
   const { data: booking, isLoading } = useReservation(bookingId ?? "");
   const cancel = useCancelBooking(bookingId ?? "");
   const { bookingStatuses } = useMasterData();
+  const tz = useTimezone();
 
   const cancelledStatus = bookingStatuses.find((s) => s.code === "CANCELLED");
   const canCancel =
@@ -41,7 +43,7 @@ export default function ReservationDetailModal({
     booking?.bookingStatus.code === "CONFIRMED";
 
   const nights = booking
-    ? dayjs(booking.checkOutDate).diff(dayjs(booking.checkInDate), "day") || 1
+    ? toHotelDayjs(booking.checkOutDate, tz)!.diff(toHotelDayjs(booking.checkInDate, tz)!, "day") || 1
     : 0;
 
   const paymentStatusTag = (() => {
@@ -136,10 +138,10 @@ export default function ReservationDetailModal({
               {booking.room.floor.name}
             </Descriptions.Item>
             <Descriptions.Item label={t("booking.checkIn")}>
-              {dayjs(booking.checkInDate).format("DD/MM/YYYY")}
+              {formatInTimezone(booking.checkInDate, tz, "DD/MM/YYYY HH:mm")}
             </Descriptions.Item>
             <Descriptions.Item label={t("booking.checkOut")}>
-              {dayjs(booking.checkOutDate).format("DD/MM/YYYY")}
+              {formatInTimezone(booking.checkOutDate, tz, "DD/MM/YYYY HH:mm")}
             </Descriptions.Item>
             <Descriptions.Item label={t("booking.nights")}>
               {nights}
