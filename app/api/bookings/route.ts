@@ -5,6 +5,7 @@ import { parseQueryParams } from "@/common/utils/queryParams";
 import { buildLocalDayBoundsUTC } from "@/common/utils/hotelDate";
 import { generateBookingNumber } from "@/common/utils/bookingNumber";
 import { generateInvoiceNumber } from "@/common/utils/invoiceNumber";
+import { writeAudit } from "@/lib/audit";
 
 const bookingInclude = {
   guest: { include: { guestType: true } },
@@ -23,6 +24,7 @@ export async function GET(req: NextRequest) {
 
     const where: Record<string, unknown> = {};
     if (filters.bookingStatusId) where.bookingStatusId = filters.bookingStatusId;
+    if (filters.roomId)         where.roomId           = filters.roomId;
     if (filters.roomTypeId) where.room = { roomTypeId: filters.roomTypeId };
     if (filters.checkInFrom || filters.checkInTo) {
       const fromBounds = filters.checkInFrom ? await buildLocalDayBoundsUTC(filters.checkInFrom) : null;
@@ -201,6 +203,20 @@ export async function POST(req: NextRequest) {
         },
       });
     }
+
+    await writeAudit({
+      action:     "CREATE",
+      entityType: "BOOKING",
+      entityId:   booking.id,
+      roomId:     booking.roomId,
+      newValues: {
+        bookingNumber: booking.bookingNumber,
+        checkInDate:   booking.checkInDate,
+        checkOutDate:  booking.checkOutDate,
+        chargeType:    booking.chargeType,
+        baseRate:      String(booking.baseRate),
+      },
+    });
 
     return created(booking);
   } catch (e) {

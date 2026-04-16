@@ -18,6 +18,7 @@ export const PERMISSIONS = {
   STAFF_VIEW: "staff:view",
   STAFF_MANAGE: "staff:manage",
   SETTINGS_MANAGE: "settings:manage",
+  AUDIT_LOG_VIEW: "audit_log:view",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -42,6 +43,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.MASTER_DATA_VIEW,
     PERMISSIONS.MASTER_DATA_MANAGE,
     PERMISSIONS.STAFF_VIEW,
+    PERMISSIONS.AUDIT_LOG_VIEW,
   ],
   RECEPTIONIST: [
     PERMISSIONS.DASHBOARD_VIEW,

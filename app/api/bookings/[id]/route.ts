@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ok, notFound, badRequest, serverError } from "@/lib/response";
+import { writeAudit } from "@/lib/audit";
 
 const bookingInclude = {
   guest: { include: { guestType: true } },
@@ -47,6 +48,18 @@ export async function PUT(
       }
     }
 
+    // Capture tracked fields before update so we can diff them
+    const TRACKED = [
+      "bookingStatusId", "roomId", "checkInDate", "checkOutDate",
+      "baseRate", "chargeType", "discountAmount", "surchargeAmount",
+      "depositAmount", "hourlyBlockHours", "hourlyRatePerHour", "source", "note",
+    ] as const;
+
+    const prev = await prisma.booking.findUnique({
+      where: { id },
+      select: Object.fromEntries(TRACKED.map((f) => [f, true])) as Record<typeof TRACKED[number], true>,
+    });
+
     const booking = await prisma.booking.update({
       where: { id },
       data: {
@@ -66,6 +79,35 @@ export async function PUT(
       },
       include: bookingInclude,
     });
+
+    // Build old/new diff — only include fields that actually changed
+    if (prev) {
+      const oldValues: Record<string, unknown> = {};
+      const newValues: Record<string, unknown> = {};
+
+      for (const field of TRACKED) {
+        if (body[field] === undefined) continue;
+        const oldVal = prev[field];
+        const newVal = booking[field as keyof typeof booking];
+        const oldStr = oldVal instanceof Date ? oldVal.toISOString() : String(oldVal ?? "");
+        const newStr = newVal instanceof Date ? (newVal as Date).toISOString() : String(newVal ?? "");
+        if (oldStr !== newStr) {
+          oldValues[field] = oldVal instanceof Date ? oldVal.toISOString() : oldVal;
+          newValues[field] = newVal instanceof Date ? (newVal as Date).toISOString() : newVal;
+        }
+      }
+
+      if (Object.keys(newValues).length > 0) {
+        await writeAudit({
+          action:     "UPDATE",
+          entityType: "BOOKING",
+          entityId:   id,
+          roomId:     booking.roomId,
+          oldValues,
+          newValues,
+        });
+      }
+    }
 
     return ok(booking);
   } catch (e) {

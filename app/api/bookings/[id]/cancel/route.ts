@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ok, notFound, badRequest, serverError } from "@/lib/response";
+import { writeAudit } from "@/lib/audit";
 
 const OPERATIONAL_LOCK_CODES = new Set(["CLEANING", "MAINTENANCE", "OUT_OF_SERVICE"]);
 
@@ -51,6 +52,13 @@ export async function POST(
           ]
         : []),
     ]);
+
+    await writeAudit({
+      action:     "CANCEL",
+      entityType: "BOOKING",
+      entityId:   id,
+      roomId:     booking.roomId,
+    });
 
     return ok({ cancelled: true });
   } catch (e) {

@@ -1,7 +1,9 @@
 export const ROUTES = {
   DASHBOARD: "/dashboard",
+  HISTORY: "/history",
   ROOM_MAP: "/room-map",
   ROOMS: "/rooms",
+  ROOM_HISTORY: (id: string) => `/rooms/${id}/history`,
   RESERVATIONS: "/reservations",
   GUESTS: "/guests",
   HOUSEKEEPING: "/housekeeping",

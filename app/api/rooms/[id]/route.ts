@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ok, notFound, serverError } from "@/lib/response";
 import { buildBookingInclude, roomBaseInclude, toRoomDTO } from "../_utils";
 import { hotelLocalDate } from "@/common/utils/hotelDate";
+import { writeAudit } from "@/lib/audit";
 
 async function getRoomInclude(req: NextRequest) {
   const date =
@@ -35,6 +36,11 @@ export async function PUT(
     const body = await req.json();
     const include = await getRoomInclude(req);
 
+    // Capture previous roomStatusId before update (for audit)
+    const prevRoom = body.roomStatusId
+      ? await prisma.room.findUnique({ where: { id }, select: { roomStatusId: true } })
+      : null;
+
     await prisma.$transaction(async (tx) => {
       await tx.room.update({
         where: { id },
@@ -59,6 +65,17 @@ export async function PUT(
         }
       }
     }, { maxWait: 10000, timeout: 15000 });
+
+    if (body.roomStatusId && prevRoom && prevRoom.roomStatusId !== body.roomStatusId) {
+      await writeAudit({
+        action:     "UPDATE",
+        entityType: "ROOM",
+        entityId:   id,
+        roomId:     id,
+        oldValues:  { roomStatusId: prevRoom.roomStatusId },
+        newValues:  { roomStatusId: body.roomStatusId },
+      });
+    }
 
     const room = await prisma.room.findUnique({ where: { id }, include });
     if (!room) return notFound();

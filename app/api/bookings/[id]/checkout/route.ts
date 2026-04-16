@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ok, notFound, badRequest, serverError } from "@/lib/response";
 import { generateInvoiceNumber } from "@/common/utils/invoiceNumber";
+import { writeAudit } from "@/lib/audit";
 
 export async function POST(
   _req: NextRequest,
@@ -95,6 +96,13 @@ export async function POST(
         data: { roomStatusId: occupiedRoomStatus.id },
       });
     }
+
+    await writeAudit({
+      action:     "CHECK_OUT",
+      entityType: "BOOKING",
+      entityId:   id,
+      roomId:     booking.roomId,
+    });
 
     return ok({ booking: updatedBooking, invoice });
   } catch (e) {

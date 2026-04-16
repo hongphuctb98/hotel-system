@@ -5,8 +5,9 @@ import { apiClient } from "@/common/services/apiClient";
 
 export type DashboardStats = {
   periodRevenue: number;
-  scheduledTodayRevenue: number;
-  revenueChangePercent: number | null;
+  todayPaidRevenue: number;
+  todayExpectedRevenue: number;
+  todayRevenuePercent: number | null;
   occupancyRate: number;
   currentGuests: number;
   roomsNeedCleaning: number;

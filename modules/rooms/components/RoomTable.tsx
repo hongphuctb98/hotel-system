@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { App, Button, Select, Space, Switch, Tag } from "antd";
-import { IconEdit, IconPlus, IconPower, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconHistory, IconPlus, IconPower, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import AppTable from "@/common/components/ui/AppTable";
 import StatusBadge from "@/common/components/ui/StatusBadge";
 import PriceDisplay from "@/common/components/ui/PriceDisplay";
@@ -15,6 +16,7 @@ import { useAuthRole } from "@/providers/AuthRoleProvider";
 import { useRooms } from "../hooks/useRooms";
 import { useDeleteRoom } from "../hooks/useRoomMutations";
 import RoomFormDrawer from "./RoomFormDrawer";
+import { ROUTES } from "@/common/constants/routes";
 import type { Room } from "@/types/room.types";
 
 export default function RoomTable() {
@@ -26,6 +28,7 @@ export default function RoomTable() {
   const deleteRoom = useDeleteRoom();
   const { confirm } = useConfirm();
 
+  const router = useRouter();
   const { hasPermission } = usePermission(role);
   const canManage = hasPermission(PERMISSIONS.ROOMS_MANAGE);
 
@@ -118,6 +121,13 @@ export default function RoomTable() {
       width: 100,
       render: (_: unknown, r: Room) => (
         <Space size={4}>
+          <Button
+            type="text"
+            size="small"
+            icon={<IconHistory size={14} />}
+            title={t("room.viewHistory")}
+            onClick={() => router.push(ROUTES.ROOM_HISTORY(r.id))}
+          />
           {canManage && (
             <Button
               type="text"

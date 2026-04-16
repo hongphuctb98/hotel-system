@@ -22,19 +22,13 @@ export async function GET(req: NextRequest) {
     const periodStartStr = dayjs.tz(todayStr, tz).subtract(period - 1, "day").format("YYYY-MM-DD");
     const { start: periodStart } = await buildLocalDayBoundsUTC(periodStartStr);
 
-    // Previous equivalent period bounds
-    const prevPeriodStartStr = dayjs.tz(todayStr, tz).subtract(2 * period - 1, "day").format("YYYY-MM-DD");
-    const prevPeriodEndStr = dayjs.tz(todayStr, tz).subtract(period, "day").format("YYYY-MM-DD");
-    const { start: prevPeriodStart } = await buildLocalDayBoundsUTC(prevPeriodStartStr);
-    const { end: prevPeriodEnd } = await buildLocalDayBoundsUTC(prevPeriodEndStr);
-
     const [
       totalRooms,
       occupiedBookings,
       cleaningRooms,
       periodPayments,
-      prevPeriodPaymentSum,
-      scheduledTodayInvoices,
+      todayCheckoutsPaid,
+      todayCheckoutsExpected,
       roomStatuses,
       todayArrivalsRaw,
       todayDeparturesRaw,
@@ -57,18 +51,23 @@ export async function GET(req: NextRequest) {
         where: { paidAt: { gte: periodStart, lte: todayEnd } },
         select: { paidAt: true, amount: true },
       }),
-      // Previous equivalent period total (for % change)
-      prisma.payment.aggregate({
-        where: { paidAt: { gte: prevPeriodStart, lte: prevPeriodEnd } },
-        _sum: { amount: true },
-      }),
-      // Unpaid invoices for today's expected checkouts (scheduled revenue)
+      // Today's checkout revenue — already paid (invoice.isPaid = true)
       prisma.invoice.aggregate({
         where: {
-          isPaid: false,
+          isPaid: true,
           booking: {
-            checkOutDate: { gte: todayStart, lt: todayEnd },
-            bookingStatus: { code: "CHECKED_IN" },
+            checkOutDate: { gte: todayStart, lte: todayEnd },
+            bookingStatus: { code: { in: ["CHECKED_IN", "CHECKED_OUT"] } },
+          },
+        },
+        _sum: { totalAmount: true },
+      }),
+      // Today's checkout revenue — total expected (all active checkouts today)
+      prisma.invoice.aggregate({
+        where: {
+          booking: {
+            checkOutDate: { gte: todayStart, lte: todayEnd },
+            bookingStatus: { code: { in: ["CHECKED_IN", "CHECKED_OUT"] } },
           },
         },
         _sum: { totalAmount: true },
@@ -122,15 +121,16 @@ export async function GET(req: NextRequest) {
       revenueByDay.push({ date: dateStr, revenue: revenueMap[dateStr] ?? 0 });
     }
 
-    // Period revenue totals
+    // Period revenue total (used by chart)
     const periodRevenue = periodPayments.reduce((sum, p) => sum + Number(p.amount), 0);
-    const prevPeriodRevenue = Number(prevPeriodPaymentSum._sum.amount ?? 0);
-    const revenueChangePercent =
-      prevPeriodRevenue > 0
-        ? Math.round(((periodRevenue - prevPeriodRevenue) / prevPeriodRevenue) * 1000) / 10
-        : null;
 
-    const scheduledTodayRevenue = Number(scheduledTodayInvoices._sum.totalAmount ?? 0);
+    // Today's checkout payment KPI
+    const todayPaidRevenue     = Number(todayCheckoutsPaid._sum.totalAmount     ?? 0);
+    const todayExpectedRevenue = Number(todayCheckoutsExpected._sum.totalAmount ?? 0);
+    const todayRevenuePercent  =
+      todayExpectedRevenue > 0
+        ? Math.round((todayPaidRevenue / todayExpectedRevenue) * 1000) / 10
+        : null;
 
     // Room status counts
     const roomStatusCounts = roomStatuses.map((rs) => ({
@@ -152,8 +152,9 @@ export async function GET(req: NextRequest) {
 
     return ok({
       periodRevenue,
-      scheduledTodayRevenue,
-      revenueChangePercent,
+      todayPaidRevenue,
+      todayExpectedRevenue,
+      todayRevenuePercent,
       occupancyRate,
       currentGuests: occupiedBookings,
       roomsNeedCleaning: cleaningRooms,

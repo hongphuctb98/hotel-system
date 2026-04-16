@@ -10,6 +10,7 @@
     "billing": "Billing & Services",
     "staff": "Staff Management",
     "settings": "Settings",
+    "history": "Activity Log",
     "masterData": {
       "title": "Master Data",
       "floors": "Floors",
@@ -44,7 +45,12 @@
     "noData": "No data",
     "total": "Total {total} items",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "timestamp": "Timestamp",
+    "action": "Action",
+    "entityType": "Entity Type",
+    "summary": "Summary",
+    "actor": "Actor"
   },
   "header": {
     "profile": "My Profile",
@@ -163,7 +169,11 @@
     "basePricePlaceholder": "Leave blank to use room type default",
     "uploadHint": "Upload images (JPG, PNG)",
     "imageDeleteSuccess": "Image deleted successfully",
-    "imageDeleteFailed": "Failed to delete image"
+    "imageDeleteFailed": "Failed to delete image",
+    "roomHistory": "Room History",
+    "roomHistoryTitle": "Activity History — Room {number}",
+    "viewHistory": "View History",
+    "noAuditHistory": "No activity recorded for this room yet. History is available from the point this feature was enabled."
   },
   "guest": {
     "firstName": "First Name",
@@ -192,6 +202,16 @@
     "dirty": "Dirty",
     "maintenance": "Maintenance",
     "inspection": "Inspection"
+  },
+  "history": {
+    "title": "Activity Log",
+    "filterAction": "Action",
+    "filterEntityType": "Entity Type",
+    "filterDateFrom": "From date",
+    "filterDateTo": "To date",
+    "allActions": "All actions",
+    "allEntityTypes": "All entity types",
+    "noHistory": "No activity records found"
   },
   "billing": {
     "title": "Billing & Services",

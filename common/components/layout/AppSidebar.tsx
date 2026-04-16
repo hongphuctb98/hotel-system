@@ -24,6 +24,7 @@ import {
   IconSparkles,
   IconReportMoneyFilled,
   IconClipboardList,
+  IconActivityHeartbeat,
 } from "@tabler/icons-react";
 import { navigationConfig, type NavItem } from "@/configs/navigation.config";
 import { usePermission } from "@/common/hooks/usePermission";
@@ -49,6 +50,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   "master-guest-types": IconUserStar,
   "master-amenities": IconSparkles,
   "master-room-type-pricing": IconReportMoneyFilled,
+  history: IconActivityHeartbeat,
 };
 
 function buildMenuItems(

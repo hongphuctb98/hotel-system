@@ -10,6 +10,7 @@
     "billing": "Dịch vụ & Hóa đơn",
     "staff": "Nhân viên",
     "settings": "Cài đặt",
+    "history": "Nhật ký hoạt động",
     "masterData": {
       "title": "Danh mục",
       "floors": "Tầng",
@@ -44,7 +45,12 @@
     "noData": "Không có dữ liệu",
     "total": "Tổng {total} mục",
     "yes": "Có",
-    "no": "Không"
+    "no": "Không",
+    "timestamp": "Thời gian",
+    "action": "Hành động",
+    "entityType": "Loại",
+    "summary": "Tóm tắt",
+    "actor": "Người thực hiện"
   },
   "header": {
     "profile": "Hồ sơ",
@@ -163,7 +169,11 @@
     "basePricePlaceholder": "Để trống để dùng giá mặc định của loại phòng",
     "uploadHint": "Tải ảnh lên (JPG, PNG)",
     "imageDeleteSuccess": "Xóa ảnh thành công",
-    "imageDeleteFailed": "Xóa ảnh thất bại"
+    "imageDeleteFailed": "Xóa ảnh thất bại",
+    "roomHistory": "Lịch sử phòng",
+    "roomHistoryTitle": "Lịch sử hoạt động — Phòng {number}",
+    "viewHistory": "Xem lịch sử",
+    "noAuditHistory": "Chưa có hoạt động nào được ghi nhận cho phòng này. Lịch sử chỉ khả dụng từ thời điểm tính năng này được kích hoạt."
   },
   "guest": {
     "firstName": "Tên",
@@ -192,6 +202,16 @@
     "dirty": "Bẩn",
     "maintenance": "Bảo trì",
     "inspection": "Kiểm tra"
+  },
+  "history": {
+    "title": "Nhật ký hoạt động",
+    "filterAction": "Hành động",
+    "filterEntityType": "Loại",
+    "filterDateFrom": "Từ ngày",
+    "filterDateTo": "Đến ngày",
+    "allActions": "Tất cả hành động",
+    "allEntityTypes": "Tất cả loại",
+    "noHistory": "Không tìm thấy bản ghi hoạt động nào"
   },
   "billing": {
     "title": "Dịch vụ & Hóa đơn",

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ok, notFound, badRequest, serverError } from "@/lib/response";
+import { writeAudit } from "@/lib/audit";
 
 const invoiceInclude = {
   booking: {
@@ -73,6 +74,13 @@ export async function POST(
           data: { isPaid: true },
         });
       }
+
+      await writeAudit({
+        action:     "PAYMENT",
+        entityType: "PAYMENT",
+        entityId:   payment.id,
+        newValues:  { amount: String(payment.amount), paymentMethodId: payment.paymentMethodId },
+      });
 
       const updated = await prisma.invoice.findUnique({
         where: { id },
