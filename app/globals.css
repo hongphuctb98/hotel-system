@@ -30,3 +30,15 @@ body {
 .ant-layout-header {
   border-bottom: 1px solid var(--border-color) !important;
 }
+
+/* Print: hide app chrome regardless of className forwarding */
+@media print {
+  .ant-layout-sider,
+  .ant-layout-header {
+    display: none !important;
+  }
+
+  .ant-layout {
+    margin-left: 0 !important;
+  }
+}

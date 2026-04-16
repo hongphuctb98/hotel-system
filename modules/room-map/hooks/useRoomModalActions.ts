@@ -172,10 +172,12 @@ export function useRoomModalActions({
         baseRate:          raw.baseRate,
         discountAmount:    raw.discount       ?? 0,
         surchargeAmount:   raw.surcharge      ?? 0,
-        depositAmount:     Number(raw.prepaid ?? 0),
         hourlyBlockHours:  raw.hourlyBlockHours  ?? null,
         hourlyRatePerHour: raw.hourlyRatePerHour ?? null,
       };
+      if (!booking?.hasDepositPayment) {
+        updates.depositAmount = Number(raw.prepaid ?? 0);
+      }
       if (raw.checkOutDate)         updates.checkOutDate = raw.checkOutDate.toISOString();
       if (raw.note !== undefined)   updates.note         = raw.note;
       await bookingService.update(booking.id, updates);
@@ -218,11 +220,13 @@ export function useRoomModalActions({
         baseRate:          values.baseRate,
         discountAmount:    values.discount       ?? 0,
         surchargeAmount:   values.surcharge      ?? 0,
-        depositAmount:     Number(values.prepaid ?? 0),
         source:            values.source         ?? null,
         hourlyBlockHours:  values.hourlyBlockHours  ?? null,
         hourlyRatePerHour: values.hourlyRatePerHour ?? null,
       };
+      if (!booking?.hasDepositPayment) {
+        updates.depositAmount = Number(values.prepaid ?? 0);
+      }
       if (values.checkInDate)        updates.checkInDate  = values.checkInDate.toISOString();
       if (values.checkOutDate)       updates.checkOutDate = values.checkOutDate.toISOString();
       if (values.note !== undefined) updates.note         = values.note;

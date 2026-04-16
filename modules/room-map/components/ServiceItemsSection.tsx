@@ -27,6 +27,7 @@ interface ServiceItemsSectionProps {
   prepaid: number;
   hoursStayed?: number;
   disabled?: boolean;
+  prepaidDisabled?: boolean;
 }
 
 export default function ServiceItemsSection({
@@ -43,6 +44,7 @@ export default function ServiceItemsSection({
   remaining,
   hoursStayed,
   disabled,
+  prepaidDisabled,
 }: ServiceItemsSectionProps) {
   const t = useTranslations("roomMap");
 
@@ -212,7 +214,7 @@ export default function ServiceItemsSection({
             <span style={{ fontSize: 12, color: "#595959", whiteSpace: "nowrap" }}>{t("prepaid")}</span>
             <Space.Compact size="small">
               <Form.Item name="prepaid" noStyle>
-                <InputNumber min={0} style={{ width: 90 }} disabled={disabled} />
+                <InputNumber min={0} style={{ width: 90 }} disabled={disabled || prepaidDisabled} />
               </Form.Item>
               <Input value="₫" readOnly style={{ width: 32, textAlign: "center", color: "#8c8c8c", cursor: "default" }} />
             </Space.Compact>

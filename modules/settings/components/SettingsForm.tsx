@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { App, Button, Card, Form, Select, Typography } from "antd";
+import { useEffect, useState } from "react";
+import { App, Button, Card, Divider, Form, Input, Select, Typography } from "antd";
 import { useTranslations } from "next-intl";
-import { useTimezone } from "@/providers/TimezoneProvider";
-import { settingsService } from "@/common/services/settingsService";
+import { useQueryClient } from "@tanstack/react-query";
+import { useHotelSettings } from "@/common/hooks/useHotelSettings";
+import { apiClient } from "@/common/services/apiClient";
 
 const { Text } = Typography;
 
-// Curated list of common IANA timezones
 const TIMEZONE_OPTIONS = [
   { label: "UTC+0 — UTC",                       value: "UTC" },
   { label: "UTC+1 — Europe/London",              value: "Europe/London" },
@@ -25,7 +25,7 @@ const TIMEZONE_OPTIONS = [
   { label: "UTC+5:30 — Asia/Kolkata",            value: "Asia/Kolkata" },
   { label: "UTC+5:45 — Asia/Kathmandu",          value: "Asia/Kathmandu" },
   { label: "UTC+6 — Asia/Dhaka",                 value: "Asia/Dhaka" },
-  { label: "UTC+6:30 — Asia/Yangon",             value: "Asia/Yangon" },
+  { label: "UTC+6:30 — Asia/Rangoon",            value: "Asia/Rangoon" },
   { label: "UTC+7 — Asia/Bangkok",               value: "Asia/Bangkok" },
   { label: "UTC+7 — Asia/Ho_Chi_Minh",           value: "Asia/Ho_Chi_Minh" },
   { label: "UTC+7 — Asia/Jakarta",               value: "Asia/Jakarta" },
@@ -42,32 +42,58 @@ const TIMEZONE_OPTIONS = [
   { label: "UTC+12 — Pacific/Auckland",          value: "Pacific/Auckland" },
   { label: "UTC-3 — America/Sao_Paulo",          value: "America/Sao_Paulo" },
   { label: "UTC-4 — America/New_York (EDT)",     value: "America/New_York" },
-  { label: "UTC-5 — America/New_York (EST)",     value: "America/New_York" },
   { label: "UTC-5 — America/Chicago",            value: "America/Chicago" },
-  { label: "UTC-6 — America/Mexico_City",        value: "America/Mexico_City" },
   { label: "UTC-7 — America/Denver",             value: "America/Denver" },
   { label: "UTC-8 — America/Los_Angeles",        value: "America/Los_Angeles" },
   { label: "UTC-9 — America/Anchorage",          value: "America/Anchorage" },
   { label: "UTC-10 — Pacific/Honolulu",          value: "Pacific/Honolulu" },
-].filter(
-  // Deduplicate by value (e.g. New_York listed twice for EST/EDT note — keep first)
-  (opt, idx, arr) => arr.findIndex((o) => o.value === opt.value) === idx
-);
+].filter((opt, idx, arr) => arr.findIndex((o) => o.value === opt.value) === idx);
 
-export default function TimezoneSettingsCard() {
+
+interface FormValues {
+  hotelName: string;
+  address: string;
+  phone: string;
+  email: string;
+  timezone: string;
+}
+
+export default function SettingsForm() {
   const t = useTranslations("settings");
   const { message } = App.useApp();
-  const currentTimezone = useTimezone();
-  const [selected, setSelected] = useState<string>(currentTimezone);
+  const queryClient = useQueryClient();
+  const [form] = Form.useForm<FormValues>();
   const [saving, setSaving] = useState(false);
+  const { data: settings } = useHotelSettings();
+
+  useEffect(() => {
+    if (!settings) return;
+    form.setFieldsValue({
+      hotelName: settings.hotelName ?? "",
+      address:   settings.address   ?? "",
+      phone:     settings.phone     ?? "",
+      email:     settings.email     ?? "",
+      timezone:  settings.timezone,
+    });
+  }, [settings, form]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await settingsService.updateSettings(selected);
+      const values = await form.validateFields();
+      await apiClient.put("/api/settings", {
+        timezone:  values.timezone,
+        hotelName: values.hotelName || null,
+        address:   values.address   || null,
+        phone:     values.phone     || null,
+        email:     values.email     || null,
+      });
+      queryClient.invalidateQueries({ queryKey: ["hotel-settings"] });
       message.success(t("saveSuccess"));
-    } catch {
-      message.error(t("saveError"));
+    } catch (e) {
+      if (e instanceof Error) {
+        message.error(t("saveError"));
+      }
     } finally {
       setSaving(false);
     }
@@ -75,15 +101,41 @@ export default function TimezoneSettingsCard() {
 
   return (
     <Card variant="outlined">
-      <Form layout="vertical">
+      <Form form={form} layout="vertical">
+        {/* Hotel Information */}
+        <div className="mb-1">
+          <Text strong className="text-base">{t("hotelInfo")}</Text>
+          <div>
+            <Text type="secondary" className="text-sm">{t("hotelInfoHelp")}</Text>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 mt-4">
+          <Form.Item name="hotelName" label={t("hotelName")}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="phone" label={t("phone")}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="email" label={t("email")}>
+            <Input />
+          </Form.Item>
+        </div>
+        <Form.Item name="address" label={t("address")}>
+          <Input.TextArea rows={2} style={{ maxWidth: 840 }} />
+        </Form.Item>
+
+        <Divider />
+
+        {/* Timezone */}
         <Form.Item
+          name="timezone"
           label={<Text strong>{t("timezone")}</Text>}
           extra={<Text type="secondary">{t("timezoneHelp")}</Text>}
+          rules={[{ required: true }]}
         >
           <Select
             showSearch
-            value={selected}
-            onChange={setSelected}
             options={TIMEZONE_OPTIONS}
             filterOption={(input, option) =>
               (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
@@ -91,6 +143,7 @@ export default function TimezoneSettingsCard() {
             style={{ maxWidth: 400 }}
           />
         </Form.Item>
+
         <Button type="primary" loading={saving} onClick={handleSave}>
           {t("save")}
         </Button>

@@ -15,11 +15,33 @@ const invoiceInclude = {
 
 export async function GET(req: NextRequest) {
   try {
-    const { page, limit, filters } = parseQueryParams(req.nextUrl.searchParams);
+    const { page, limit, search, filters } = parseQueryParams(req.nextUrl.searchParams);
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
+
     if (filters.isPaid !== undefined) where.isPaid = filters.isPaid === "true";
+
+    if (filters.issuedFrom || filters.issuedTo) {
+      where.issuedAt = {
+        ...(filters.issuedFrom ? { gte: new Date(filters.issuedFrom) } : {}),
+        ...(filters.issuedTo
+          ? { lte: new Date(new Date(filters.issuedTo).getTime() + 86_400_000 - 1) }
+          : {}),
+      };
+    }
+
+    if (filters.roomNumber) {
+      where.booking = { room: { number: { contains: filters.roomNumber, mode: "insensitive" } } };
+    }
+
+    if (search) {
+      where.OR = [
+        { invoiceNumber: { contains: search, mode: "insensitive" } },
+        { booking: { guest: { firstName: { contains: search, mode: "insensitive" } } } },
+        { booking: { guest: { lastName:  { contains: search, mode: "insensitive" } } } },
+      ];
+    }
 
     const [invoices, total] = await Promise.all([
       prisma.invoice.findMany({

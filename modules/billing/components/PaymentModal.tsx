@@ -38,7 +38,7 @@ export default function PaymentModal({
     try {
       const values = await form.validateFields();
       await pay.mutateAsync(values);
-      message.success("Payment recorded");
+      message.success(t("billing.paymentRecorded"));
       form.resetFields();
       onClose();
     } catch (e) {
@@ -82,7 +82,7 @@ export default function PaymentModal({
         </Form.Item>
         <Form.Item
           name="amount"
-          label="Amount"
+          label={t("billing.amount")}
           rules={[{ required: true, type: "number", min: 0.01 }]}
         >
           <InputNumber<number>
@@ -93,7 +93,7 @@ export default function PaymentModal({
             parser={(value) => parseNumberInput(value)}
           />
         </Form.Item>
-        <Form.Item name="reference" label="Reference / Note">
+        <Form.Item name="reference" label={t("billing.referenceNote")}>
           <Input placeholder="e.g. transaction ID" />
         </Form.Item>
       </Form>

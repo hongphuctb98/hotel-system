@@ -27,6 +27,9 @@ export async function buildBookingInclude(date: string) {
           },
         },
         bookingStatus: { select: { id: true, code: true, name: true, color: true } },
+        invoices: {
+          select: { payments: { take: 1, select: { id: true } } },
+        },
       },
     },
   };
@@ -65,11 +68,15 @@ export function toRoomDTO(room: any) {
     return { ...rest, currentBooking: null };
   }
   const {
-    guest, bookingStatus,
+    guest, bookingStatus, invoices,
     baseRate, depositAmount, discountAmount, surchargeAmount,
     hourlyRatePerHour,
     ...bookingRest
   } = booking;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const hasDepositPayment = (invoices ?? []).some((inv: any) => inv.payments.length > 0);
+
   return {
     ...rest,
     currentBooking: {
@@ -80,6 +87,7 @@ export function toRoomDTO(room: any) {
       surchargeAmount:   surchargeAmount   != null ? Number(surchargeAmount)   : null,
       hourlyRatePerHour: hourlyRatePerHour != null ? Number(hourlyRatePerHour) : null,
       paymentMethodId: null,
+      hasDepositPayment,
       guest,
       bookingStatus,
       bookingState: deriveBookingState(booking),

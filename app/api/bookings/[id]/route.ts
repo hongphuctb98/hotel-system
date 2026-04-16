@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ok, notFound, serverError } from "@/lib/response";
+import { ok, notFound, badRequest, serverError } from "@/lib/response";
 
 const bookingInclude = {
   guest: { include: { guestType: true } },
@@ -31,6 +31,22 @@ export async function PUT(
   try {
     const { id } = await props.params;
     const body = await req.json();
+
+    // Guard: depositAmount is locked once any payment has been recorded
+    if (body.depositAmount !== undefined) {
+      const invoices = await prisma.invoice.findMany({
+        where: { bookingId: id },
+        select: { payments: { take: 1, select: { id: true } } },
+      });
+      const hasPayments = invoices.some((inv) => inv.payments.length > 0);
+      if (hasPayments) {
+        return badRequest(
+          "Deposit amount cannot be changed after a payment has been recorded.",
+          "DEPOSIT_LOCKED"
+        );
+      }
+    }
+
     const booking = await prisma.booking.update({
       where: { id },
       data: {

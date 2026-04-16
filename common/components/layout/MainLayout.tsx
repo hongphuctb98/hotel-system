@@ -31,6 +31,7 @@ export default function MainLayout({
           collapsedWidth={64}
           theme="light"
           trigger={null}
+          className="print:hidden"
           style={{
             position: "fixed",
             left: 0,
@@ -51,6 +52,7 @@ export default function MainLayout({
           }}
         >
           <Header
+            className="print:hidden"
             style={{
               position: "sticky",
               top: 0,

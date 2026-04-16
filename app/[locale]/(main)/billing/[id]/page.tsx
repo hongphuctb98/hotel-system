@@ -8,9 +8,11 @@ import { use } from "react";
 import AppPageHeader from "@/common/components/ui/AppPageHeader";
 import AppCard from "@/common/components/ui/AppCard";
 import { useInvoice } from "@/modules/billing/hooks/useInvoice";
+import { useHotelSettings } from "@/common/hooks/useHotelSettings";
 import { useDisclosure } from "@/common/hooks/useDisclosure";
 import { useLocaleCurrency } from "@/common/hooks/useLocaleCurrency";
 import PaymentModal from "@/modules/billing/components/PaymentModal";
+import InvoicePrintTemplate from "@/modules/billing/components/InvoicePrintTemplate";
 import type { Payment } from "@/types/booking.types";
 import type { BookingService } from "@/types/booking.types";
 
@@ -24,6 +26,7 @@ export default function InvoiceDetailPage({
   const locale = useLocale();
   const router = useRouter();
   const { data: invoice, isLoading } = useInvoice(id);
+  const { data: hotelSettings } = useHotelSettings();
   const payModal = useDisclosure();
   const { format, formatDate, formatDateTime } = useLocaleCurrency();
 
@@ -49,25 +52,25 @@ export default function InvoiceDetailPage({
     {
       key: "paidAt",
       dataIndex: "paidAt",
-      title: "Date",
+      title: t("billing.issuedAt"),
       render: (v: string) => formatDateTime(v),
       width: 160,
     },
     {
       key: "method",
-      title: "Method",
+      title: t("billing.methodLabel"),
       render: (_: unknown, r: Payment) => r.paymentMethod.name,
     },
     {
       key: "reference",
       dataIndex: "reference",
-      title: "Reference",
+      title: t("billing.reference"),
       render: (v: string | null) => v ?? "—",
     },
     {
       key: "amount",
       dataIndex: "amount",
-      title: "Amount",
+      title: t("billing.amount"),
       render: (v: number) => format(v),
       width: 130,
       align: "right" as const,
@@ -77,26 +80,26 @@ export default function InvoiceDetailPage({
   const serviceColumns = [
     {
       key: "name",
-      title: "Description",
+      title: t("billing.description"),
       render: (_: unknown, r: BookingService) => r.serviceItem.name,
     },
     {
       key: "serviceDate",
       dataIndex: "serviceDate",
-      title: "Date",
+      title: t("billing.issuedAt"),
       render: (v: string) => formatDate(v),
       width: 110,
     },
     {
       key: "quantity",
       dataIndex: "quantity",
-      title: "Qty",
+      title: t("billing.qty"),
       width: 60,
     },
     {
       key: "unitPrice",
       dataIndex: "unitPrice",
-      title: "Unit Price",
+      title: t("billing.unitPrice"),
       render: (v: number) => format(v),
       width: 120,
       align: "right" as const,
@@ -104,7 +107,7 @@ export default function InvoiceDetailPage({
     {
       key: "totalPrice",
       dataIndex: "totalPrice",
-      title: "Total",
+      title: t("billing.total"),
       render: (v: number) => format(v),
       width: 120,
       align: "right" as const,
@@ -113,51 +116,55 @@ export default function InvoiceDetailPage({
 
   return (
     <div className="space-y-4">
-      <AppPageHeader
-        title={`Invoice #${invoice.invoiceNumber}`}
-        translateTitle={false}
-        extra={
-          <div className="flex gap-2">
-            <Button
-              icon={<IconArrowLeft size={16} />}
-              onClick={() => router.push(`/${locale}/billing`)}
-            >
-              Back
-            </Button>
-            <Button icon={<IconPrinter size={16} />} onClick={() => window.print()}>
-              {t("billing.print")}
-            </Button>
-            {!invoice.isPaid && outstanding > 0 && (
+      {/* Screen-only chrome: header + action buttons */}
+      <div className="print:hidden">
+        <AppPageHeader
+          title={`Invoice #${invoice.invoiceNumber}`}
+          translateTitle={false}
+          extra={
+            <div className="flex gap-2">
               <Button
-                type="primary"
-                icon={<IconCreditCard size={16} />}
-                onClick={payModal.open}
+                icon={<IconArrowLeft size={16} />}
+                onClick={() => router.push(`/${locale}/billing`)}
               >
-                {t("billing.payNow")}
+                {t("billing.back")}
               </Button>
-            )}
-          </div>
-        }
-      />
+              <Button icon={<IconPrinter size={16} />} onClick={() => window.print()}>
+                {t("billing.print")}
+              </Button>
+              {!invoice.isPaid && outstanding > 0 && (
+                <Button
+                  type="primary"
+                  icon={<IconCreditCard size={16} />}
+                  onClick={payModal.open}
+                >
+                  {t("billing.payNow")}
+                </Button>
+              )}
+            </div>
+          }
+        />
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* Screen layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 print:hidden">
         <div className="lg:col-span-2 space-y-4">
-          <AppCard title="Invoice Details">
+          <AppCard title={t("billing.invoiceDetails")}>
             <Descriptions column={2} size="small">
-              <Descriptions.Item label="Invoice #">
+              <Descriptions.Item label={t("billing.invoiceNumber")}>
                 {invoice.invoiceNumber}
               </Descriptions.Item>
-              <Descriptions.Item label="Status">
+              <Descriptions.Item label={t("common.status")}>
                 <Tag color={invoice.isPaid ? "success" : "warning"}>
                   {invoice.isPaid ? t("billing.paid") : t("billing.unpaid")}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="Issued">
+              <Descriptions.Item label={t("billing.issuedAt")}>
                 {formatDateTime(invoice.issuedAt)}
               </Descriptions.Item>
               {booking && (
                 <>
-                  <Descriptions.Item label="Booking #">
+                  <Descriptions.Item label={t("booking.bookingNumber")}>
                     <Button
                       type="link"
                       size="small"
@@ -169,13 +176,13 @@ export default function InvoiceDetailPage({
                       {booking.bookingNumber}
                     </Button>
                   </Descriptions.Item>
-                  <Descriptions.Item label="Guest">
+                  <Descriptions.Item label={t("booking.guest")}>
                     {booking.guest.firstName} {booking.guest.lastName}
                   </Descriptions.Item>
-                  <Descriptions.Item label="Room">
+                  <Descriptions.Item label={t("booking.room")}>
                     {booking.room.number} · {booking.room.roomType.name}
                   </Descriptions.Item>
-                  <Descriptions.Item label="Stay">
+                  <Descriptions.Item label={t("billing.stay")}>
                     {formatDate(booking.checkInDate)} →{" "}
                     {formatDate(booking.checkOutDate)}
                   </Descriptions.Item>
@@ -185,7 +192,7 @@ export default function InvoiceDetailPage({
           </AppCard>
 
           {booking?.services && booking.services.length > 0 && (
-            <AppCard title="Services">
+            <AppCard title={t("booking.servicesSection")}>
               <Table
                 columns={serviceColumns}
                 dataSource={booking.services}
@@ -196,9 +203,9 @@ export default function InvoiceDetailPage({
             </AppCard>
           )}
 
-          <AppCard title="Payment History">
+          <AppCard title={t("billing.paymentHistory")}>
             {invoice.payments.length === 0 ? (
-              <p className="text-gray-400 text-sm">No payments recorded yet.</p>
+              <p className="text-gray-400 text-sm">{t("billing.noPayments")}</p>
             ) : (
               <Table
                 columns={paymentColumns}
@@ -212,7 +219,7 @@ export default function InvoiceDetailPage({
         </div>
 
         <div className="space-y-4">
-          <AppCard title="Summary">
+          <AppCard title={t("billing.summary")}>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>{t("billing.subtotal")}</span>
@@ -234,12 +241,12 @@ export default function InvoiceDetailPage({
                 <span>{format(Number(invoice.totalAmount))}</span>
               </div>
               <div className="flex justify-between text-green-600">
-                <span>Paid</span>
+                <span>{t("billing.paid")}</span>
                 <span>{format(totalPaid)}</span>
               </div>
               {outstanding > 0 && (
                 <div className="flex justify-between font-semibold text-red-500 border-t pt-2">
-                  <span>Outstanding</span>
+                  <span>{t("billing.outstanding")}</span>
                   <span>{format(outstanding)}</span>
                 </div>
               )}
@@ -259,6 +266,9 @@ export default function InvoiceDetailPage({
           </AppCard>
         </div>
       </div>
+
+      {/* Print-only template */}
+      <InvoicePrintTemplate invoice={invoice} hotelSettings={hotelSettings} />
 
       <PaymentModal
         invoiceId={id}

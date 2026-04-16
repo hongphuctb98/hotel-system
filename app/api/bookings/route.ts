@@ -4,6 +4,7 @@ import { ok, created, badRequest, conflict, serverError } from "@/lib/response";
 import { parseQueryParams } from "@/common/utils/queryParams";
 import { buildLocalDayBoundsUTC } from "@/common/utils/hotelDate";
 import { generateBookingNumber } from "@/common/utils/bookingNumber";
+import { generateInvoiceNumber } from "@/common/utils/invoiceNumber";
 
 const bookingInclude = {
   guest: { include: { guestType: true } },
@@ -190,6 +191,7 @@ export async function POST(req: NextRequest) {
       const invoiceTotal = subtotal - discountAmount;
       const invoice = await prisma.invoice.create({
         data: {
+          invoiceNumber:  await generateInvoiceNumber(prisma),
           bookingId:      booking.id,
           subtotal,
           taxAmount:      0,

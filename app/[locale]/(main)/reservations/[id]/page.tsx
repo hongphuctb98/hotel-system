@@ -122,7 +122,7 @@ export default function ReservationDetailPage({
   return (
     <div className="space-y-4">
       <AppPageHeader
-        title={booking.bookingNumber}
+        title={`${t("booking.bookingNumber")} #${booking.bookingNumber}`}
         translateTitle={false}
         extra={
           <div className="flex gap-2">

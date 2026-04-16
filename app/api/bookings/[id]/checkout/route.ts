@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ok, notFound, badRequest, serverError } from "@/lib/response";
+import { generateInvoiceNumber } from "@/common/utils/invoiceNumber";
 
 export async function POST(
   _req: NextRequest,
@@ -63,7 +64,14 @@ export async function POST(
           data: { subtotal, taxAmount, discountAmount: discount, totalAmount, isPaid: paidSoFar >= totalAmount },
         })
       : await prisma.invoice.create({
-          data: { bookingId: id, subtotal, taxAmount, discountAmount: discount, totalAmount },
+          data: {
+            invoiceNumber: await generateInvoiceNumber(prisma),
+            bookingId: id,
+            subtotal,
+            taxAmount,
+            discountAmount: discount,
+            totalAmount,
+          },
         });
 
     const updatedBooking = await prisma.booking.update({

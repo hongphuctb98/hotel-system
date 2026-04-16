@@ -23,7 +23,7 @@ export default function AppPageHeader({
     <div className="flex items-center justify-between mb-6">
       <div>
         <Typography.Title level={4} style={{ margin: 0 }}>
-          {displayTitle}
+         {displayTitle}
         </Typography.Title>
         {subtitle && (
           <Typography.Text type="secondary" className="text-sm">

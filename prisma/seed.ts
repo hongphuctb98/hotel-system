@@ -429,6 +429,7 @@ async function main() {
     if (!existingInvoice) {
       const invoice = await prisma.invoice.create({
         data: {
+          invoiceNumber: "INV-20260416-0001",
           bookingId: bk204.id,
           subtotal: 3600000,
           taxAmount: 360000,

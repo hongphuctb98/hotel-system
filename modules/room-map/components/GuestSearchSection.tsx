@@ -167,7 +167,7 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
               format="DD/MM/YYYY HH:mm"
               style={{ width: "100%" }}
               disabled={disabled}
-              disabledDate={(d) => d.isBefore(todayInTimezone(tz))}
+              disabledDate={(d) => d.isBefore(todayInTimezone(tz), "day")}
             />
           </Form.Item>
         </Col>
@@ -210,7 +210,7 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
               format="DD/MM/YYYY HH:mm"
               style={{ width: "100%" }}
               disabled={coDisabled}
-              disabledDate={(d) => d.isBefore(todayInTimezone(tz))}
+              disabledDate={(d) => d.isBefore(todayInTimezone(tz), "day")}
             />
           </Form.Item>
         </Col>
