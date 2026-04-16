@@ -4,29 +4,23 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/common/services/apiClient";
 
 export type DashboardStats = {
-  todayRevenue: number;
+  periodRevenue: number;
+  scheduledTodayRevenue: number;
+  revenueChangePercent: number | null;
   occupancyRate: number;
   currentGuests: number;
   roomsNeedCleaning: number;
-  weeklyRevenue: { date: string; revenue: number }[];
-  upcomingCheckIns: {
-    id: string;
-    guestName: string;
-    roomNumber: string;
-    checkInDate: string;
-  }[];
-  upcomingCheckOuts: {
-    id: string;
-    guestName: string;
-    roomNumber: string;
-    checkOutDate: string;
-  }[];
+  revenueByDay: { date: string; revenue: number }[];
+  roomStatusCounts: { code: string; name: string; color: string; count: number }[];
+  todayArrivals: { id: string; guestName: string; roomNumber: string; scheduledTime: string }[];
+  todayDepartures: { id: string; guestName: string; roomNumber: string; scheduledTime: string }[];
+  housekeepingCounts: { pending: number; inProgress: number; completedToday: number };
 };
 
-export function useDashboardStats() {
+export function useDashboardStats(period: "7d" | "30d" = "7d") {
   return useQuery({
-    queryKey: ["dashboard", "stats"],
-    queryFn: () => apiClient.get<DashboardStats>("/api/dashboard/stats"),
+    queryKey: ["dashboard", "stats", period],
+    queryFn: () => apiClient.get<DashboardStats>(`/api/dashboard/stats?period=${period}`),
     refetchInterval: 1000 * 60 * 5,
   });
 }

@@ -1,11 +1,13 @@
 "use client";
 
-import { Form, Select, InputNumber, Input, Button } from "antd";
+import { useEffect } from "react";
+import { App, Form, Select, InputNumber, Input, Button } from "antd";
 import AppModal from "@/common/components/ui/AppModal";
 import { useMasterData } from "@/common/hooks/useMasterData";
 import { useInvoiceActions } from "@/modules/billing/hooks/useInvoice";
 import { useTranslations } from "next-intl";
 import { useLocaleCurrency } from "@/common/hooks/useLocaleCurrency";
+import { formatNumberInput, parseNumberInput } from "@/common/utils/numberInput";
 
 interface PaymentModalProps {
   invoiceId: string;
@@ -21,16 +23,30 @@ export default function PaymentModal({
   onClose,
 }: PaymentModalProps) {
   const t = useTranslations();
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const { paymentMethods } = useMasterData();
   const { pay } = useInvoiceActions(invoiceId);
   const { format } = useLocaleCurrency();
 
+  useEffect(() => {
+    if (!open) return;
+    form.setFieldsValue({ amount: outstanding });
+  }, [open, outstanding, form]);
+
   const handleSubmit = async () => {
-    const values = await form.validateFields();
-    await pay.mutateAsync(values);
-    form.resetFields();
-    onClose();
+    try {
+      const values = await form.validateFields();
+      await pay.mutateAsync(values);
+      message.success("Payment recorded");
+      form.resetFields();
+      onClose();
+    } catch (e) {
+      if (e instanceof Error) {
+        message.error(e.message);
+      }
+      // Ant Design validation rejection is a plain object — field errors are shown inline, nothing to display
+    }
   };
 
   return (
@@ -53,7 +69,7 @@ export default function PaymentModal({
       <Form form={form} layout="vertical" initialValues={{ amount: outstanding }}>
         <Form.Item
           name="paymentMethodId"
-          label={t("billing.invoiceNumber").replace("#", "Method")}
+          label={t("billing.paymentMethod").replace("#", "Method")}
           rules={[{ required: true }]}
         >
           <Select
@@ -69,7 +85,13 @@ export default function PaymentModal({
           label="Amount"
           rules={[{ required: true, type: "number", min: 0.01 }]}
         >
-          <InputNumber className="w-full" min={0} precision={2} />
+          <InputNumber<number>
+            className="w-full"
+            min={0}
+            style={{ width: "100%" }}
+            formatter={(value) => formatNumberInput(value, {})}
+            parser={(value) => parseNumberInput(value)}
+          />
         </Form.Item>
         <Form.Item name="reference" label="Reference / Note">
           <Input placeholder="e.g. transaction ID" />

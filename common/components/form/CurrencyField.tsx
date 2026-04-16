@@ -5,6 +5,7 @@ import type { FormItemProps } from "antd";
 import { useTranslations, useLocale } from "next-intl";
 import { LOCALE_CONFIG } from "@/common/constants/locale.config";
 import type { AppLocale } from "@/common/constants/locale.config";
+import { formatNumberInput, parseNumberInput } from "@/common/utils/numberInput";
 
 interface CurrencyFieldProps extends FormItemProps {
   disabled?: boolean;
@@ -26,14 +27,13 @@ export default function CurrencyField({
 
   return (
     <Form.Item label={displayLabel} {...props}>
-      <InputNumber
+      <InputNumber<number>
         disabled={disabled}
         style={{ width: "100%" }}
         formatter={(value) =>
-          value
-            ? `${config.currency} ${Number(value).toLocaleString(config.locale)}`
-            : ""
+          formatNumberInput(value, { prefix: config.currency })
         }
+        parser={(value) => parseNumberInput(value)}
         min={0}
         step={locale === "vi" ? 1000 : 1}
       />

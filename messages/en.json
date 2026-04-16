@@ -61,13 +61,24 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "revenue": "Today's Revenue",
+    "revenue": "Revenue",
     "occupancyRate": "Occupancy Rate",
     "currentGuests": "Current Guests",
     "needsCleaning": "Needs Cleaning",
-    "weeklyRevenue": "Weekly Revenue",
-    "upcomingCheckIn": "Upcoming Check-ins",
-    "upcomingCheckOut": "Upcoming Check-outs"
+    "revenueChart": "Revenue",
+    "period7d": "7 days",
+    "period30d": "30 days",
+    "roomStatus": "Room Status",
+    "totalRooms": "Total Active Rooms",
+    "arrivals": "Today's Arrivals",
+    "departures": "Today's Departures",
+    "room": "Room",
+    "housekeeping": "Housekeeping",
+    "pending": "Pending",
+    "inProgress": "In Progress",
+    "completedToday": "Completed Today",
+    "viewAll": "View All",
+    "scheduledToday": "Scheduled today"
   },
   "booking": {
     "create": "New Booking",
@@ -185,6 +196,7 @@
   "billing": {
     "title": "Billing & Services",
     "invoiceNumber": "Invoice #",
+    "paymentMethod": "Payment Method",
     "subtotal": "Subtotal",
     "tax": "Tax",
     "discount": "Discount",

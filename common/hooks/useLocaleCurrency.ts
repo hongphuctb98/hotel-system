@@ -8,8 +8,8 @@ import { LOCALE_CONFIG } from "@/common/constants/locale.config";
 import type { AppLocale } from "@/common/constants/locale.config";
 
 export function useLocaleCurrency() {
-  const locale = useLocale() as AppLocale;
-  const config = LOCALE_CONFIG[locale] ?? LOCALE_CONFIG.en;
+  const appLocale = useLocale() as AppLocale;
+  const config = LOCALE_CONFIG[appLocale] ?? LOCALE_CONFIG.en;
 
   dayjs.locale(config.dayjsLocale);
 
@@ -17,7 +17,7 @@ export function useLocaleCurrency() {
     new Intl.NumberFormat(config.locale, {
       style: "currency",
       currency: config.currency,
-      minimumFractionDigits: locale === "vi" ? 0 : 2,
+      minimumFractionDigits: appLocale === "vi" ? 0 : 2,
     }).format(amount);
 
   const formatDate = (date: string | Date | null | undefined, fmt = "DD/MM/YYYY") => {
@@ -30,5 +30,12 @@ export function useLocaleCurrency() {
     return dayjs(date).locale(config.dayjsLocale).format("DD/MM/YYYY HH:mm");
   };
 
-  return { format, formatDate, formatDateTime, currency: config.currency, locale };
+  return {
+    format,
+    formatDate,
+    formatDateTime,
+    currency: config.currency,
+    appLocale,
+    numberLocale: config.locale,
+  };
 }

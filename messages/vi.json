@@ -61,13 +61,24 @@
   },
   "dashboard": {
     "title": "Tổng quan",
-    "revenue": "Doanh thu hôm nay",
+    "revenue": "Doanh thu",
     "occupancyRate": "Tỷ lệ lấp đầy",
     "currentGuests": "Khách đang lưu trú",
     "needsCleaning": "Phòng cần dọn",
-    "weeklyRevenue": "Doanh thu tuần",
-    "upcomingCheckIn": "Sắp nhận phòng",
-    "upcomingCheckOut": "Sắp trả phòng"
+    "revenueChart": "Doanh thu",
+    "period7d": "7 ngày",
+    "period30d": "30 ngày",
+    "roomStatus": "Trạng thái phòng",
+    "totalRooms": "Tổng phòng hoạt động",
+    "arrivals": "Nhận phòng hôm nay",
+    "departures": "Trả phòng hôm nay",
+    "room": "Phòng",
+    "housekeeping": "Buồng phòng",
+    "pending": "Chờ xử lý",
+    "inProgress": "Đang xử lý",
+    "completedToday": "Hoàn thành hôm nay",
+    "viewAll": "Xem tất cả",
+    "scheduledToday": "Dự thu hôm nay"
   },
   "booking": {
     "create": "Tạo đặt phòng",
@@ -185,6 +196,7 @@
   "billing": {
     "title": "Dịch vụ & Hóa đơn",
     "invoiceNumber": "Số hóa đơn",
+    "paymentMethod": "Phương thức thanh toán",
     "subtotal": "Tạm tính",
     "tax": "Thuế",
     "discount": "Giảm giá",

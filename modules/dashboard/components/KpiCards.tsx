@@ -6,6 +6,7 @@ import {
   IconUsers,
   IconVacuumCleaner,
 } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 import AppStatisticCard from "@/common/components/ui/AppStatisticCard";
 import { useDashboardStats } from "../hooks/useDashboardStats";
 import { useLocaleCurrency } from "@/common/hooks/useLocaleCurrency";
@@ -14,13 +15,19 @@ export default function KpiCards() {
   const { data, isLoading } = useDashboardStats();
   const stats = data?.data;
   const { format } = useLocaleCurrency();
+  const t = useTranslations("dashboard");
 
   const cards = [
     {
       title: "dashboard.revenue",
-      value: format(stats?.todayRevenue ?? 0),
+      value: format(stats?.periodRevenue ?? 0),
       icon: <IconCurrencyDollar size={22} />,
       color: "#52c41a",
+      secondaryText:
+        stats?.scheduledTodayRevenue != null && stats.scheduledTodayRevenue > 0
+          ? `${t("scheduledToday")}: ${format(stats.scheduledTodayRevenue)}`
+          : undefined,
+      changePercent: stats?.revenueChangePercent,
     },
     {
       title: "dashboard.occupancyRate",
