@@ -183,28 +183,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── Record deposit payment ─────────────────────────────────────────────
-    // If a deposit was collected up-front with a payment method, create an
-    // Invoice (with the discount applied) and a matching Payment record.
-    if (depositAmount > 0 && body.paymentMethodId) {
-      const subtotal    = roomTotal + surchargeAmount;
-      const invoiceTotal = subtotal - discountAmount;
-      const invoice = await prisma.invoice.create({
+    // ── Create invoice ────────────────────────────────────────────────────
+    // Every booking gets an invoice immediately, unpaid. Initial amounts are
+    // estimates (no tax, no services yet); they are finalized at checkout.
+    // All actual payments are recorded later through the Billing flow.
+    {
+      const subtotal = roomTotal + surchargeAmount;
+      await prisma.invoice.create({
         data: {
-          invoiceNumber:  await generateInvoiceNumber(prisma),
-          bookingId:      booking.id,
+          invoiceNumber: await generateInvoiceNumber(prisma),
+          bookingId:     booking.id,
           subtotal,
-          taxAmount:      0,
+          taxAmount:     0,
           discountAmount,
-          totalAmount:    invoiceTotal,
-          isPaid:         depositAmount >= invoiceTotal,
-        },
-      });
-      await prisma.payment.create({
-        data: {
-          invoiceId:       invoice.id,
-          paymentMethodId: body.paymentMethodId,
-          amount:          depositAmount,
+          totalAmount:   subtotal - discountAmount,
+          isPaid:        false,
         },
       });
     }

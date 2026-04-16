@@ -160,7 +160,6 @@ export function useRoomModalForm(
         discount:         booking.discountAmount  ?? 0,
         surcharge:        booking.surchargeAmount ?? 0,
         prepaid:          Number(booking.depositAmount ?? 0),
-        paymentMethodId:  booking.paymentMethodId ?? undefined,
         services: persistedServices.map(s => ({
           id:            s.id,
           serviceItemId: s.serviceItemId,

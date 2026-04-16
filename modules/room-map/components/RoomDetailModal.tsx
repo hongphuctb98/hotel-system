@@ -12,7 +12,6 @@ import { useRoomModalActions } from "../hooks/useRoomModalActions";
 import { resolveModalMode, resolveStayMode, resolveStatusDisplayWithMasterData } from "../utils/roomModalMode";
 import { useMasterData } from "@/common/hooks/useMasterData";
 import type { Room, BookingState } from "@/types/room.types";
-import PaymentSummarySection from "./PaymentSummarySection";
 
 interface RoomDetailModalProps {
   open: boolean;
@@ -22,7 +21,7 @@ interface RoomDetailModalProps {
 
 export default function RoomDetailModal({ open, room, onClose }: RoomDetailModalProps) {
   const t = useTranslations("roomMap");
-  const { serviceItems, roomStatuses, paymentMethods } = useMasterData();
+  const { serviceItems, roomStatuses } = useMasterData();
 
 
   const mode      = room ? resolveModalMode(room) : "stay";
@@ -191,14 +190,6 @@ export default function RoomDetailModal({ open, room, onClose }: RoomDetailModal
             hoursStayed={hoursStayed}
             disabled={servicesDisabled}
             prepaidDisabled={room?.currentBooking?.hasDepositPayment ?? false}
-          />
-
-          <SectionHeader title={t("payment")} style={{ marginTop: 12 }} />
-          <PaymentSummarySection
-            paymentMethods={paymentMethods}
-            totalPayable={totalPayable}
-            prepaid={prepaid}
-            remaining={remaining}
           />
 
           <SectionHeader title={t("note")} style={{ marginTop: 10 }} />

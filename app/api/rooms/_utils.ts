@@ -1,6 +1,8 @@
 import type { BookingState } from "@/types/room.types";
 import { buildLocalDayBoundsUTC } from "@/common/utils/hotelDate";
 
+const STALE_CHECKED_OUT_ROOM_STATUS_CODES = new Set(["AVAILABLE", "RESERVED"]);
+
 /**
  * Prisma `include` that attaches the one booking overlapping `date` to a room.
  * `date` is a YYYY-MM-DD string in the hotel's local timezone.
@@ -59,12 +61,13 @@ export function toRoomDTO(room: any) {
   if (!booking) return { ...rest, currentBooking: null };
 
   // A CHECKED_OUT booking on an AVAILABLE room is a stale same-day record from a
-  // completed stay. The room has been cleaned and is ready for the next guest — suppress
-  // the old booking so the room renders as a fresh available room everywhere (card body,
-  // modal form, stay-mode derivation). A new booking for this room will have a more
-  // recent createdAt and will replace this record when it is created.
+  // completed stay. The same stale record must also stay suppressed when a future
+  // reservation has already moved the current room status to RESERVED; that future
+  // reservation should affect only its own date, not resurrect a checked-out stay on
+  // previous dates. Keep CHECKED_OUT only while the room is still in its post-checkout
+  // operational flow (for example OCCUPIED before cleaning is queued).
   const bookingState = deriveBookingState(booking);
-  if (bookingState === "checked_out" && rest.roomStatus?.code === "AVAILABLE") {
+  if (bookingState === "checked_out" && STALE_CHECKED_OUT_ROOM_STATUS_CODES.has(rest.roomStatus?.code)) {
     return { ...rest, currentBooking: null };
   }
   const {

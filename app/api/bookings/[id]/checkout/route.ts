@@ -50,9 +50,10 @@ export async function POST(
     const taxAmount      = subtotal * 0.1;
     const totalAmount    = subtotal + taxAmount - discount;
 
-    // ── Create or update invoice ──────────────────────────────────────────
-    // An invoice may already exist if a deposit payment was recorded at booking
-    // creation. In that case, update it with final amounts (preserving payments).
+    // ── Finalize invoice ──────────────────────────────────────────────────
+    // Every booking now has an invoice from creation. Update it with final
+    // amounts (services included, 10% tax applied). A fallback create handles
+    // legacy bookings that pre-date the always-create rule.
     const existingInvoice = booking.invoices[0] ?? null;
     const paidSoFar = existingInvoice
       ? existingInvoice.payments.reduce((s, p) => s + Number(p.amount), 0)

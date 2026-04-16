@@ -89,11 +89,9 @@ export function useRoomModalActions({
     }
   };
 
-  /** RESERVED: cancel the booking. */
+  /** RESERVED: cancel the booking and reset room to AVAILABLE. */
   const handleCancelBooking = () => {
     if (!booking) return;
-    const cancelledStatus = bookingStatuses.find((s) => s.code === "CANCELLED");
-    if (!cancelledStatus) return;
     confirm({
       title:   t("cancelBookingTitle"),
       content: t("cancelBookingContent"),
@@ -101,7 +99,7 @@ export function useRoomModalActions({
       onOk: async () => {
         setIsCancellingBooking(true);
         try {
-          await bookingService.update(booking.id, { bookingStatusId: cancelledStatus.id });
+          await bookingService.cancel(booking.id);
           queryClient.invalidateQueries({ queryKey: ["room-map"] });
           message.success(t("cancelBookingSuccess"));
           onClose();

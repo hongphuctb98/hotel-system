@@ -27,6 +27,8 @@ export const bookingService = {
     apiClient.post<Booking>("/api/bookings", data),
   update: (id: string, data: Partial<Booking>): Promise<ApiResponse<Booking>> =>
     apiClient.put<Booking>(`/api/bookings/${id}`, data),
+  cancel: (id: string): Promise<ApiResponse<{ cancelled: boolean }>> =>
+    apiClient.post<{ cancelled: boolean }>(`/api/bookings/${id}/cancel`, {}),
   checkIn: (id: string): Promise<ApiResponse<Booking>> =>
     apiClient.post<Booking>(`/api/bookings/${id}/checkin`, {}),
   checkOut: (id: string): Promise<ApiResponse<{ booking: Booking; invoice: unknown }>> =>

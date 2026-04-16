@@ -84,7 +84,6 @@ export function useCheckInFlow(room: Room | null, onSuccess: () => void) {
           chargeType:        values.chargeType     ?? "nightly",
           hourlyBlockHours:  values.hourlyBlockHours,
           hourlyRatePerHour: values.hourlyRatePerHour,
-          paymentMethodId:   values.paymentMethodId,
           source:            values.source,
           note:              values.note || undefined,
         });

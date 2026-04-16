@@ -22,6 +22,5 @@ export type CheckInFormValues = {
   discount: number;
   surcharge: number;
   prepaid: number;
-  paymentMethodId?: string;
   note?: string;
 };
