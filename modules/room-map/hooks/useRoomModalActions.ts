@@ -40,7 +40,7 @@ export function useRoomModalActions({
   const { message }  = App.useApp();
   const { confirm }  = useConfirm();
 
-  const { serviceItems, roomStatuses, bookingStatuses } = useMasterData();
+  const { serviceItems, roomStatuses } = useMasterData();
   const booking = room?.currentBooking ?? null;
 
   const [isSavingStay,         setIsSavingStay]         = useState(false);
@@ -64,8 +64,8 @@ export function useRoomModalActions({
       queryClient.invalidateQueries({ queryKey: ["room-map"] });
       message.success(t("markAvailableSuccess"));
       onClose();
-    } catch {
-      message.error(t("checkInFailed"));
+    } catch (err) {
+      message.error(getApiErrorMessage(err, t("checkInFailed")));
     } finally {
       setIsMarkingAvailable(false);
     }
@@ -82,8 +82,8 @@ export function useRoomModalActions({
       queryClient.invalidateQueries({ queryKey: ["room-map"] });
       message.success(t("cleanRoomSuccess"));
       onClose();
-    } catch {
-      message.error(t("checkInFailed"));
+    } catch (err) {
+      message.error(getApiErrorMessage(err, t("checkInFailed")));
     } finally {
       setIsCleaningRoom(false);
     }
@@ -103,8 +103,8 @@ export function useRoomModalActions({
           queryClient.invalidateQueries({ queryKey: ["room-map"] });
           message.success(t("cancelBookingSuccess"));
           onClose();
-        } catch {
-          message.error(t("checkInFailed"));
+        } catch (err) {
+          message.error(getApiErrorMessage(err, t("checkInFailed")));
         } finally {
           setIsCancellingBooking(false);
         }
@@ -124,8 +124,8 @@ export function useRoomModalActions({
           queryClient.invalidateQueries({ queryKey: ["room-map"] });
           message.success(t("checkOutSuccess"));
           onClose();
-        } catch {
-          message.error(t("checkOutFailed"));
+        } catch (err) {
+          message.error(getApiErrorMessage(err, t("checkOutFailed")));
         }
       },
     });
@@ -252,6 +252,11 @@ export function useRoomModalActions({
     router.push(`/${locale}/reservations/${booking.id}`);
   };
 
+  const handleViewBilling = () => {
+    if (!booking?.invoiceId) return;
+    router.push(`/${locale}/billing/${booking.invoiceId}`);
+  };
+
   const handleClose = () => {
     form.resetFields();
     onClose();
@@ -266,6 +271,7 @@ export function useRoomModalActions({
     handleSaveStay,
     handleSaveReservation,
     handleViewReservation,
+    handleViewBilling,
     handleClose,
     isSavingStay,
     isMarkingAvailable,
@@ -288,6 +294,15 @@ function apiErrorMessage(
     case "BOOKING_NOT_CONFIRMED":  return t("errors.bookingNotConfirmed");
     case "BOOKING_NOT_CHECKED_IN": return t("errors.bookingNotCheckedIn");
     case "ROOM_NOT_READY":         return t("errors.roomNotReady");
-    default:                       return t("checkInFailed");
+    case "CHECKIN_TOO_EARLY":      return t("errors.checkInTooEarly");
+    case "CHECKIN_DATE_PASSED":    return t("errors.checkInDatePassed");
+    case "CHECKOUT_TOO_EARLY":     return t("errors.checkOutTooEarly");
+    default:                       return err.message || t("checkInFailed");
   }
+}
+
+function getApiErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof ApiError) return err.message || fallback;
+  if (err instanceof Error) return err.message || fallback;
+  return fallback;
 }

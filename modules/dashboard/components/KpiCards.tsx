@@ -3,8 +3,8 @@
 import {
   IconCurrencyDollar,
   IconBed,
-  IconUsers,
-  IconVacuumCleaner,
+  IconLogin,
+  IconLogout,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import AppStatisticCard from "@/common/components/ui/AppStatisticCard";
@@ -29,6 +29,7 @@ export default function KpiCards() {
       })()
     : undefined;
 
+
   const cards = [
     {
       title: "dashboard.revenue",
@@ -45,15 +46,15 @@ export default function KpiCards() {
       color: "#1677ff",
     },
     {
-      title: "dashboard.currentGuests",
-      value: stats?.currentGuests ?? 0,
-      icon: <IconUsers size={22} />,
+      title: "dashboard.todayCheckinCount",
+      value: stats?.todayCheckinCount ?? 0,
+      icon: <IconLogin size={22} />,
       color: "#722ed1",
     },
     {
-      title: "dashboard.needsCleaning",
-      value: stats?.roomsNeedCleaning ?? 0,
-      icon: <IconVacuumCleaner size={22} />,
+      title: "dashboard.todayCheckouts",
+      value: stats?.todayCheckoutsCount ?? 0,
+      icon: <IconLogout size={22} />,
       color: "#fa8c16",
     },
   ];

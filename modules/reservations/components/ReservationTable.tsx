@@ -12,6 +12,7 @@ import { useReservations, type BookingFilters } from "../hooks/useReservations";
 import { useMasterData } from "@/common/hooks/useMasterData";
 import { useTimezone } from "@/providers/TimezoneProvider";
 import { formatInTimezone } from "@/common/utils/clientTimezone";
+import { getBookingStatusLabel } from "@/common/utils/bookingStatusLabel";
 import type { Booking } from "@/types/booking.types";
 
 interface ReservationTableProps {
@@ -42,7 +43,7 @@ export default function ReservationTable({
       width: 150,
       render: (v: string) => (
         <Typography.Text
-          copyable={{ text: v, tooltips: ["Copy", "Copied!"] }}
+          copyable={{ text: v, tooltips: [t("common.copy"), t("common.copied")] }}
           style={{ fontFamily: "monospace", fontSize: 13 }}
         >
           {v}
@@ -79,7 +80,10 @@ export default function ReservationTable({
       key: "status",
       title: t("booking.status"),
       render: (_: unknown, r: Booking) => (
-        <StatusBadge color={r.bookingStatus.color} label={r.bookingStatus.name} />
+        <StatusBadge
+          color={r.bookingStatus.color}
+          label={getBookingStatusLabel(r.bookingStatus, t)}
+        />
       ),
       width: 130,
     },
@@ -152,7 +156,10 @@ export default function ReservationTable({
           style={{ minWidth: 200 }}
           value={filters.bookingStatusId}
           onChange={(v) => updateFilter({ bookingStatusId: v ?? undefined })}
-          options={bookingStatuses.map((s) => ({ value: s.id, label: s.name }))}
+          options={bookingStatuses.map((s) => ({
+            value: s.id,
+            label: getBookingStatusLabel(s, t),
+          }))}
         />
         <Select
           allowClear

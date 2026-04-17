@@ -62,9 +62,9 @@ export default function InvoiceDetailPage({
       render: (_: unknown, r: Payment) => r.paymentMethod.name,
     },
     {
-      key: "reference",
+      key: "note",
       dataIndex: "reference",
-      title: t("billing.reference"),
+      title: t("common.note"),
       render: (v: string | null) => v ?? "—",
     },
     {

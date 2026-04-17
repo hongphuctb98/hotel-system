@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ok, created, badRequest, conflict, serverError } from "@/lib/response";
 import { parseQueryParams } from "@/common/utils/queryParams";
-import { buildLocalDayBoundsUTC } from "@/common/utils/hotelDate";
+import { buildLocalDayBoundsUTC, hotelLocalDate } from "@/common/utils/hotelDate";
 import { generateBookingNumber } from "@/common/utils/bookingNumber";
 import { generateInvoiceNumber } from "@/common/utils/invoiceNumber";
 import { writeAudit } from "@/lib/audit";
@@ -89,6 +89,30 @@ export async function POST(req: NextRequest) {
     // ── Date ordering ─────────────────────────────────────────────────────
     if (checkIn >= checkOut) {
       return badRequest("Check-in date must be before check-out date");
+    }
+
+    // ── Charge-type date consistency ──────────────────────────────────────
+    const chargeType = body.chargeType ?? "nightly";
+    if (chargeType === "hourly" && body.hourlyBlockHours) {
+      const blockMs = Number(body.hourlyBlockHours) * 60 * 60 * 1000;
+      if (checkOut.getTime() - checkIn.getTime() < blockMs) {
+        return badRequest(
+          `For hourly bookings, check-out must be at least ${body.hourlyBlockHours} hour(s) after check-in.`,
+          "DATE_RANGE_INVALID"
+        );
+      }
+    } else {
+      // Nightly: check-out must fall on a later calendar day than check-in
+      const [checkInDay, checkOutDay] = await Promise.all([
+        hotelLocalDate(checkIn),
+        hotelLocalDate(checkOut),
+      ]);
+      if (checkInDay >= checkOutDay) {
+        return badRequest(
+          "For nightly bookings, check-out must be on a later calendar day than check-in.",
+          "DATE_RANGE_INVALID"
+        );
+      }
     }
 
     // ── Overlap check — no active booking may overlap this range ──────────

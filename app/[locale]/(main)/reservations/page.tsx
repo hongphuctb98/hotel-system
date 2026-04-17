@@ -10,6 +10,7 @@ import AppPageHeader from "@/common/components/ui/AppPageHeader";
 import ReservationSummary from "@/modules/reservations/components/ReservationSummary";
 import ReservationTable from "@/modules/reservations/components/ReservationTable";
 import { bookingService } from "@/common/services/bookingService";
+import { getBookingStatusLabel } from "@/common/utils/bookingStatusLabel";
 import type { BookingFilters } from "@/modules/reservations/hooks/useReservations";
 import type { Booking } from "@/types/booking.types";
 
@@ -45,7 +46,7 @@ export default function ReservationsPage() {
           [t("booking.nights")]: nights,
           [t("booking.adults")]: b.adults,
           [t("booking.children")]: b.children,
-          [t("booking.status")]: b.bookingStatus.name,
+          [t("booking.status")]: getBookingStatusLabel(b.bookingStatus, t),
           [t("booking.chargeType")]: b.chargeType === "hourly" ? t("booking.hourly") : t("booking.nightly"),
           [`${t("booking.baseRate")} (VND)`]: Number(b.baseRate),
           [`${t("booking.total")} (VND)`]: Number(b.totalAmount),
@@ -57,11 +58,11 @@ export default function ReservationsPage() {
 
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Reservations");
+      XLSX.utils.book_append_sheet(wb, ws, t("booking.exportSheetName"));
       const filename = `${t("booking.exportFilename")}-${dayjs().format("YYYY-MM-DD")}.xlsx`;
       XLSX.writeFile(wb, filename);
     } catch {
-      message.error("Export failed");
+      message.error(t("booking.exportFailed"));
     } finally {
       setExporting(false);
     }

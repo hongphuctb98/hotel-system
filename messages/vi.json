@@ -38,7 +38,9 @@
     "search": "Tìm kiếm",
     "filter": "Lọc",
     "reset": "Đặt lại",
-    "export": "Xuất",
+      "export": "Xuất",
+      "copy": "Sao chép",
+      "copied": "Đã sao chép!",
     "active": "Hoạt động",
     "inactive": "Không hoạt động",
     "loading": "Đang tải...",
@@ -50,7 +52,8 @@
     "action": "Hành động",
     "entityType": "Loại",
     "summary": "Tóm tắt",
-    "actor": "Người thực hiện"
+    "actor": "Người thực hiện", 
+    "note":"Ghi chú"
   },
   "header": {
     "profile": "Hồ sơ",
@@ -69,7 +72,7 @@
     "title": "Tổng quan",
     "revenue": "Doanh thu",
     "occupancyRate": "Tỷ lệ lấp đầy",
-    "currentGuests": "Khách đang lưu trú",
+    "todayCheckinCount": "Check in hôm nay",
     "needsCleaning": "Phòng cần dọn",
     "revenueChart": "Doanh thu",
     "period7d": "7 ngày",
@@ -84,7 +87,8 @@
     "inProgress": "Đang xử lý",
     "completedToday": "Hoàn thành hôm nay",
     "viewAll": "Xem tất cả",
-    "scheduledToday": "Dự thu hôm nay"
+    "scheduledToday": "Dự thu hôm nay",
+    "todayCheckouts": "Trả phòng hôm nay"
   },
   "booking": {
     "create": "Tạo đặt phòng",
@@ -97,8 +101,14 @@
     "checkInFrom": "Nhận phòng từ ngày",
     "checkInTo": "Nhận phòng đến ngày",
     "checkOut": "Trả phòng",
-    "status": "Trạng thái",
-    "source": "Nguồn",
+      "status": "Trạng thái",
+      "statusPending": "Chờ xử lý",
+      "statusConfirmed": "Đã xác nhận",
+      "statusCheckedIn": "Đã nhận phòng",
+      "statusCheckedOut": "Đã trả phòng",
+      "statusCancelled": "Đã hủy",
+      "statusNoShow": "Không đến",
+      "source": "Nguồn",
     "total": "Tổng tiền",
     "adults": "Người lớn",
     "children": "Trẻ em",
@@ -132,8 +142,11 @@
     "estimatedTotal": "Ước tính tổng (gồm 10% thuế)",
     "summaryByStatus": "Theo trạng thái",
     "summaryByRoomType": "Theo loại phòng",
-    "exportFilename": "danh-sach-dat-phong",
-    "viewFullDetails": "Xem chi tiết đầy đủ"
+      "exportFilename": "danh-sach-dat-phong",
+      "exportSheetName": "Đặt phòng",
+      "exportFailed": "Xuất danh sách đặt phòng thất bại",
+      "emptyInSelectedDateRange": "Không có đặt phòng nào trong khoảng ngày đã chọn.",
+      "viewFullDetails": "Xem chi tiết đầy đủ"
   },
   "room": {
     "capacity": "Sức chứa",
@@ -436,6 +449,7 @@
     "reserved": "Đã đặt phòng",
     "checkedOut": "Đã trả phòng",
     "viewReservation": "Xem đặt phòng",
+    "viewBilling": "Xem thanh toán",
     "date": "Ngày",
     "bookingStateAll": "Tất cả trạng thái",
     "bookingStateNone": "Chưa có đặt phòng",
@@ -471,6 +485,9 @@
       "bookingNotConfirmed": "Đặt phòng này không thể nhận khách từ trạng thái hiện tại.",
       "bookingNotCheckedIn": "Đặt phòng này không thể trả phòng từ trạng thái hiện tại.",
       "roomNotReady": "Phòng này chưa sẵn sàng để nhận khách.",
+      "checkInTooEarly": "Chưa đến ngày nhận phòng của đặt phòng này.",
+      "checkInDatePassed": "Đặt phòng này đã quá ngày nhận phòng, không thể nhận phòng theo lịch cũ.",
+      "checkOutTooEarly": "Chưa đến thời điểm trả phòng hợp lệ.",
       "saveFailed": "Lưu thay đổi thất bại. Vui lòng thử lại."
     }
   },

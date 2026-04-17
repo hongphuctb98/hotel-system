@@ -93,7 +93,7 @@ export default function PaymentModal({
             parser={(value) => parseNumberInput(value)}
           />
         </Form.Item>
-        <Form.Item name="reference" label={t("billing.referenceNote")}>
+        <Form.Item name="reference" label={t("common.note")}>
           <Input placeholder="e.g. transaction ID" />
         </Form.Item>
       </Form>

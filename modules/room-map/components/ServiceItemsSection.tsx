@@ -4,6 +4,7 @@ import { Form, InputNumber, Select, Button, Space, Input } from "antd";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import PriceDisplay from "@/common/components/ui/PriceDisplay";
+import { formatNumberInput, parseNumberInput } from "@/common/utils/numberInput";
 import type { ServiceItem } from "@/types/master.types";
 
 // Grid: Service (auto) | Qty (58px) | Unit Price (96px) | Total (96px) | Delete (28px)
@@ -189,7 +190,13 @@ export default function ServiceItemsSection({
             <span style={{ fontSize: 12, color: "#595959", whiteSpace: "nowrap" }}>{t("surcharge")}</span>
             <Space.Compact size="small">
               <Form.Item name="surcharge" noStyle>
-                <InputNumber min={0} style={{ width: 90 }} disabled={disabled} />
+                <InputNumber<number>
+                  min={0}
+                  style={{ width: 90 }}
+                  disabled={disabled}
+                  formatter={(value) => formatNumberInput(value, {})}
+                  parser={(value) => parseNumberInput(value)}
+                />
               </Form.Item>
               <Input value="₫" readOnly style={{ width: 32, textAlign: "center", color: "#8c8c8c", cursor: "default" }} />
             </Space.Compact>
@@ -198,7 +205,13 @@ export default function ServiceItemsSection({
             <span style={{ fontSize: 12, color: "#595959", whiteSpace: "nowrap" }}>{t("discount")}</span>
             <Space.Compact size="small">
               <Form.Item name="discount" noStyle>
-                <InputNumber min={0} style={{ width: 90 }} disabled={disabled} />
+                <InputNumber<number>
+                  min={0}
+                  style={{ width: 90 }}
+                  disabled={disabled}
+                  formatter={(value) => formatNumberInput(value, {})}
+                  parser={(value) => parseNumberInput(value)}
+                />
               </Form.Item>
               <Input value="₫" readOnly style={{ width: 32, textAlign: "center", color: "#8c8c8c", cursor: "default" }} />
             </Space.Compact>
@@ -214,7 +227,12 @@ export default function ServiceItemsSection({
             <span style={{ fontSize: 12, color: "#595959", whiteSpace: "nowrap" }}>{t("prepaid")}</span>
             <Space.Compact size="small">
               <Form.Item name="prepaid" noStyle>
-                <InputNumber min={0} style={{ width: 90 }}  />
+                <InputNumber<number>
+                  min={0}
+                  style={{ width: 90 }}
+                  formatter={(value) => formatNumberInput(value, {})}
+                  parser={(value) => parseNumberInput(value)}
+                />
               </Form.Item>
               <Input value="₫" readOnly style={{ width: 32, textAlign: "center", color: "#8c8c8c", cursor: "default" }} />
             </Space.Compact>

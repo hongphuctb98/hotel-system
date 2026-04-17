@@ -44,6 +44,7 @@ export type CurrentBooking = {
   actualCheckOut: string | null;
   paymentMethodId: string | null;
   hasDepositPayment: boolean;
+  invoiceId: string | null;
   bookingState: BookingState;
   guest: {
     firstName: string;

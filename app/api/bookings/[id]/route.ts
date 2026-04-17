@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ok, notFound, badRequest, serverError } from "@/lib/response";
+import { ok, notFound, badRequest, conflict, serverError } from "@/lib/response";
 import { writeAudit } from "@/lib/audit";
+import { hotelLocalDate } from "@/common/utils/hotelDate";
 
 const bookingInclude = {
   guest: { include: { guestType: true } },
@@ -33,6 +34,19 @@ export async function PUT(
     const { id } = await props.params;
     const body = await req.json();
 
+    // Fetch current booking state (used for deposit guard, date validation, and audit diff)
+    const TRACKED = [
+      "bookingStatusId", "roomId", "checkInDate", "checkOutDate",
+      "baseRate", "chargeType", "discountAmount", "surchargeAmount",
+      "depositAmount", "hourlyBlockHours", "hourlyRatePerHour", "source", "note",
+    ] as const;
+
+    const prev = await prisma.booking.findUnique({
+      where: { id },
+      select: Object.fromEntries(TRACKED.map((f) => [f, true])) as Record<typeof TRACKED[number], true>,
+    });
+    if (!prev) return notFound();
+
     // Guard: depositAmount is locked once any payment has been recorded
     if (body.depositAmount !== undefined) {
       const invoices = await prisma.invoice.findMany({
@@ -48,17 +62,69 @@ export async function PUT(
       }
     }
 
-    // Capture tracked fields before update so we can diff them
-    const TRACKED = [
-      "bookingStatusId", "roomId", "checkInDate", "checkOutDate",
-      "baseRate", "chargeType", "discountAmount", "surchargeAmount",
-      "depositAmount", "hourlyBlockHours", "hourlyRatePerHour", "source", "note",
-    ] as const;
+    // ── Date-consistency guard (applied when either date is being changed) ─
+    if (body.checkInDate !== undefined || body.checkOutDate !== undefined) {
+      const checkIn  = new Date(body.checkInDate  ?? prev.checkInDate);
+      const checkOut = new Date(body.checkOutDate ?? prev.checkOutDate);
 
-    const prev = await prisma.booking.findUnique({
-      where: { id },
-      select: Object.fromEntries(TRACKED.map((f) => [f, true])) as Record<typeof TRACKED[number], true>,
-    });
+      if (checkIn >= checkOut) {
+        return badRequest("Check-in date must be before check-out date", "DATE_RANGE_INVALID");
+      }
+
+      const chargeType       = body.chargeType       ?? prev.chargeType;
+      const hourlyBlockHours = body.hourlyBlockHours ?? prev.hourlyBlockHours;
+
+      if (chargeType === "hourly" && hourlyBlockHours) {
+        const blockMs = Number(hourlyBlockHours) * 60 * 60 * 1000;
+        if (checkOut.getTime() - checkIn.getTime() < blockMs) {
+          return badRequest(
+            `For hourly bookings, check-out must be at least ${hourlyBlockHours} hour(s) after check-in.`,
+            "DATE_RANGE_INVALID"
+          );
+        }
+      } else {
+        const [checkInDay, checkOutDay] = await Promise.all([
+          hotelLocalDate(checkIn),
+          hotelLocalDate(checkOut),
+        ]);
+        if (checkInDay >= checkOutDay) {
+          return badRequest(
+            "For nightly bookings, check-out must be on a later calendar day than check-in.",
+            "DATE_RANGE_INVALID"
+          );
+        }
+      }
+    }
+
+    // ── Overlap guard (mirrors create logic, excludes self) ───────────────
+    if (body.roomId !== undefined || body.checkInDate !== undefined || body.checkOutDate !== undefined) {
+      const effectiveRoomId  = body.roomId      ?? prev.roomId;
+      const effectiveCheckIn = new Date(body.checkInDate  ?? prev.checkInDate);
+      const effectiveCheckOut= new Date(body.checkOutDate ?? prev.checkOutDate);
+
+      const activeStatuses = await prisma.bookingStatus.findMany({
+        where: { code: { in: ["CONFIRMED", "CHECKED_IN"] } },
+        select: { id: true },
+      });
+      const activeStatusIds = activeStatuses.map((s) => s.id);
+
+      const overlap = await prisma.booking.findFirst({
+        where: {
+          id:              { not: id },
+          roomId:          effectiveRoomId,
+          bookingStatusId: { in: activeStatusIds },
+          checkInDate:     { lt: effectiveCheckOut },
+          checkOutDate:    { gt: effectiveCheckIn },
+        },
+      });
+
+      if (overlap) {
+        return conflict(
+          "This room is already booked for the selected dates",
+          "BOOKING_OVERLAP"
+        );
+      }
+    }
 
     const booking = await prisma.booking.update({
       where: { id },
@@ -81,7 +147,7 @@ export async function PUT(
     });
 
     // Build old/new diff — only include fields that actually changed
-    if (prev) {
+    {
       const oldValues: Record<string, unknown> = {};
       const newValues: Record<string, unknown> = {};
 

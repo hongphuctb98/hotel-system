@@ -18,6 +18,7 @@ import AppPageHeader from "@/common/components/ui/AppPageHeader";
 import AppCard from "@/common/components/ui/AppCard";
 import StatusBadge from "@/common/components/ui/StatusBadge";
 import PriceDisplay from "@/common/components/ui/PriceDisplay";
+import { getBookingStatusLabel } from "@/common/utils/bookingStatusLabel";
 import { useReservation, useReservationActions } from "@/modules/reservations/hooks/useReservation";
 import { useDisclosure } from "@/common/hooks/useDisclosure";
 import AddServiceModal from "@/modules/billing/components/AddServiceModal";
@@ -205,7 +206,7 @@ export default function ReservationDetailPage({
                 {booking.source ?? "—"}
               </Descriptions.Item>
               <Descriptions.Item label={t("booking.status")}>
-                <StatusBadge color={status.color} label={status.name} />
+                <StatusBadge color={status.color} label={getBookingStatusLabel(status, t)} />
               </Descriptions.Item>
               {booking.note && (
                 <Descriptions.Item label={t("booking.note")} span={2}>

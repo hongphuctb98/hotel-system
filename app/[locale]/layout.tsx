@@ -23,7 +23,10 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale}>
+    <html lang={locale} translate="no" className="notranslate">
+      <head>
+        <meta name="google" content="notranslate" />
+      </head>
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <QueryProvider>

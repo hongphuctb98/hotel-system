@@ -180,10 +180,8 @@ async function main() {
     prisma.roomType.findUnique({ where: { code: "SUT" } }),
     prisma.roomType.findUnique({ where: { code: "FAM" } }),
   ]);
-  const [rsAVAIL, rsCLEANING, rsMOINT] = await Promise.all([
+  const [rsAVAIL] = await Promise.all([
     prisma.roomStatus.findUnique({ where: { code: "AVAILABLE" } }),
-    prisma.roomStatus.findUnique({ where: { code: "CLEANING" } }),
-    prisma.roomStatus.findUnique({ where: { code: "MAINTENANCE" } }),
   ]);
   const [gtNORMAL, gtVIP, gtCORPORATE] = await Promise.all([
     prisma.guestType.findUnique({ where: { code: "NORMAL" } }),
@@ -204,13 +202,13 @@ async function main() {
 
   // Rooms
   // Occupancy state is derived from Booking records (currentBooking.bookingState).
-  // roomStatus here represents operational state only — CLEANING and MAINTENANCE are intentional.
-  // All other rooms default to AVAILABLE regardless of whether a booking exists.
+  // When reseeding/resetting business data, all rooms should return to AVAILABLE
+  // so dashboard and room-management views start from a clean baseline.
   const roomDefs = [
     { number: "101", floorId: f1!.id, roomTypeId: rtSTD!.id, roomStatusId: rsAVAIL!.id },
     { number: "102", floorId: f1!.id, roomTypeId: rtSTD!.id, roomStatusId: rsAVAIL!.id },
-    { number: "103", floorId: f1!.id, roomTypeId: rtSTD!.id, roomStatusId: rsCLEANING!.id },
-    { number: "104", floorId: f1!.id, roomTypeId: rtSTD!.id, roomStatusId: rsMOINT!.id },
+    { number: "103", floorId: f1!.id, roomTypeId: rtSTD!.id, roomStatusId: rsAVAIL!.id },
+    { number: "104", floorId: f1!.id, roomTypeId: rtSTD!.id, roomStatusId: rsAVAIL!.id },
     { number: "201", floorId: f2!.id, roomTypeId: rtSTD!.id, roomStatusId: rsAVAIL!.id },
     { number: "202", floorId: f2!.id, roomTypeId: rtSTD!.id, roomStatusId: rsAVAIL!.id },
     { number: "203", floorId: f2!.id, roomTypeId: rtDLX!.id, roomStatusId: rsAVAIL!.id },
@@ -225,7 +223,16 @@ async function main() {
     { number: "404", floorId: f4!.id, roomTypeId: rtDLX!.id, roomStatusId: rsAVAIL!.id },
   ];
   for (const r of roomDefs) {
-    await prisma.room.upsert({ where: { number: r.number }, update: {}, create: r });
+    await prisma.room.upsert({
+      where: { number: r.number },
+      update: {
+        floorId: r.floorId,
+        roomTypeId: r.roomTypeId,
+        roomStatusId: r.roomStatusId,
+        isActive: true,
+      },
+      create: r,
+    });
   }
 
   // Guests

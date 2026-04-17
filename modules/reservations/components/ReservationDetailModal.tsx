@@ -9,6 +9,7 @@ import { useTimezone } from "@/providers/TimezoneProvider";
 import { formatInTimezone, toHotelDayjs } from "@/common/utils/clientTimezone";
 import StatusBadge from "@/common/components/ui/StatusBadge";
 import PriceDisplay from "@/common/components/ui/PriceDisplay";
+import { getBookingStatusLabel } from "@/common/utils/bookingStatusLabel";
 import { useReservation } from "../hooks/useReservation";
 import { useCancelBooking } from "../hooks/useCancelBooking";
 import { useMasterData } from "@/common/hooks/useMasterData";
@@ -126,7 +127,10 @@ export default function ReservationDetailModal({
         ) : (
           <Descriptions column={2} size="small" bordered>
             <Descriptions.Item label={t("booking.status")} span={2}>
-              <StatusBadge color={booking.bookingStatus.color} label={booking.bookingStatus.name} />
+              <StatusBadge
+                color={booking.bookingStatus.color}
+                label={getBookingStatusLabel(booking.bookingStatus, t)}
+              />
             </Descriptions.Item>
             <Descriptions.Item label={t("booking.guest")} span={2}>
               {booking.guest.firstName} {booking.guest.lastName}

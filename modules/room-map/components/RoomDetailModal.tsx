@@ -4,12 +4,13 @@ import { Form, Input, Tag, Typography } from "antd";
 import { useTranslations } from "next-intl";
 import AppModal from "@/common/components/ui/AppModal";
 import PriceDisplay from "@/common/components/ui/PriceDisplay";
+import { resolveStatusDisplayWithMasterData } from "@/common/utils/roomDisplayStatus";
 import GuestSearchSection from "./GuestSearchSection";
 import ServiceItemsSection from "./ServiceItemsSection";
 import RoomDetailModalFooter from "./RoomDetailModalFooter";
 import { useRoomModalForm } from "../hooks/useRoomModalForm";
 import { useRoomModalActions } from "../hooks/useRoomModalActions";
-import { resolveModalMode, resolveStayMode, resolveStatusDisplayWithMasterData } from "../utils/roomModalMode";
+import { resolveModalMode, resolveStayMode } from "../utils/roomModalMode";
 import { useMasterData } from "@/common/hooks/useMasterData";
 import type { Room, BookingState } from "@/types/room.types";
 
@@ -77,7 +78,7 @@ export default function RoomDetailModal({ open, room, onClose }: RoomDetailModal
       width="min(920px, 95vw)"
       styles={{
         header: { paddingBottom: 8 },
-        body:   { padding: "10px 16px 4px", overflowY: "auto", maxHeight: "calc(90vh - 110px)" },
+        body:   { padding: "0 8px 4px", overflowY: "auto", maxHeight: "calc(90vh - 110px)" },
         footer: { padding: "8px 16px" },
       }}
       title={
@@ -114,6 +115,7 @@ export default function RoomDetailModal({ open, room, onClose }: RoomDetailModal
           onSaveStay={actions.handleSaveStay}
           onSaveReservation={actions.handleSaveReservation}
           onViewReservation={actions.handleViewReservation}
+          onViewBilling={actions.handleViewBilling}
           onClose={actions.handleClose}
         />
       }

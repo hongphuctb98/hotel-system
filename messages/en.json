@@ -38,7 +38,9 @@
     "search": "Search",
     "filter": "Filter",
     "reset": "Reset",
-    "export": "Export",
+      "export": "Export",
+      "copy": "Copy",
+      "copied": "Copied!",
     "active": "Active",
     "inactive": "Inactive",
     "loading": "Loading...",
@@ -50,7 +52,8 @@
     "action": "Action",
     "entityType": "Entity Type",
     "summary": "Summary",
-    "actor": "Actor"
+    "actor": "Actor", 
+    "note": "Note"
   },
   "header": {
     "profile": "My Profile",
@@ -69,7 +72,7 @@
     "title": "Dashboard",
     "revenue": "Revenue",
     "occupancyRate": "Occupancy Rate",
-    "currentGuests": "Current Guests",
+    "todayCheckinCount": "Today's Check-ins",
     "needsCleaning": "Needs Cleaning",
     "revenueChart": "Revenue",
     "period7d": "7 days",
@@ -84,7 +87,8 @@
     "inProgress": "In Progress",
     "completedToday": "Completed Today",
     "viewAll": "View All",
-    "scheduledToday": "Scheduled today"
+    "scheduledToday": "Scheduled today",
+    "todayCheckouts": "Today's Checkouts"
   },
   "booking": {
     "create": "New Booking",
@@ -97,8 +101,14 @@
     "checkInFrom": "Check-in from",
     "checkInTo": "Check-in to",
     "checkOut": "Check-out",
-    "status": "Status",
-    "source": "Source",
+      "status": "Status",
+      "statusPending": "Pending",
+      "statusConfirmed": "Confirmed",
+      "statusCheckedIn": "Checked In",
+      "statusCheckedOut": "Checked Out",
+      "statusCancelled": "Cancelled",
+      "statusNoShow": "No-show",
+      "source": "Source",
     "total": "Total",
     "adults": "Adults",
     "children": "Children",
@@ -132,8 +142,11 @@
     "estimatedTotal": "Est. Total (incl. 10% tax)",
     "summaryByStatus": "By Status",
     "summaryByRoomType": "By Room Type",
-    "exportFilename": "reservations",
-    "viewFullDetails": "View Full Details"
+      "exportFilename": "reservations",
+      "exportSheetName": "Reservations",
+      "exportFailed": "Export failed",
+      "emptyInSelectedDateRange": "No reservations in the selected date range.",
+      "viewFullDetails": "View Full Details"
   },
   "room": {
     "capacity": "Capacity",
@@ -436,6 +449,7 @@
     "reserved": "Reserved",
     "checkedOut": "Checked Out",
     "viewReservation": "View Reservation",
+    "viewBilling": "View Billing",
     "date": "Date",
     "bookingStateAll": "All occupancy states",
     "bookingStateNone": "No booking",
@@ -471,6 +485,9 @@
       "bookingNotConfirmed": "This booking cannot be checked in from its current status.",
       "bookingNotCheckedIn": "This booking cannot be checked out from its current status.",
       "roomNotReady": "This room is not ready to receive guests.",
+      "checkInTooEarly": "This booking cannot be checked in before its scheduled check-in date.",
+      "checkInDatePassed": "This booking has already passed its scheduled check-in date.",
+      "checkOutTooEarly": "This booking cannot be checked out yet.",
       "saveFailed": "Failed to save changes. Please try again."
     }
   },

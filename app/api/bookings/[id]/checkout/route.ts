@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ok, notFound, badRequest, serverError } from "@/lib/response";
 import { generateInvoiceNumber } from "@/common/utils/invoiceNumber";
 import { writeAudit } from "@/lib/audit";
+import { hotelLocalDate } from "@/common/utils/hotelDate";
 
 export async function POST(
   _req: NextRequest,
@@ -28,6 +29,33 @@ export async function POST(
         `Cannot check out: booking is currently '${booking.bookingStatus.code}'. Only CHECKED_IN bookings can be checked out.`,
         "BOOKING_NOT_CHECKED_IN"
       );
+    }
+
+    // ── Timing guard ──────────────────────────────────────────────────────
+    if (booking.chargeType === "hourly" && booking.hourlyBlockHours && booking.actualCheckIn) {
+      // Hourly block: the full block must have elapsed since actual check-in
+      const blockedUntil = new Date(
+        booking.actualCheckIn.getTime() + booking.hourlyBlockHours * 60 * 60 * 1000
+      );
+      if (new Date() < blockedUntil) {
+        const remaining = Math.ceil((blockedUntil.getTime() - Date.now()) / 60000);
+        return badRequest(
+          `Cannot check out: the ${booking.hourlyBlockHours}-hour block has not elapsed yet. ${remaining} minute(s) remaining.`,
+          "CHECKOUT_TOO_EARLY"
+        );
+      }
+    } else {
+      // Nightly: cannot check out before the scheduled check-out date
+      const [todayStr, scheduledOutStr] = await Promise.all([
+        hotelLocalDate(),
+        hotelLocalDate(booking.checkOutDate),
+      ]);
+      if (todayStr < scheduledOutStr) {
+        return badRequest(
+          `Cannot check out: today is ${todayStr} but checkout is scheduled for ${scheduledOutStr}.`,
+          "CHECKOUT_TOO_EARLY"
+        );
+      }
     }
 
     // Find the "Checked-out" booking status and the OCCUPIED room status in parallel.

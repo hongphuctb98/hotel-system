@@ -24,6 +24,10 @@ export function useLocaleCurrency() {
     if (!date) return "-";
     return dayjs(date).locale(config.dayjsLocale).format(fmt);
   };
+   const formatDateShort = (date: string | Date | null | undefined, fmt = "DD/MM/YY") => {
+    if (!date) return "-";
+    return dayjs(date).locale(config.dayjsLocale).format(fmt);
+  };
 
   const formatDateTime = (date: string | Date | null | undefined) => {
     if (!date) return "-";
@@ -33,6 +37,7 @@ export function useLocaleCurrency() {
   return {
     format,
     formatDate,
+    formatDateShort,
     formatDateTime,
     currency: config.currency,
     appLocale,

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ok, notFound, badRequest, conflict, serverError } from "@/lib/response";
 import { writeAudit } from "@/lib/audit";
+import { hotelLocalDate } from "@/common/utils/hotelDate";
 
 export async function POST(
   _req: NextRequest,
@@ -25,6 +26,24 @@ export async function POST(
       return badRequest(
         `Cannot check in: booking is currently '${booking.bookingStatus.code}'. Only CONFIRMED bookings can be checked in.`,
         "BOOKING_NOT_CONFIRMED"
+      );
+    }
+
+    // ── Date guard — check-in is allowed only on the scheduled check-in date ─
+    const [todayStr, scheduledInStr] = await Promise.all([
+      hotelLocalDate(),
+      hotelLocalDate(booking.checkInDate),
+    ]);
+    if (todayStr < scheduledInStr) {
+      return badRequest(
+        `Cannot check in: today is ${todayStr} but this booking is scheduled for ${scheduledInStr}.`,
+        "CHECKIN_TOO_EARLY"
+      );
+    }
+    if (todayStr > scheduledInStr) {
+      return badRequest(
+        `Cannot check in: today is ${todayStr} but this booking was scheduled for ${scheduledInStr}.`,
+        "CHECKIN_DATE_PASSED"
       );
     }
 

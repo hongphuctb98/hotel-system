@@ -9,7 +9,9 @@ export default function RoomStatusOverview() {
   const { data, isLoading } = useDashboardStats();
   const stats = data?.data;
 
-  const totalRooms = (stats?.roomStatusCounts ?? []).reduce((sum, s) => sum + s.count, 0);
+  const totalRooms =
+    stats?.totalRooms ??
+    (stats?.roomStatusCounts ?? []).reduce((sum, s) => sum + s.count, 0);
 
   return (
     <Card

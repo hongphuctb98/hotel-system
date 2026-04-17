@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { buildBookingInclude, roomBaseInclude, toRoomDTO } from "@/app/api/rooms/_utils";
+import { ROOM_DISPLAY_STATUS_ORDER, resolveRoomDisplayStatusCode } from "@/common/utils/roomDisplayStatus";
 import { prisma } from "@/lib/prisma";
 import { ok, serverError } from "@/lib/response";
 import { getHotelTimezone, hotelLocalDate, buildLocalDayBoundsUTC } from "@/common/utils/hotelDate";
@@ -17,6 +19,7 @@ export async function GET(req: NextRequest) {
     const tz = await getHotelTimezone();
     const todayStr = await hotelLocalDate();
     const { start: todayStart, end: todayEnd } = await buildLocalDayBoundsUTC(todayStr);
+    const roomInclude = { ...roomBaseInclude, ...await buildBookingInclude(todayStr) };
 
     // Compute start of the revenue window
     const periodStartStr = dayjs.tz(todayStr, tz).subtract(period - 1, "day").format("YYYY-MM-DD");
@@ -25,11 +28,14 @@ export async function GET(req: NextRequest) {
     const [
       totalRooms,
       occupiedBookings,
+      todayCheckInBookings,
       cleaningRooms,
       periodPayments,
       todayCheckoutsPaid,
       todayCheckoutsExpected,
-      roomStatuses,
+      dashboardRoomStatuses,
+      checkedOutStatus,
+      dashboardRoomsRaw,
       todayArrivalsRaw,
       todayDeparturesRaw,
       housekeepingPending,
@@ -41,6 +47,13 @@ export async function GET(req: NextRequest) {
       // Currently occupied bookings
       prisma.booking.count({
         where: { bookingStatus: { code: { in: ["CHECKED_IN"] } } },
+      }),
+      // Today's check-ins (bookings scheduled to arrive today)
+      prisma.booking.count({
+        where: {
+          checkInDate: { gte: todayStart, lte: todayEnd },
+          bookingStatus: { code: { in: ["CONFIRMED", "PENDING"] } },
+        },
       }),
       // Rooms in post-checkout CLEANING state (derived from room status, not tasks)
       prisma.room.count({
@@ -72,13 +85,18 @@ export async function GET(req: NextRequest) {
         },
         _sum: { totalAmount: true },
       }),
-      // Room status breakdown
+      // Shared display-status metadata used by room-map / rooms / dashboard
       prisma.roomStatus.findMany({
-        where: { code: { in: ["AVAILABLE", "OCCUPIED", "CLEANING", "MAINTENANCE"] } },
-        include: {
-          rooms: { where: { isActive: true }, select: { id: true } },
-        },
-        orderBy: { code: "asc" },
+        where: { code: { in: ROOM_DISPLAY_STATUS_ORDER.filter((code) => code !== "CHECKED_OUT") } },
+        select: { code: true, name: true, color: true },
+      }),
+      prisma.bookingStatus.findFirst({
+        where: { code: "CHECKED_OUT" },
+        select: { code: true, name: true, color: true },
+      }),
+      prisma.room.findMany({
+        where: { isActive: true },
+        include: roomInclude,
       }),
       // Today's arrivals (CONFIRMED or PENDING, check-in today)
       prisma.booking.findMany({
@@ -132,13 +150,32 @@ export async function GET(req: NextRequest) {
         ? Math.round((todayPaidRevenue / todayExpectedRevenue) * 1000) / 10
         : null;
 
-    // Room status counts
-    const roomStatusCounts = roomStatuses.map((rs) => ({
-      code: rs.code,
-      name: rs.name,
-      color: rs.color ?? "#888",
-      count: rs.rooms.length,
-    }));
+    // Room status counts must match the current status shown on room-map cards.
+    const dashboardRooms = dashboardRoomsRaw.map(toRoomDTO);
+    const statusMeta = new Map(
+      [...dashboardRoomStatuses, ...(checkedOutStatus ? [checkedOutStatus] : [])].map((status) => [
+        status.code,
+        status,
+      ]),
+    );
+    const roomStatusCountsMap = new Map<string, number>(
+      ROOM_DISPLAY_STATUS_ORDER.map((code) => [code, 0]),
+    );
+
+    for (const room of dashboardRooms) {
+      const code = resolveRoomDisplayStatusCode(room);
+      roomStatusCountsMap.set(code, (roomStatusCountsMap.get(code) ?? 0) + 1);
+    }
+
+    const roomStatusCounts = ROOM_DISPLAY_STATUS_ORDER.map((code) => {
+      const meta = statusMeta.get(code);
+      return {
+        code,
+        name: meta?.name ?? code,
+        color: meta?.color ?? "#888",
+        count: roomStatusCountsMap.get(code) ?? 0,
+      };
+    });
 
     const occupancyRate = totalRooms > 0 ? Math.round((occupiedBookings / totalRooms) * 100) : 0;
 
@@ -155,9 +192,11 @@ export async function GET(req: NextRequest) {
       todayPaidRevenue,
       todayExpectedRevenue,
       todayRevenuePercent,
+      totalRooms,
       occupancyRate,
-      currentGuests: occupiedBookings,
+      todayCheckinCount: todayCheckInBookings,
       roomsNeedCleaning: cleaningRooms,
+      todayCheckoutsCount: todayDeparturesRaw.length,
       revenueByDay,
       roomStatusCounts,
       todayArrivals: (todayArrivalsRaw as BookingWithRelations[]).map((b) => ({

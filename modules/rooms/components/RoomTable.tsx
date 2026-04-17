@@ -1,17 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { App, Button, Select, Space, Switch, Tag } from "antd";
-import { IconEdit, IconHistory, IconPlus, IconPower, IconTrash } from "@tabler/icons-react";
+import dayjs from "dayjs";
+import { App, Button, DatePicker, Select, Space, Switch, Tag } from "antd";
+import { IconEdit, IconHistory, IconPlus, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import AppTable from "@/common/components/ui/AppTable";
 import StatusBadge from "@/common/components/ui/StatusBadge";
 import PriceDisplay from "@/common/components/ui/PriceDisplay";
+import { useHotelSettings } from "@/common/hooks/useHotelSettings";
 import { useMasterData } from "@/common/hooks/useMasterData";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { usePermission } from "@/common/hooks/usePermission";
 import { PERMISSIONS } from "@/common/constants/permissions";
+import { todayInTimezone } from "@/common/utils/clientTimezone";
+import { resolveStatusDisplayWithMasterData } from "@/common/utils/roomDisplayStatus";
 import { useAuthRole } from "@/providers/AuthRoleProvider";
 import { useRooms } from "../hooks/useRooms";
 import { useDeleteRoom } from "../hooks/useRoomMutations";
@@ -23,6 +27,8 @@ export default function RoomTable() {
   const t = useTranslations();
   const { message } = App.useApp();
   const { role } = useAuthRole();
+  const { data: hotelSettings } = useHotelSettings();
+  const tz = hotelSettings?.timezone ?? "Asia/Ho_Chi_Minh";
   const { floors, roomTypes, roomStatuses } = useMasterData();
   const { data, isLoading, pagination, filters, setFilters } = useRooms();
   const deleteRoom = useDeleteRoom();
@@ -85,9 +91,10 @@ export default function RoomTable() {
     {
       key: "status",
       title: t("room.status"),
-      render: (_: unknown, r: Room) => (
-        <StatusBadge color={r.roomStatus.color} label={r.roomStatus.name} />
-      ),
+      render: (_: unknown, r: Room) => {
+        const { label, color } = resolveStatusDisplayWithMasterData(r, roomStatuses);
+        return <StatusBadge color={color} label={label} />;
+      },
       width: 130,
     },
     {
@@ -162,6 +169,18 @@ export default function RoomTable() {
         }}
       >
         <Space wrap>
+          <DatePicker
+            format="DD/MM/YYYY"
+            value={filters.date ? dayjs(filters.date) : todayInTimezone(tz)}
+            onChange={(d) =>
+              setFilters((prev) => ({
+                ...prev,
+                date: d ? d.format("YYYY-MM-DD") : todayInTimezone(tz).format("YYYY-MM-DD"),
+              }))
+            }
+            allowClear={false}
+            placeholder={t("roomMap.date")}
+          />
           <Select
             allowClear
             placeholder={t("room.floor")}

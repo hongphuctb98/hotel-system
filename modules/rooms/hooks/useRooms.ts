@@ -9,6 +9,7 @@ type RoomFilters = {
   roomTypeId?: string;
   statusId?: string;
   showInactive?: boolean;
+  date?: string;
 };
 
 export function useRooms() {

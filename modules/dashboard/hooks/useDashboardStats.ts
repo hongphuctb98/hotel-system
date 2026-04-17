@@ -8,9 +8,11 @@ export type DashboardStats = {
   todayPaidRevenue: number;
   todayExpectedRevenue: number;
   todayRevenuePercent: number | null;
+  totalRooms: number;
   occupancyRate: number;
-  currentGuests: number;
+  todayCheckinCount: number;
   roomsNeedCleaning: number;
+  todayCheckoutsCount: number;
   revenueByDay: { date: string; revenue: number }[];
   roomStatusCounts: { code: string; name: string; color: string; count: number }[];
   todayArrivals: { id: string; guestName: string; roomNumber: string; scheduledTime: string }[];

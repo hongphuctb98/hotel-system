@@ -2,7 +2,9 @@
 
 import { Table, Skeleton, theme } from "antd";
 import type { ColumnType } from "antd/es/table";
+import { useTranslations } from "next-intl";
 import { useMasterData } from "@/common/hooks/useMasterData";
+import { getBookingStatusLabel } from "@/common/utils/bookingStatusLabel";
 import { useReservationMatrix } from "../hooks/useReservationMatrix";
 
 type Props = {
@@ -20,6 +22,7 @@ type RowData = {
 };
 
 export default function ReservationSummary({ checkInFrom, checkInTo }: Props) {
+  const t = useTranslations();
   const { token } = theme.useToken();
   const { bookingStatuses, roomTypes } = useMasterData();
   const { data: matrix, isLoading } = useReservationMatrix({ checkInFrom, checkInTo });
@@ -58,7 +61,7 @@ export default function ReservationSummary({ checkInFrom, checkInTo }: Props) {
     return {
       key: status.id,
       statusId: status.id,
-      statusName: status.name,
+      statusName: getBookingStatusLabel(status, t),
       statusColor: status.color,
       counts,
       total,
@@ -79,7 +82,9 @@ export default function ReservationSummary({ checkInFrom, checkInTo }: Props) {
   const columns: ColumnType<RowData>[] = [
     {
       key: "status",
-      title: <span style={{ fontSize: 12, fontWeight: 600 }}>Status</span>,
+      title: (
+        <span style={{ fontSize: 12, fontWeight: 600 }}>{t("common.status")}</span>
+      ),
       dataIndex: "statusName",
       width: 128,
       render: (_: unknown, row: RowData) => (
@@ -120,7 +125,9 @@ export default function ReservationSummary({ checkInFrom, checkInTo }: Props) {
     })),
     {
       key: "total",
-      title: <span style={{ fontSize: 12, fontWeight: 600 }}>Total</span>,
+      title: (
+        <span style={{ fontSize: 12, fontWeight: 600 }}>{t("booking.total")}</span>
+      ),
       dataIndex: "total",
       align: "center" as const,
       width: 72,
@@ -136,7 +143,7 @@ export default function ReservationSummary({ checkInFrom, checkInTo }: Props) {
   const totalRow: RowData = {
     key: "__total__",
     statusId: "",
-    statusName: "Total",
+    statusName: t("booking.total"),
     statusColor: token.colorBorderSecondary,
     counts: totalCounts,
     total: grandTotal,
@@ -150,14 +157,14 @@ export default function ReservationSummary({ checkInFrom, checkInTo }: Props) {
         className="text-sm text-center py-4"
         style={{ color: token.colorTextSecondary }}
       >
-        No reservations in the selected date range.
+        {t("booking.emptyInSelectedDateRange")}
       </div>
     );
   }
 
   return (
     <>
-      <div className="w-full lg:w-1/2 lg:max-w-[760px]">
+      <div className="w-full lg:w-1/2 lg:max-w-190">
         <Table<RowData>
           className="reservation-summary-table"
           columns={columns}

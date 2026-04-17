@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { bookingService } from "@/common/services/bookingService";
 import { calculateStayPrice, buildStayPriceInput, countNights } from "@/common/utils/stayPricing";
 import { useTimezone } from "@/providers/TimezoneProvider";
-import { toHotelDayjs } from "@/common/utils/clientTimezone";
+import { toHotelDayjs, todayInTimezone } from "@/common/utils/clientTimezone";
 import type { Room } from "@/types/room.types";
 import type { ServiceItem } from "@/types/master.types";
 import type { StayMode, FormValues } from "../utils/roomModalMode";
@@ -168,9 +168,20 @@ export function useRoomModalForm(
         })),
       });
     } else {
+      const defaultCheckInDate = todayInTimezone(tz).hour(14).minute(0).second(0).millisecond(0);
+      const defaultCheckOutDate = defaultCheckInDate
+        .clone()
+        .add(1, "day")
+        .hour(11)
+        .minute(0)
+        .second(0)
+        .millisecond(0);
+
       // New booking: pre-fill from roomType.pricing defaults (nightly by default)
       form.setFieldsValue({
         chargeType: "nightly",
+        checkInDate: defaultCheckInDate,
+        checkOutDate: defaultCheckOutDate,
         baseRate:   pricing?.nightlyPrice != null ? Number(pricing.nightlyPrice) : (room?.basePrice ? Number(room.basePrice) : 0),
       });
     }

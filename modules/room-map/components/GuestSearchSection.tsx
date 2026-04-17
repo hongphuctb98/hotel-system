@@ -101,13 +101,11 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
               disabled={disabled}
             />
           </Form.Item>
-          {isGuestLocked && (
             <div style={{ marginTop: -6, marginBottom: 6 }}>
               <Button type="link" size="small" onClick={handleClear} style={{ padding: 0, height: "auto", fontSize: 11 }}>
                 {t("clearGuest")}
               </Button>
             </div>
-          )}
         </Col>
         <Col span={7}>
           <Form.Item
@@ -134,14 +132,13 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
       <Row gutter={[8, 0]}>
         <Col span={14}>
           <Form.Item name="source" label={t("source")} style={ITEM_STYLE}>
-            <Input disabled={disabled} />
+            <Input  />
           </Form.Item>
         </Col>
         <Col span={10}>
           <Form.Item name="chargeType" label={t("chargeType")} style={ITEM_STYLE}>
             <Select
               options={CHARGE_TYPE_OPTIONS}
-              disabled={disabled}
             />
           </Form.Item>
         </Col>
