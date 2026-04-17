@@ -5,6 +5,48 @@ import { getAuthUser } from "@/lib/auth";
 import { ok, badRequest, forbidden, notFound, conflict, serverError } from "@/lib/response";
 import { toStaffDTO, staffInclude } from "../../route";
 
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const caller = await getAuthUser();
+    if (!caller) return forbidden("Unauthorized");
+
+    const { id } = await params;
+    const body = await req.json();
+    const { role, isActive } = body as { role?: string; isActive?: boolean };
+
+    if (role === "ADMIN" && caller.role !== "ADMIN") {
+      return forbidden("Only admins can assign the ADMIN role");
+    }
+
+    const staff = await prisma.staff.findUnique({
+      where: { id },
+      select: { id: true, userId: true },
+    });
+    if (!staff) return notFound();
+    if (!staff.userId) return badRequest("This staff member has no account to update");
+
+    if (isActive === false && caller.sub === staff.userId) {
+      return forbidden("You cannot deactivate your own account");
+    }
+
+    const updateData: Record<string, unknown> = {};
+    if (role !== undefined) updateData.role = role;
+    if (isActive !== undefined) updateData.isActive = isActive;
+
+    await prisma.user.update({ where: { id: staff.userId }, data: updateData });
+
+    const updated = await prisma.staff.findUnique({ where: { id }, include: staffInclude });
+    if (!updated) throw new Error("Staff record not found after update");
+
+    return ok(toStaffDTO(updated));
+  } catch (e) {
+    return serverError(e);
+  }
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -73,9 +73,12 @@ export async function GET(req: NextRequest) {
     const { page, limit } = parseQueryParams(req.nextUrl.searchParams);
     const showInactive = req.nextUrl.searchParams.get("showInactive") === "true";
     const role = req.nextUrl.searchParams.get("role");
+    const hasAccountParam = req.nextUrl.searchParams.get("hasAccount");
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = {};
+    if (hasAccountParam === "true") where.userId = { not: null };
+    else if (hasAccountParam === "false") where.userId = null;
     if (!showInactive) {
       const now = new Date();
       where.isActive = true;

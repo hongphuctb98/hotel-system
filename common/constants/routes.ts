@@ -9,6 +9,7 @@ export const ROUTES = {
   HOUSEKEEPING: "/housekeeping",
   BILLING: "/billing",
   STAFF: "/staff",
+  ACCOUNTS: "/accounts",
   SETTINGS: "/settings",
   MASTER: {
     FLOORS: "/master-data/floors",

@@ -9,6 +9,7 @@
     "housekeeping": "Housekeeping",
     "billing": "Billing & Services",
     "staff": "Staff Management",
+    "accounts": "Account Management",
     "settings": "Settings",
     "history": "Activity Log",
     "masterData": {
@@ -508,5 +509,24 @@
     "email": "Email",
     "hotelInfoSaveSuccess": "Hotel information saved.",
     "hotelInfoSaveError": "Failed to save hotel information. Please try again."
+  },
+  "accounts": {
+    "title": "Account Management",
+    "createAccount": "Create Account",
+    "editAccount": "Edit Account",
+    "createSuccess": "Account created successfully",
+    "createFailed": "Failed to create account",
+    "editSuccess": "Account updated successfully",
+    "editFailed": "Failed to update account",
+    "resetPassword": "Reset Password",
+    "role": "System Role",
+    "accountStatus": "Account Status",
+    "accountEmail": "Login Email",
+    "password": "Password",
+    "staffPlaceholder": "Select staff member",
+    "staffName": "Staff Member",
+    "filterByRole": "Filter by role",
+    "noUnlinkedStaff": "All staff members already have accounts",
+    "emailTaken": "This login email is already in use"
   }
 }

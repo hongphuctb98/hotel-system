@@ -10,7 +10,7 @@ import type { ApiResponse, PaginationParams } from "@/types/api.types";
 
 export const staffService = {
   findAll: (
-    params?: PaginationParams & { role?: string; showInactive?: boolean }
+    params?: PaginationParams & { role?: string; showInactive?: boolean; hasAccount?: boolean }
   ): Promise<ApiResponse<StaffMember[]>> => {
     const query = new URLSearchParams();
     if (params) {
@@ -39,6 +39,13 @@ export const staffService = {
     data: CreateAccountPayload
   ): Promise<ApiResponse<StaffMember>> =>
     apiClient.post<StaffMember>(`/api/staff/${id}/account`, data),
+
+  // Update an existing linked account (role and/or isActive)
+  updateAccount: (
+    id: string,
+    data: { role?: string; isActive?: boolean }
+  ): Promise<ApiResponse<StaffMember>> =>
+    apiClient.patch<StaffMember>(`/api/staff/${id}/account`, data),
 
   resetPassword: (
     id: string,

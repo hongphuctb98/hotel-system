@@ -50,13 +50,13 @@ export const navigationConfig: NavItem[] = [
     href: ROUTES.GUESTS,
     permission: PERMISSIONS.GUEST_VIEW,
   },
-  {
-    key: "housekeeping",
-    labelKey: "nav.housekeeping",
-    icon: undefined,
-    href: ROUTES.HOUSEKEEPING,
-    permission: PERMISSIONS.HOUSEKEEPING_VIEW,
-  },
+  // {
+  //   key: "housekeeping",
+  //   labelKey: "nav.housekeeping",
+  //   icon: undefined,
+  //   href: ROUTES.HOUSEKEEPING,
+  //   permission: PERMISSIONS.HOUSEKEEPING_VIEW,
+  // },
   {
     key: "billing",
     labelKey: "nav.billing",
@@ -80,6 +80,14 @@ export const navigationConfig: NavItem[] = [
     href: ROUTES.STAFF,
     permission: PERMISSIONS.STAFF_VIEW,
     roles: ["ADMIN", "MANAGER"],
+  },
+  {
+    key: "accounts",
+    labelKey: "nav.accounts",
+    icon: undefined,
+    href: ROUTES.ACCOUNTS,
+    permission: PERMISSIONS.STAFF_MANAGE,
+    roles: ["ADMIN"],
   },
   {
     key: "settings",

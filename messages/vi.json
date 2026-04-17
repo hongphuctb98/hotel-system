@@ -9,6 +9,7 @@
     "housekeeping": "Buồng phòng",
     "billing": "Dịch vụ & Hóa đơn",
     "staff": "Nhân viên",
+    "accounts": "Quản lý tài khoản",
     "settings": "Cài đặt",
     "history": "Nhật ký hoạt động",
     "masterData": {
@@ -509,5 +510,24 @@
     "email": "Email",
     "hotelInfoSaveSuccess": "Đã lưu thông tin khách sạn.",
     "hotelInfoSaveError": "Lưu thông tin khách sạn thất bại. Vui lòng thử lại."
+  },
+  "accounts": {
+    "title": "Quản lý tài khoản",
+    "createAccount": "Tạo tài khoản",
+    "editAccount": "Chỉnh sửa tài khoản",
+    "createSuccess": "Tạo tài khoản thành công",
+    "createFailed": "Tạo tài khoản thất bại",
+    "editSuccess": "Cập nhật tài khoản thành công",
+    "editFailed": "Cập nhật tài khoản thất bại",
+    "resetPassword": "Đặt lại mật khẩu",
+    "role": "Vai trò hệ thống",
+    "accountStatus": "Trạng thái tài khoản",
+    "accountEmail": "Email đăng nhập",
+    "password": "Mật khẩu",
+    "staffPlaceholder": "Chọn nhân viên",
+    "staffName": "Nhân viên",
+    "filterByRole": "Lọc theo vai trò",
+    "noUnlinkedStaff": "Tất cả nhân viên đã có tài khoản",
+    "emailTaken": "Email đăng nhập này đã được sử dụng"
   }
 }
