@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import type { Prisma } from "@/prisma/generated/client";
 
 export interface WriteAuditParams {
   userId?:     string | null;
@@ -27,8 +28,8 @@ export async function writeAudit(params: WriteAuditParams): Promise<void> {
         entityType: params.entityType,
         entityId:   params.entityId,
         roomId:     params.roomId     ?? null,
-        oldValues:  params.oldValues  ?? undefined,
-        newValues:  params.newValues  ?? undefined,
+        oldValues:  params.oldValues  != null ? params.oldValues  as Prisma.InputJsonValue : undefined,
+        newValues:  params.newValues  != null ? params.newValues  as Prisma.InputJsonValue : undefined,
         ipAddress:  params.ipAddress  ?? null,
       },
     });
