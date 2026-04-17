@@ -18,12 +18,17 @@ export type TodayBookingDTO = {
 
 export type DashboardStats = {
   periodRevenue: number;
+  todayCollected: number;
+  yesterdayCollected: number;
   todayExpectedRevenue: number;
   totalRooms: number;
   occupancyRate: number;
+  occupancyRateChange: number | null;
   todayCheckinCount: number;
+  todayCheckinChange: number | null;
   roomsNeedCleaning: number;
   todayCheckoutsCount: number;
+  todayCheckoutsChange: number | null;
   revenueByDay: { date: string; revenue: number }[];
   roomStatusCounts: { code: string; name: string; color: string; count: number }[];
   todayArrivals: TodayBookingDTO[];

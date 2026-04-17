@@ -25,6 +25,11 @@ export async function GET(req: NextRequest) {
     const periodStartStr = dayjs.tz(todayStr, tz).subtract(period - 1, "day").format("YYYY-MM-DD");
     const { start: periodStart } = await buildLocalDayBoundsUTC(periodStartStr);
 
+    // Yesterday's UTC bounds — derived from already-fetched timezone, no extra await
+    const yesterdayStr = dayjs.tz(todayStr, tz).subtract(1, "day").format("YYYY-MM-DD");
+    const yesterdayStart = dayjs.tz(yesterdayStr, tz).startOf("day").toDate();
+    const yesterdayEnd = dayjs.tz(yesterdayStr, tz).endOf("day").toDate();
+
     const [
       totalRooms,
       occupiedBookings,
@@ -40,6 +45,9 @@ export async function GET(req: NextRequest) {
       housekeepingPending,
       housekeepingInProgress,
       housekeepingCompletedToday,
+      yesterdayOccupied,
+      yesterdayCheckins,
+      yesterdayCheckouts,
     ] = await Promise.all([
       // Total active rooms
       prisma.room.count({ where: { isActive: true } }),
@@ -122,6 +130,28 @@ export async function GET(req: NextRequest) {
       prisma.housekeepingTask.count({
         where: { status: "COMPLETED", updatedAt: { gte: todayStart, lte: todayEnd } },
       }),
+      // Yesterday — bookings occupying a room (for occupancy rate comparison)
+      prisma.booking.count({
+        where: {
+          checkInDate: { lte: yesterdayEnd },
+          checkOutDate: { gte: yesterdayStart },
+          bookingStatus: { code: { in: ["CHECKED_IN", "CHECKED_OUT"] } },
+        },
+      }),
+      // Yesterday — check-ins (arrived yesterday, now CHECKED_IN or CHECKED_OUT)
+      prisma.booking.count({
+        where: {
+          checkInDate: { gte: yesterdayStart, lte: yesterdayEnd },
+          bookingStatus: { code: { in: ["CHECKED_IN", "CHECKED_OUT"] } },
+        },
+      }),
+      // Yesterday — check-outs (departed yesterday, now CHECKED_OUT)
+      prisma.booking.count({
+        where: {
+          checkOutDate: { gte: yesterdayStart, lte: yesterdayEnd },
+          bookingStatus: { code: "CHECKED_OUT" },
+        },
+      }),
     ]);
 
     // Build revenueByDay: group period payments by hotel-local date
@@ -137,10 +167,20 @@ export async function GET(req: NextRequest) {
       revenueByDay.push({ date: dateStr, revenue: revenueMap[dateStr] ?? 0 });
     }
 
-    // Actual revenue: sum of real payments received in the period
+    // Returns null when previous value is 0 (division not meaningful)
+    function dayOverDay(today: number, yesterday: number): number | null {
+      if (yesterday === 0) return null;
+      return Math.round(((today - yesterday) / yesterday) * 100);
+    }
+
+    // Actual revenue: sum of real payments received in the period (for chart)
     const periodRevenue = periodPayments.reduce((sum, p) => sum + Number(p.amount), 0);
 
-    // Estimated revenue today: total invoice amounts for today's checkouts
+    // Money actually collected today and yesterday — derived from revenueMap already built above
+    const todayCollected = revenueMap[todayStr] ?? 0;
+    const yesterdayCollected = revenueMap[yesterdayStr] ?? 0;
+
+    // Estimated checkout revenue today: sum of invoice totals for bookings checking out today
     const todayExpectedRevenue = Number(todayCheckoutsExpected._sum.totalAmount ?? 0);
 
     // Room status counts must match the current status shown on room-map cards.
@@ -171,6 +211,7 @@ export async function GET(req: NextRequest) {
     });
 
     const occupancyRate = totalRooms > 0 ? Math.round((occupiedBookings / totalRooms) * 100) : 0;
+    const yesterdayOccupancyRate = totalRooms > 0 ? Math.round((yesterdayOccupied / totalRooms) * 100) : 0;
 
     type BookingWithRelations = {
       id: string;
@@ -207,12 +248,17 @@ export async function GET(req: NextRequest) {
 
     return ok({
       periodRevenue,
+      todayCollected,
+      yesterdayCollected,
       todayExpectedRevenue,
       totalRooms,
       occupancyRate,
+      occupancyRateChange: dayOverDay(occupancyRate, yesterdayOccupancyRate),
       todayCheckinCount: todayCheckInBookings,
+      todayCheckinChange: dayOverDay(todayCheckInBookings, yesterdayCheckins),
       roomsNeedCleaning: cleaningRooms,
       todayCheckoutsCount: todayDeparturesRaw.length,
+      todayCheckoutsChange: dayOverDay(todayDeparturesRaw.length, yesterdayCheckouts),
       revenueByDay,
       roomStatusCounts,
       todayArrivals: (todayArrivalsRaw as unknown as BookingWithRelations[]).map(toBookingDTO),

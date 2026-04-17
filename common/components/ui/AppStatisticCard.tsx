@@ -13,6 +13,7 @@ interface AppStatisticCardProps {
   suffix?: string;
   secondaryText?: string;
   changePercent?: number | null;
+  changeAmount?: string;
 }
 
 export default function AppStatisticCard({
@@ -24,9 +25,11 @@ export default function AppStatisticCard({
   suffix,
   secondaryText,
   changePercent,
+  changeAmount,
 }: AppStatisticCardProps) {
   const t = useTranslations();
 
+  const showChange = changePercent !== undefined || changeAmount !== undefined;
   const changeColor =
     changePercent == null ? "#8c8c8c" : changePercent > 0 ? "#52c41a" : changePercent < 0 ? "#ff4d4f" : "#8c8c8c";
   const ChangeIcon =
@@ -60,10 +63,13 @@ export default function AppStatisticCard({
                 {secondaryText}
               </span>
             )}
-            {changePercent !== undefined && (
-              <span className="flex items-center gap-0.5 text-xs font-medium" style={{ color: changeColor }}>
+            {showChange && (
+              <span className="flex items-center gap-1 text-xs font-medium" style={{ color: changeColor }}>
                 <ChangeIcon size={13} />
-                {changePercent == null ? "—" : `${changePercent > 0 ? "+" : ""}${changePercent}%`}
+                {changeAmount && <span>{changeAmount}</span>}
+                {changePercent == null
+                  ? <span>—</span>
+                  : <span>{`(${changePercent > 0 ? "+" : ""}${changePercent}%)`}</span>}
               </span>
             )}
           </div>
