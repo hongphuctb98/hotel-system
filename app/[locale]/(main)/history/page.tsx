@@ -87,7 +87,7 @@ export default function HistoryPage() {
   }
 
   const { data, isLoading, pagination } = useTableQuery<AuditLogRecord, HistoryFilters>({
-    queryKey: ["audit-log", "all", filters],
+    queryKey: ["audit-log", "all", JSON.stringify(filters)],
     fetcher: ({ page, limit }) =>
       auditLogService.findAll({ ...filters, page, limit }),
     externalFilters: filters,
