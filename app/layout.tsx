@@ -1,10 +1,16 @@
-// Root layout is intentionally minimal — <html> and <body> are rendered in
-// app/[locale]/layout.tsx so that the locale-aware lang attribute can be set
-// directly on the <html> element without a script-tag workaround.
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <>{children}</>;
+import type { Metadata } from "next";
+import { getLocale } from "next-intl/server";
+import "@/app/globals.css";
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
+  return (
+    <html lang={locale} translate="no" className="notranslate">
+      <head>
+        <meta name="google" content="notranslate" />
+      </head>
+      <body>{children}</body>
+    </html>
+  );
 }
+
