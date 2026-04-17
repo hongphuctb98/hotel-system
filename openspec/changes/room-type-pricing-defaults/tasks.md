@@ -3,8 +3,8 @@
 - [x] 1.1 Add `RoomTypePricing` model to `prisma/schema.prisma`: `id`, `roomTypeId` (unique FK → `RoomType`), `nightlyPrice Decimal?`, `dailyPrice Decimal?`, `hourlyBlockHours Int?`, `hourlyBlockPrice Decimal?`, `hourlyExtraPrice Decimal?`, `createdAt`, `updatedAt`; add `pricing RoomTypePricing?` relation back on `RoomType`
 - [x] 1.2 Remove `defaultPrice` field from the `RoomType` model in `prisma/schema.prisma`
 - [x] 1.3 Run `npm run db:migrate` to generate the migration file; manually insert a raw SQL step **before** the `defaultPrice` drop: `INSERT INTO room_type_pricing (id, room_type_id, nightly_price, created_at, updated_at) SELECT gen_random_uuid(), id, default_price, now(), now() FROM room_types ON CONFLICT DO NOTHING`
-- [ ] 1.4 Apply the migration: `npm run db:migrate`
-- [ ] 1.5 Run `npm run db:generate` to regenerate the Prisma client
+- [x] 1.4 Apply the migration: `npm run db:migrate`
+- [x] 1.5 Run `npm run db:generate` to regenerate the Prisma client
 
 ## 2. Seed
 

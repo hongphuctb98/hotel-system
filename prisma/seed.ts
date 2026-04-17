@@ -188,16 +188,27 @@ async function main() {
     prisma.guestType.findUnique({ where: { code: "VIP" } }),
     prisma.guestType.findUnique({ where: { code: "CORPORATE" } }),
   ]);
-  const [bsCONFIRMED, bsCHECKED_IN, bsCHECKED_OUT] = await Promise.all([
+  const [bsPENDING, bsCONFIRMED, bsCHECKED_IN, bsCHECKED_OUT, bsCANCELLED, bsNO_SHOW] = await Promise.all([
+    prisma.bookingStatus.findUnique({ where: { code: "PENDING" } }),
     prisma.bookingStatus.findUnique({ where: { code: "CONFIRMED" } }),
     prisma.bookingStatus.findUnique({ where: { code: "CHECKED_IN" } }),
     prisma.bookingStatus.findUnique({ where: { code: "CHECKED_OUT" } }),
+    prisma.bookingStatus.findUnique({ where: { code: "CANCELLED" } }),
+    prisma.bookingStatus.findUnique({ where: { code: "NO_SHOW" } }),
   ]);
-  const pmCASH = await prisma.paymentMethod.findUnique({ where: { code: "CASH" } });
-  const [siBREAKFAST, siLAUNDRY, siSPA] = await Promise.all([
+  const [pmCASH, pmCARD, pmBANK, pmQR] = await Promise.all([
+    prisma.paymentMethod.findUnique({ where: { code: "CASH" } }),
+    prisma.paymentMethod.findUnique({ where: { code: "CREDIT_CARD" } }),
+    prisma.paymentMethod.findUnique({ where: { code: "BANK_TRANSFER" } }),
+    prisma.paymentMethod.findUnique({ where: { code: "QR_PAYMENT" } }),
+  ]);
+  const [siBREAKFAST, siLAUNDRY, siSPA, siMINIBAR, siEXTRA_BED, siAIRPORT_TRANSFER] = await Promise.all([
     prisma.serviceItem.findUnique({ where: { code: "BREAKFAST" } }),
     prisma.serviceItem.findUnique({ where: { code: "LAUNDRY" } }),
     prisma.serviceItem.findUnique({ where: { code: "SPA" } }),
+    prisma.serviceItem.findUnique({ where: { code: "MINIBAR" } }),
+    prisma.serviceItem.findUnique({ where: { code: "EXTRA_BED" } }),
+    prisma.serviceItem.findUnique({ where: { code: "AIRPORT_TRANSFER" } }),
   ]);
 
   // Rooms
@@ -269,11 +280,14 @@ async function main() {
   };
 
   const rooms = await prisma.room.findMany({
-    where: { number: { in: ["102", "201", "202", "204", "303", "401"] } },
+    where: {
+      number: {
+        in: ["101", "102", "103", "104", "201", "202", "203", "204", "301", "302", "303", "304", "401", "402", "403", "404"],
+      },
+    },
   });
   const roomByNumber = Object.fromEntries(rooms.map((r) => [r.number, r]));
 
-  // Bookings for room-map validation (relative to today)
   const bookingDefs = [
     // Room 102: reserved and overlapping today
     {
@@ -288,7 +302,18 @@ async function main() {
       totalAmount: 800000 * 4,
       depositAmount: 800000,
       source: "Direct",
-      note: "Room-map reserved test\n[META] chargeType=nightly",
+      note: "Room-map reserved test",
+      invoice: {
+        invoiceNumber: "INV-SMP-0102-01",
+        subtotal: 3200000,
+        taxAmount: 320000,
+        discountAmount: 0,
+        totalAmount: 3520000,
+        isPaid: false,
+        issuedAt: atDayOffset(-1, 15),
+        payments: [],
+      },
+      services: [],
     },
     // Room 201: checked in and overlapping today
     {
@@ -304,7 +329,24 @@ async function main() {
       totalAmount: 800000 * 4,
       depositAmount: 800000,
       source: "Direct",
-      note: "Room-map checked-in test\n[META] chargeType=nightly",
+      note: "Room-map checked-in test",
+      invoice: {
+        invoiceNumber: "INV-SMP-0201-01",
+        subtotal: 3490000,
+        taxAmount: 349000,
+        discountAmount: 0,
+        totalAmount: 3839000,
+        isPaid: false,
+        issuedAt: atDayOffset(-2, 15),
+        payments: [
+          { paymentMethodId: pmCASH!.id, amount: 1500000, paidAt: atDayOffset(-2, 16), note: "Deposit" },
+          { paymentMethodId: pmQR!.id, amount: 500000, paidAt: atDayOffset(0, 10), note: "Additional payment" },
+        ],
+      },
+      services: [
+        { serviceItemId: siBREAKFAST!.id, quantity: 2, unitPrice: 120000, totalPrice: 240000, serviceDate: atDayOffset(-1, 8) },
+        { serviceItemId: siLAUNDRY!.id, quantity: 1, unitPrice: 50000, totalPrice: 50000, serviceDate: atDayOffset(0, 9) },
+      ],
     },
     // Extra occupied room with services
     {
@@ -320,7 +362,23 @@ async function main() {
       totalAmount: 800000 * 2,
       depositAmount: 400000,
       source: "Walk-in",
-      note: "Extra occupied sample\n[META] chargeType=nightly",
+      note: "Extra occupied sample",
+      invoice: {
+        invoiceNumber: "INV-SMP-0202-01",
+        subtotal: 2190000,
+        taxAmount: 219000,
+        discountAmount: 0,
+        totalAmount: 2409000,
+        isPaid: false,
+        issuedAt: atDayOffset(-1, 16),
+        payments: [
+          { paymentMethodId: pmCARD!.id, amount: 1000000, paidAt: atDayOffset(-1, 17), note: "Advance payment" },
+        ],
+      },
+      services: [
+        { serviceItemId: siSPA!.id, quantity: 1, unitPrice: 350000, totalPrice: 350000, serviceDate: atDayOffset(0, 14) },
+        { serviceItemId: siBREAKFAST!.id, quantity: 2, unitPrice: 120000, totalPrice: 240000, serviceDate: atDayOffset(0, 7) },
+      ],
     },
     // Extra occupied suite
     {
@@ -336,6 +394,22 @@ async function main() {
       totalAmount: 2500000 * 5,
       depositAmount: 2500000,
       source: "Agoda",
+      invoice: {
+        invoiceNumber: "INV-SMP-0401-01",
+        subtotal: 12500000,
+        taxAmount: 1250000,
+        discountAmount: 0,
+        totalAmount: 13750000,
+        isPaid: false,
+        issuedAt: atDayOffset(-2, 16),
+        payments: [
+          { paymentMethodId: pmBANK!.id, amount: 7000000, paidAt: atDayOffset(-2, 17), note: "Corporate transfer" },
+          { paymentMethodId: pmCARD!.id, amount: 3000000, paidAt: atDayOffset(-1, 19), note: "Card guarantee" },
+        ],
+      },
+      services: [
+        { serviceItemId: siAIRPORT_TRANSFER!.id, quantity: 1, unitPrice: 250000, totalPrice: 250000, serviceDate: atDayOffset(-2, 12) },
+      ],
     },
     // Room 303: future booking, non-overlap for today
     {
@@ -350,7 +424,18 @@ async function main() {
       totalAmount: 1800000 * 3,
       depositAmount: 600000,
       source: "Corporate",
-      note: "Future reservation test\n[META] chargeType=daily",
+      note: "Future reservation test",
+      invoice: {
+        invoiceNumber: "INV-SMP-0303-01",
+        subtotal: 5400000,
+        taxAmount: 540000,
+        discountAmount: 0,
+        totalAmount: 5940000,
+        isPaid: false,
+        issuedAt: atDayOffset(0, 9),
+        payments: [],
+      },
+      services: [],
     },
     // Room 204: checked out today
     {
@@ -367,92 +452,387 @@ async function main() {
       totalAmount: 1200000 * 3,
       depositAmount: 1200000,
       source: "Direct",
+      invoice: {
+        invoiceNumber: "INV-SMP-0204-01",
+        subtotal: 3600000,
+        taxAmount: 360000,
+        discountAmount: 0,
+        totalAmount: 3960000,
+        isPaid: true,
+        issuedAt: atDayOffset(0, 10),
+        payments: [
+          { paymentMethodId: pmCASH!.id, amount: 3960000, paidAt: atDayOffset(0, 10, 30), note: "Checkout settlement" },
+        ],
+      },
+      services: [],
+    },
+    // Past completed booking
+    {
+      bookingNumber: "BK-SAMPLE-0101",
+      guestId: guests[1].id,
+      roomId: roomByNumber["101"].id,
+      bookingStatusId: bsCHECKED_OUT!.id,
+      checkInDate: atDayOffset(-6, 14),
+      checkOutDate: atDayOffset(-4, 11),
+      actualCheckIn: atDayOffset(-6, 14),
+      actualCheckOut: atDayOffset(-4, 11),
+      adults: 2,
+      children: 0,
+      baseRate: 800000,
+      totalAmount: 1600000,
+      depositAmount: 500000,
+      source: "Booking.com",
+      invoice: {
+        invoiceNumber: "INV-SMP-0101-01",
+        subtotal: 1770000,
+        taxAmount: 177000,
+        discountAmount: 50000,
+        totalAmount: 1897000,
+        isPaid: true,
+        issuedAt: atDayOffset(-4, 9),
+        payments: [
+          { paymentMethodId: pmQR!.id, amount: 500000, paidAt: atDayOffset(-6, 15), note: "Deposit" },
+          { paymentMethodId: pmCARD!.id, amount: 1397000, paidAt: atDayOffset(-4, 10), note: "Final settlement" },
+        ],
+      },
+      services: [
+        { serviceItemId: siBREAKFAST!.id, quantity: 1, unitPrice: 120000, totalPrice: 120000, serviceDate: atDayOffset(-5, 8) },
+      ],
+    },
+    // Future confirmed booking with deposit
+    {
+      bookingNumber: "BK-SAMPLE-0103",
+      guestId: guests[3].id,
+      roomId: roomByNumber["103"].id,
+      bookingStatusId: bsCONFIRMED!.id,
+      checkInDate: atDayOffset(1, 14),
+      checkOutDate: atDayOffset(3, 11),
+      adults: 2,
+      children: 0,
+      baseRate: 800000,
+      totalAmount: 1600000,
+      depositAmount: 400000,
+      source: "Website",
+      invoice: {
+        invoiceNumber: "INV-SMP-0103-01",
+        subtotal: 1600000,
+        taxAmount: 160000,
+        discountAmount: 0,
+        totalAmount: 1760000,
+        isPaid: false,
+        issuedAt: atDayOffset(0, 14),
+        payments: [
+          { paymentMethodId: pmQR!.id, amount: 400000, paidAt: atDayOffset(0, 14, 30), note: "Deposit" },
+        ],
+      },
+      services: [],
+    },
+    // Cancelled reservation
+    {
+      bookingNumber: "BK-SAMPLE-0104",
+      guestId: guests[8].id,
+      roomId: roomByNumber["104"].id,
+      bookingStatusId: bsCANCELLED!.id,
+      checkInDate: atDayOffset(2, 14),
+      checkOutDate: atDayOffset(4, 11),
+      adults: 1,
+      children: 0,
+      baseRate: 800000,
+      totalAmount: 1600000,
+      depositAmount: 0,
+      source: "Travel Agent",
+      note: "Cancelled sample reservation",
+      invoice: {
+        invoiceNumber: "INV-SMP-0104-01",
+        subtotal: 1600000,
+        taxAmount: 160000,
+        discountAmount: 0,
+        totalAmount: 1760000,
+        isPaid: false,
+        issuedAt: atDayOffset(0, 10),
+        payments: [],
+      },
+      services: [],
+    },
+    // Today's arrival
+    {
+      bookingNumber: "BK-SAMPLE-0203",
+      guestId: guests[9].id,
+      roomId: roomByNumber["203"].id,
+      bookingStatusId: bsCONFIRMED!.id,
+      checkInDate: atDayOffset(0, 14),
+      checkOutDate: atDayOffset(2, 11),
+      adults: 2,
+      children: 0,
+      baseRate: 1200000,
+      totalAmount: 2400000,
+      depositAmount: 1200000,
+      source: "Corporate",
+      invoice: {
+        invoiceNumber: "INV-SMP-0203-01",
+        subtotal: 2400000,
+        taxAmount: 240000,
+        discountAmount: 0,
+        totalAmount: 2640000,
+        isPaid: false,
+        issuedAt: atDayOffset(0, 8),
+        payments: [
+          { paymentMethodId: pmBANK!.id, amount: 1200000, paidAt: atDayOffset(0, 9), note: "Deposit" },
+        ],
+      },
+      services: [],
+    },
+    // In-house deluxe booking
+    {
+      bookingNumber: "BK-SAMPLE-0301",
+      guestId: guests[0].id,
+      roomId: roomByNumber["301"].id,
+      bookingStatusId: bsCHECKED_IN!.id,
+      checkInDate: atDayOffset(-3, 14),
+      checkOutDate: atDayOffset(1, 11),
+      actualCheckIn: atDayOffset(-3, 14),
+      adults: 2,
+      children: 1,
+      baseRate: 1200000,
+      totalAmount: 4800000,
+      depositAmount: 1000000,
+      source: "Expedia",
+      invoice: {
+        invoiceNumber: "INV-SMP-0301-01",
+        subtotal: 5240000,
+        taxAmount: 524000,
+        discountAmount: 0,
+        totalAmount: 5764000,
+        isPaid: false,
+        issuedAt: atDayOffset(-3, 15),
+        payments: [
+          { paymentMethodId: pmCARD!.id, amount: 2000000, paidAt: atDayOffset(-3, 16), note: "Guarantee card" },
+        ],
+      },
+      services: [
+        { serviceItemId: siBREAKFAST!.id, quantity: 2, unitPrice: 120000, totalPrice: 240000, serviceDate: atDayOffset(-2, 8) },
+        { serviceItemId: siMINIBAR!.id, quantity: 2, unitPrice: 30000, totalPrice: 60000, serviceDate: atDayOffset(-1, 21) },
+        { serviceItemId: siEXTRA_BED!.id, quantity: 1, unitPrice: 200000, totalPrice: 200000, serviceDate: atDayOffset(-3, 15) },
+      ],
+    },
+    // Checkout today but not fully paid
+    {
+      bookingNumber: "BK-SAMPLE-0302",
+      guestId: guests[2].id,
+      roomId: roomByNumber["302"].id,
+      bookingStatusId: bsCHECKED_IN!.id,
+      checkInDate: atDayOffset(-1, 14),
+      checkOutDate: atDayOffset(0, 11),
+      actualCheckIn: atDayOffset(-1, 14),
+      adults: 2,
+      children: 0,
+      baseRate: 1200000,
+      totalAmount: 1200000,
+      depositAmount: 0,
+      source: "Walk-in",
+      invoice: {
+        invoiceNumber: "INV-SMP-0302-01",
+        subtotal: 1290000,
+        taxAmount: 129000,
+        discountAmount: 0,
+        totalAmount: 1419000,
+        isPaid: false,
+        issuedAt: atDayOffset(-1, 14, 30),
+        payments: [],
+      },
+      services: [
+        { serviceItemId: siMINIBAR!.id, quantity: 3, unitPrice: 30000, totalPrice: 90000, serviceDate: atDayOffset(-1, 22) },
+      ],
+    },
+    // Pending future booking
+    {
+      bookingNumber: "BK-SAMPLE-0304",
+      guestId: guests[5].id,
+      roomId: roomByNumber["304"].id,
+      bookingStatusId: bsPENDING!.id,
+      checkInDate: atDayOffset(5, 14),
+      checkOutDate: atDayOffset(7, 11),
+      adults: 2,
+      children: 2,
+      baseRate: 1800000,
+      totalAmount: 3600000,
+      depositAmount: 0,
+      source: "Phone",
+      invoice: {
+        invoiceNumber: "INV-SMP-0304-01",
+        subtotal: 3600000,
+        taxAmount: 360000,
+        discountAmount: 0,
+        totalAmount: 3960000,
+        isPaid: false,
+        issuedAt: atDayOffset(0, 11),
+        payments: [],
+      },
+      services: [],
+    },
+    // No-show booking
+    {
+      bookingNumber: "BK-SAMPLE-0402",
+      guestId: guests[6].id,
+      roomId: roomByNumber["402"].id,
+      bookingStatusId: bsNO_SHOW!.id,
+      checkInDate: atDayOffset(-1, 14),
+      checkOutDate: atDayOffset(1, 11),
+      adults: 1,
+      children: 0,
+      baseRate: 2500000,
+      totalAmount: 5000000,
+      depositAmount: 0,
+      source: "Website",
+      note: "No-show sample",
+      invoice: {
+        invoiceNumber: "INV-SMP-0402-01",
+        subtotal: 5000000,
+        taxAmount: 500000,
+        discountAmount: 0,
+        totalAmount: 5500000,
+        isPaid: false,
+        issuedAt: atDayOffset(-1, 10),
+        payments: [],
+      },
+      services: [],
+    },
+    // Past completed deluxe booking
+    {
+      bookingNumber: "BK-SAMPLE-0403",
+      guestId: guests[7].id,
+      roomId: roomByNumber["403"].id,
+      bookingStatusId: bsCHECKED_OUT!.id,
+      checkInDate: atDayOffset(-3, 14),
+      checkOutDate: atDayOffset(-1, 11),
+      actualCheckIn: atDayOffset(-3, 14),
+      actualCheckOut: atDayOffset(-1, 11),
+      adults: 2,
+      children: 0,
+      baseRate: 1200000,
+      totalAmount: 2400000,
+      depositAmount: 500000,
+      source: "Agoda",
+      invoice: {
+        invoiceNumber: "INV-SMP-0403-01",
+        subtotal: 2400000,
+        taxAmount: 240000,
+        discountAmount: 0,
+        totalAmount: 2640000,
+        isPaid: true,
+        issuedAt: atDayOffset(-1, 9),
+        payments: [
+          { paymentMethodId: pmCASH!.id, amount: 500000, paidAt: atDayOffset(-3, 15), note: "Deposit" },
+          { paymentMethodId: pmCARD!.id, amount: 2140000, paidAt: atDayOffset(-1, 9, 30), note: "Final settlement" },
+        ],
+      },
+      services: [],
+    },
+    // Another future reservation
+    {
+      bookingNumber: "BK-SAMPLE-0404",
+      guestId: guests[4].id,
+      roomId: roomByNumber["404"].id,
+      bookingStatusId: bsCONFIRMED!.id,
+      checkInDate: atDayOffset(2, 14),
+      checkOutDate: atDayOffset(4, 11),
+      adults: 2,
+      children: 0,
+      baseRate: 1200000,
+      totalAmount: 2400000,
+      depositAmount: 500000,
+      source: "Direct",
+      invoice: {
+        invoiceNumber: "INV-SMP-0404-01",
+        subtotal: 2400000,
+        taxAmount: 240000,
+        discountAmount: 0,
+        totalAmount: 2640000,
+        isPaid: false,
+        issuedAt: atDayOffset(0, 13),
+        payments: [
+          { paymentMethodId: pmCASH!.id, amount: 500000, paidAt: atDayOffset(0, 13, 30), note: "Deposit" },
+        ],
+      },
+      services: [],
     },
   ];
 
   for (const b of bookingDefs) {
+    const { invoice, services, ...bookingData } = b;
+    void invoice;
+    void services;
     await prisma.booking.upsert({
-      where: { bookingNumber: b.bookingNumber },
-      update: {},
-      create: b,
+      where: { bookingNumber: bookingData.bookingNumber },
+      update: {
+        guestId: bookingData.guestId,
+        roomId: bookingData.roomId,
+        bookingStatusId: bookingData.bookingStatusId,
+        checkInDate: bookingData.checkInDate,
+        checkOutDate: bookingData.checkOutDate,
+        actualCheckIn: bookingData.actualCheckIn ?? null,
+        actualCheckOut: bookingData.actualCheckOut ?? null,
+        adults: bookingData.adults,
+        children: bookingData.children,
+        baseRate: bookingData.baseRate,
+        totalAmount: bookingData.totalAmount,
+        depositAmount: bookingData.depositAmount,
+        source: bookingData.source,
+        note: bookingData.note ?? null,
+      },
+      create: bookingData,
     });
   }
+  const seededBookings = await prisma.booking.findMany({
+    where: { bookingNumber: { in: bookingDefs.map((b) => b.bookingNumber) } },
+    select: { id: true, bookingNumber: true },
+  });
+  const seededBookingByNumber = Object.fromEntries(seededBookings.map((b) => [b.bookingNumber, b]));
 
-  // Services cho booking đang ở
-  const bk201 = await prisma.booking.findUnique({ where: { bookingNumber: "BK-RMAP-0201" } });
-  const bk202 = await prisma.booking.findUnique({ where: { bookingNumber: "BK-RMAP-0202" } });
-  const bk204 = await prisma.booking.findUnique({ where: { bookingNumber: "BK-RMAP-0204" } });
+  for (const bookingDef of bookingDefs) {
+    const booking = seededBookingByNumber[bookingDef.bookingNumber];
+    if (!booking) continue;
 
-  if (bk201) {
-    await prisma.bookingService.createMany({
-      data: [
-        {
-          bookingId: bk201.id,
-          serviceItemId: siBREAKFAST!.id,
-          quantity: 2,
-          unitPrice: 120000,
-          totalPrice: 240000,
-          serviceDate: atDayOffset(-1, 8),
-        },
-        {
-          bookingId: bk201.id,
-          serviceItemId: siLAUNDRY!.id,
-          quantity: 1,
-          unitPrice: 50000,
-          totalPrice: 50000,
-          serviceDate: atDayOffset(0, 9),
-        },
-      ],
-      skipDuplicates: true,
-    });
-  }
-  if (bk202) {
-    await prisma.bookingService.createMany({
-      data: [
-        {
-          bookingId: bk202.id,
-          serviceItemId: siSPA!.id,
-          quantity: 1,
-          unitPrice: 350000,
-          totalPrice: 350000,
-          serviceDate: atDayOffset(0, 14),
-        },
-        {
-          bookingId: bk202.id,
-          serviceItemId: siBREAKFAST!.id,
-          quantity: 2,
-          unitPrice: 120000,
-          totalPrice: 240000,
-          serviceDate: atDayOffset(0, 7),
-        },
-      ],
-      skipDuplicates: true,
-    });
-  }
-
-  // Invoice + payment cho booking đã checkout
-  if (bk204) {
-    const existingInvoice = await prisma.invoice.findFirst({ where: { bookingId: bk204.id } });
-    if (!existingInvoice) {
-      const invoice = await prisma.invoice.create({
-        data: {
-          invoiceNumber: "INV-20260416-0001",
-          bookingId: bk204.id,
-          subtotal: 3600000,
-          taxAmount: 360000,
-          discountAmount: 0,
-          totalAmount: 3960000,
-          isPaid: true,
-          issuedAt: atDayOffset(0, 10),
-        },
+    await prisma.bookingService.deleteMany({ where: { bookingId: booking.id } });
+    if (bookingDef.services.length > 0) {
+      await prisma.bookingService.createMany({
+        data: bookingDef.services.map((service) => ({
+          bookingId: booking.id,
+          ...service,
+        })),
       });
-      await prisma.payment.create({
-        data: {
+    }
+
+    const existingInvoices = await prisma.invoice.findMany({
+      where: { bookingId: booking.id },
+      select: { id: true },
+    });
+    if (existingInvoices.length > 0) {
+      await prisma.payment.deleteMany({
+        where: { invoiceId: { in: existingInvoices.map((invoice) => invoice.id) } },
+      });
+      await prisma.invoice.deleteMany({ where: { bookingId: booking.id } });
+    }
+
+    const invoice = await prisma.invoice.create({
+      data: {
+        invoiceNumber: bookingDef.invoice.invoiceNumber,
+        bookingId: booking.id,
+        subtotal: bookingDef.invoice.subtotal,
+        taxAmount: bookingDef.invoice.taxAmount,
+        discountAmount: bookingDef.invoice.discountAmount,
+        totalAmount: bookingDef.invoice.totalAmount,
+        isPaid: bookingDef.invoice.isPaid,
+        issuedAt: bookingDef.invoice.issuedAt,
+      },
+    });
+
+    if (bookingDef.invoice.payments.length > 0) {
+      await prisma.payment.createMany({
+        data: bookingDef.invoice.payments.map((payment) => ({
           invoiceId: invoice.id,
-          paymentMethodId: pmCASH!.id,
-          amount: 3960000,
-          paidAt: atDayOffset(0, 10, 30),
-        },
+          ...payment,
+        })),
       });
     }
   }

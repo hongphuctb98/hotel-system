@@ -3,6 +3,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/common/services/apiClient";
 
+export type TodayBookingDTO = {
+  id: string;
+  guestName: string;
+  roomNumber: string;
+  roomType: string;
+  checkInDate: string;
+  checkOutDate: string;
+  paidAmount: number;
+  totalAmount: number;
+  dueAmount: number;
+  paymentStatus: "PAID" | "PARTIAL" | "UNPAID";
+};
+
 export type DashboardStats = {
   periodRevenue: number;
   todayExpectedRevenue: number;
@@ -13,8 +26,8 @@ export type DashboardStats = {
   todayCheckoutsCount: number;
   revenueByDay: { date: string; revenue: number }[];
   roomStatusCounts: { code: string; name: string; color: string; count: number }[];
-  todayArrivals: { id: string; guestName: string; roomNumber: string; scheduledTime: string }[];
-  todayDepartures: { id: string; guestName: string; roomNumber: string; scheduledTime: string }[];
+  todayArrivals: TodayBookingDTO[];
+  todayDepartures: TodayBookingDTO[];
   housekeepingCounts: { pending: number; inProgress: number; completedToday: number };
 };
 

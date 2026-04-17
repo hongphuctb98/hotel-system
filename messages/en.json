@@ -1,5 +1,7 @@
 {
   "nav": {
+    "adults": "Adults",
+    "children": "Children",
     "home": "Home",
     "dashboard": "Dashboard",
     "roomMap": "Room Map",
@@ -12,6 +14,10 @@
     "accounts": "Account Management",
     "settings": "Settings",
     "history": "Activity Log",
+    "roomTypes": "Room Types",
+    "paidAmount": "Paid Amount",
+    "dueAmount": "Due Amount",
+    "paymentStatus": "Payment Status",
     "masterData": {
       "title": "Master Data",
       "floors": "Floors",
@@ -89,13 +95,25 @@
     "completedToday": "Completed Today",
     "viewAll": "View All",
     "scheduledToday": "Scheduled today",
-    "todayCheckouts": "Today's Checkouts"
+    "todayCheckouts": "Today's Checkouts",
+    "todayBookings": "Today's Bookings",
+    "guest": "Guest",
+    "roomType": "Room Type",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "paidAmount": "Paid",
+    "dueAmount": "Due",
+    "paymentStatus": "Payment",
+    "payStatus_PAID": "Paid",
+    "payStatus_PARTIAL": "Partial",
+    "payStatus_UNPAID": "Unpaid"
   },
   "booking": {
     "create": "New Booking",
     "tableView": "Table View",
     "timelineView": "Timeline View",
     "bookingNumber": "Booking #",
+    "subtotal": "Subtotal",
     "guest": "Guest",
     "room": "Room",
     "checkIn": "Check-in",

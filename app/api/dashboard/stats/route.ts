@@ -94,8 +94,12 @@ export async function GET(req: NextRequest) {
           checkInDate: { gte: todayStart, lte: todayEnd },
           bookingStatus: { code: { in: ["CONFIRMED", "PENDING"] } },
         },
-        include: { guest: true, room: true },
-        take: 10,
+        include: {
+          guest: true,
+          room: { include: { roomType: true } },
+          invoices: { include: { payments: true } },
+        },
+        take: 50,
         orderBy: { checkInDate: "asc" },
       }),
       // Today's departures (CHECKED_IN, check-out today)
@@ -104,8 +108,12 @@ export async function GET(req: NextRequest) {
           checkOutDate: { gte: todayStart, lte: todayEnd },
           bookingStatus: { code: "CHECKED_IN" },
         },
-        include: { guest: true, room: true },
-        take: 10,
+        include: {
+          guest: true,
+          room: { include: { roomType: true } },
+          invoices: { include: { payments: true } },
+        },
+        take: 50,
         orderBy: { checkOutDate: "asc" },
       }),
       // Housekeeping counts
@@ -169,8 +177,33 @@ export async function GET(req: NextRequest) {
       checkInDate: Date;
       checkOutDate: Date;
       guest: { firstName: string; lastName: string };
-      room: { number: string };
+      room: { number: string; roomType: { name: string } };
+      invoices: { totalAmount: number; payments: { amount: number }[] }[];
     };
+
+    function toBookingDTO(b: BookingWithRelations) {
+      const invoice = b.invoices[0];
+      const totalAmount = Number(invoice?.totalAmount ?? 0);
+      const paidAmount = (invoice?.payments ?? []).reduce((s, p) => s + Number(p.amount), 0);
+      const dueAmount = Math.max(0, totalAmount - paidAmount);
+      const paymentStatus =
+        totalAmount === 0 ? "UNPAID"
+        : dueAmount <= 0 ? "PAID"
+        : paidAmount > 0 ? "PARTIAL"
+        : "UNPAID";
+      return {
+        id: b.id,
+        guestName: `${b.guest.firstName} ${b.guest.lastName}`,
+        roomNumber: b.room.number,
+        roomType: b.room.roomType.name,
+        checkInDate: b.checkInDate.toISOString(),
+        checkOutDate: b.checkOutDate.toISOString(),
+        paidAmount,
+        totalAmount,
+        dueAmount,
+        paymentStatus,
+      };
+    }
 
     return ok({
       periodRevenue,
@@ -182,18 +215,8 @@ export async function GET(req: NextRequest) {
       todayCheckoutsCount: todayDeparturesRaw.length,
       revenueByDay,
       roomStatusCounts,
-      todayArrivals: (todayArrivalsRaw as BookingWithRelations[]).map((b) => ({
-        id: b.id,
-        guestName: `${b.guest.firstName} ${b.guest.lastName}`,
-        roomNumber: b.room.number,
-        scheduledTime: b.checkInDate.toISOString(),
-      })),
-      todayDepartures: (todayDeparturesRaw as BookingWithRelations[]).map((b) => ({
-        id: b.id,
-        guestName: `${b.guest.firstName} ${b.guest.lastName}`,
-        roomNumber: b.room.number,
-        scheduledTime: b.checkOutDate.toISOString(),
-      })),
+      todayArrivals: (todayArrivalsRaw as unknown as BookingWithRelations[]).map(toBookingDTO),
+      todayDepartures: (todayDeparturesRaw as unknown as BookingWithRelations[]).map(toBookingDTO),
       housekeepingCounts: {
         pending: housekeepingPending,
         inProgress: housekeepingInProgress,

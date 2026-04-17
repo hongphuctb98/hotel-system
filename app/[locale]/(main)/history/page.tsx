@@ -6,8 +6,10 @@ import type { Dayjs } from "dayjs";
 import { useTranslations, useLocale } from "next-intl";
 import AppPageHeader from "@/common/components/ui/AppPageHeader";
 import AppTable from "@/common/components/ui/AppTable";
+import { useMasterData } from "@/common/hooks/useMasterData";
 import { useTableQuery } from "@/common/hooks/useTableQuery";
 import { auditLogService, type AuditLogRecord } from "@/common/services/auditLogService";
+import { getAuditSummaryText } from "@/common/utils/auditLogSummary";
 import { formatDate } from "@/common/utils/date";
 
 const { Text } = Typography;
@@ -32,53 +34,10 @@ type HistoryFilters = {
   dateTo?:     string;
 };
 
-function renderSummary(record: AuditLogRecord): React.ReactNode {
-  const v = record.newValues;
-  if (!v) return <Text type="secondary">—</Text>;
-
-  if (record.action === "CREATE" && record.entityType === "BOOKING") {
-    return (
-      <Text style={{ fontSize: 12 }}>
-        {v.bookingNumber ? `#${v.bookingNumber}` : ""}
-        {v.checkInDate ? ` · ${formatDate(String(v.checkInDate), "en")}` : ""}
-        {v.checkOutDate ? ` → ${formatDate(String(v.checkOutDate), "en")}` : ""}
-      </Text>
-    );
-  }
-
-  if (record.action === "PAYMENT") {
-    return (
-      <Text style={{ fontSize: 12 }}>
-        {v.amount ? `${Number(v.amount).toLocaleString()} VND` : "—"}
-      </Text>
-    );
-  }
-
-  if (record.action === "UPDATE" && record.entityType === "BOOKING") {
-    const parts = Object.keys(v).map((field) => {
-      const oldVal = record.oldValues?.[field];
-      return `${field}: ${oldVal ?? "?"} → ${v[field]}`;
-    });
-    return <Text style={{ fontSize: 12 }}>{parts.join(" · ") || "—"}</Text>;
-  }
-
-  if (record.action === "UPDATE" && record.entityType === "ROOM") {
-    const oldId = record.oldValues?.roomStatusId;
-    const newId = v.roomStatusId;
-    return (
-      <Text style={{ fontSize: 12 }}>
-        Status: {String(oldId ?? "?")} → {String(newId ?? "?")}
-      </Text>
-    );
-  }
-
-  const pairs = Object.entries(v).slice(0, 3).map(([k, val]) => `${k}: ${val}`).join(" · ");
-  return <Text style={{ fontSize: 12 }}>{pairs || "—"}</Text>;
-}
-
 export default function HistoryPage() {
   const t      = useTranslations();
   const locale = useLocale() as "en" | "vi";
+  const { bookingStatuses, roomStatuses } = useMasterData();
 
   const [filters, setFilters] = useState<HistoryFilters>({});
 
@@ -150,7 +109,11 @@ export default function HistoryPage() {
     {
       key:    "summary",
       title:  t("common.summary"),
-      render: (_: unknown, row: AuditLogRecord) => renderSummary(row),
+      render: (_: unknown, row: AuditLogRecord) => (
+        <Text style={{ fontSize: 12 }}>
+          {getAuditSummaryText(row, { locale, t, bookingStatuses, roomStatuses })}
+        </Text>
+      ),
     },
     {
       key:    "actor",

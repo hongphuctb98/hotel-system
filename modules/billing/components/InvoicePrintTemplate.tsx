@@ -97,7 +97,7 @@ export default function InvoicePrintTemplate({
       </div>
 
       {/* ── Guest + Booking details ─────────────────────────────────────── */}
-      <div style={{ display: "flex", gap: 40, marginBottom: 12, paddingBottom: 16, borderBottom: "1px solid #ddd" }}>
+      <div style={{ display: "flex", gap: 40, marginBottom: 6, paddingBottom: 16, borderBottom: "1px solid #ddd" }}>
         <div style={{ flex: 1 }}>
           <SectionLabel>{t("printGuest")}</SectionLabel>
           <div style={{ fontWeight: 600, fontSize: 14 }}>
@@ -117,7 +117,7 @@ export default function InvoicePrintTemplate({
       </div>
 
       {/* ── Room charges ────────────────────────────────────────────────── */}
-      <div style={{ marginBottom: 12 }}>
+      <div style={{ marginBottom: 4 }}>
         <SectionLabel>{t("printRoomCharges")}</SectionLabel>
         <table style={{ borderCollapse: "collapse", width: "100%" }}>
           <tbody>
@@ -126,18 +126,12 @@ export default function InvoicePrintTemplate({
             <DetailRow label={t("printDuration")}    value={durationLabel} />
           </tbody>
         </table>
-        <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
-          <table style={{ borderCollapse: "collapse" }}>
-            <tbody>
-              <SummaryRow label={t("printRoomSubtotal")} value={format(roomTotal)} />
-            </tbody>
-          </table>
-        </div>
+       
       </div>
 
       {/* ── Services ────────────────────────────────────────────────────── */}
       {booking.services && booking.services.length > 0 && (
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 4 }}>
           <SectionLabel>{t("printServices")}</SectionLabel>
           <table style={{ borderCollapse: "collapse", width: "100%" }}>
             <thead>
@@ -161,18 +155,11 @@ export default function InvoicePrintTemplate({
               ))}
             </tbody>
           </table>
-          <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
-            <table style={{ borderCollapse: "collapse" }}>
-              <tbody>
-                <SummaryRow label={t("printServicesTotal")} value={format(servicesTotal)} />
-              </tbody>
-            </table>
-          </div>
         </div>
       )}
 
       {/* ── Charges summary ─────────────────────────────────────────────── */}
-      <div style={{ marginBottom: 12, paddingTop: 8, borderTop: "1px solid #ddd" }}>
+      <div style={{ marginBottom: 6, paddingTop: 8, borderTop: "1px solid #ddd" }}>
         <SectionLabel>{t("printChargesSummary")}</SectionLabel>
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <table style={{ borderCollapse: "collapse", minWidth: 320 }}>
@@ -205,7 +192,7 @@ export default function InvoicePrintTemplate({
 
       {/* ── Payment history ─────────────────────────────────────────────── */}
       {invoice.payments.length > 0 && (
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 6 }}>
           <SectionLabel>{t("printPaymentHistory")}</SectionLabel>
           <table style={{ borderCollapse: "collapse", width: "100%" }}>
             <thead>
@@ -267,8 +254,8 @@ function Td({ children, align }: { children: React.ReactNode; align: "left" | "c
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <tr>
-      <td style={{ padding: "2px 0", color: "#777", fontSize: 11, width: "40%", verticalAlign: "top" }}>{label}</td>
-      <td style={{ padding: "2px 0", fontWeight: 500, verticalAlign: "top" }}>{value}</td>
+      <td style={{ padding: "0px 0", color: "#777", fontSize: 11, width: "40%", verticalAlign: "top" }}>{label}</td>
+      <td style={{ padding: "0px 0", fontWeight: 500, verticalAlign: "top" }}>{value}</td>
     </tr>
   );
 }
@@ -286,10 +273,10 @@ function SummaryRow({
 }) {
   return (
     <tr>
-      <td style={{ padding: "4px 8px", color: color ?? "#333", fontWeight: bold ? 700 : 400, fontSize: bold ? 13 : 12 }}>
+      <td style={{ padding: "2px 8px", color: color ?? "#333", fontWeight: bold ? 700 : 400, fontSize: bold ? 13 : 12 }}>
         {label}
       </td>
-      <td style={{ padding: "4px 8px", textAlign: "right", color: color ?? "#000", fontWeight: bold ? 700 : 400, fontSize: bold ? 13 : 12, minWidth: 120 }}>
+      <td style={{ padding: "2px 8px", textAlign: "right", color: color ?? "#000", fontWeight: bold ? 700 : 400, fontSize: bold ? 13 : 12, minWidth: 120 }}>
         {value}
       </td>
     </tr>
@@ -299,7 +286,7 @@ function SummaryRow({
 function DividerRow({ bold }: { bold?: boolean }) {
   return (
     <tr>
-      <td colSpan={2} style={{ padding: "2px 8px" }}>
+      <td colSpan={2} style={{ padding: "0px 8px" }}>
         <div style={{ borderTop: bold ? "2px solid #000" : "1px solid #ccc", margin: "4px 0" }} />
       </td>
     </tr>

@@ -12,6 +12,10 @@
     "accounts": "Quản lý tài khoản",
     "settings": "Cài đặt",
     "history": "Nhật ký hoạt động",
+    "roomTypes": "Loại phòng",
+    "paidAmount": "Đã thanh toán",
+    "dueAmount": "Còn lại",
+    "paymentStatus": "Trạng thái thanh toán",
     "masterData": {
       "title": "Danh mục",
       "floors": "Tầng",
@@ -89,13 +93,25 @@
     "completedToday": "Hoàn thành hôm nay",
     "viewAll": "Xem tất cả",
     "scheduledToday": "Dự thu hôm nay",
-    "todayCheckouts": "Trả phòng hôm nay"
+    "todayCheckouts": "Trả phòng hôm nay",
+    "todayBookings": "Đặt phòng hôm nay",
+    "guest": "Khách",
+    "roomType": "Loại phòng",
+    "checkIn": "Nhận phòng",
+    "checkOut": "Trả phòng",
+    "paidAmount": "Đã thanh toán",
+    "dueAmount": "Còn lại",
+    "paymentStatus": "Thanh toán",
+    "payStatus_PAID": "Đã thanh toán",
+    "payStatus_PARTIAL": "Thanh toán một phần",
+    "payStatus_UNPAID": "Chưa thanh toán"
   },
   "booking": {
     "create": "Tạo đặt phòng",
     "tableView": "Dạng bảng",
     "timelineView": "Dạng lịch",
     "bookingNumber": "Mã đặt phòng",
+    "subtotal": "Tạm tính",
     "guest": "Khách",
     "room": "Phòng",
     "checkIn": "Nhận phòng",
@@ -383,6 +399,8 @@
     "enableAccount": "Tạo tài khoản đăng nhập cho nhân viên này"
   },
   "roomMap": {
+    "adults": "Người lớn",
+    "children": "Trẻ em",
     "checkIn": "Nhận phòng",
     "checkOut": "Trả phòng",
     "edit": "Chỉnh sửa",

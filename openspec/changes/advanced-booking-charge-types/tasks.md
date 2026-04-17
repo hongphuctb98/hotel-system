@@ -1,8 +1,8 @@
 ## 1. Schema & Migration
 
 - [x] 1.1 Add `hourlyBlockHours Int?`, `hourlyBlockPrice Decimal? @db.Decimal(12,2)`, `hourlyRatePerHour Decimal? @db.Decimal(12,2)` to the `Booking` model in `prisma/schema.prisma`
-- [ ] 1.2 Run `npm run db:migrate` to generate and apply the migration (`add_hourly_booking_fields`)
-- [ ] 1.3 Run `npm run db:generate` to regenerate the Prisma client
+- [x] 1.2 Run `npm run db:migrate` to generate and apply the migration (`add_hourly_booking_fields`)
+- [x] 1.3 Run `npm run db:generate` to regenerate the Prisma client
 
 ## 2. Types
 

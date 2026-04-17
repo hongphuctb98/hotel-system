@@ -10,7 +10,8 @@ type ActivityItem = {
   id: string;
   guestName: string;
   roomNumber: string;
-  scheduledTime: string;
+  checkInDate: string;
+  checkOutDate: string;
 };
 
 function ActivityList({ items, timeColor }: { items: ActivityItem[]; timeColor: string }) {
@@ -35,7 +36,7 @@ function ActivityList({ items, timeColor }: { items: ActivityItem[]; timeColor: 
             </Typography.Text>
           </div>
           <Tag color={timeColor}>
-            {formatInTimezone(item.scheduledTime, hotelTz, "HH:mm")}
+            {formatInTimezone(item.checkInDate, hotelTz, "HH:mm")}
           </Tag>
         </div>
       ))}

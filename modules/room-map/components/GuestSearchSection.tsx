@@ -1,6 +1,6 @@
 "use client";
 
-import { Form, Input, Select, DatePicker, AutoComplete, Button, Row, Col } from "antd";
+import { Form, Input, Select, DatePicker, AutoComplete, Button, Row, Col, InputNumber } from "antd";
 import { useTranslations } from "next-intl";
 import { useState, useCallback, useRef } from "react";
 import type { FormInstance } from "antd";
@@ -128,7 +128,7 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
         </Col>
       </Row>
 
-      {/* Row 2: Source | Charge Type */}
+      {/* Row 2: Source | Adults / Children */}
       <Row gutter={[8, 0]}>
         <Col span={14}>
           <Form.Item name="source" label={t("source")} style={ITEM_STYLE}>
@@ -136,17 +136,40 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
           </Form.Item>
         </Col>
         <Col span={10}>
+          <Row gutter={[8, 0]}>
+            <Col span={12}>
+              <Form.Item
+                name="adults"
+                label={t("adults")}
+                style={ITEM_STYLE}
+                rules={[{ required: true, message: t("validation.required") }]}
+              >
+                <InputNumber min={1} style={{ width: "100%" }} disabled={disabled} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="children"
+                label={t("children")}
+                style={ITEM_STYLE}
+              >
+                <InputNumber min={0} style={{ width: "100%" }} disabled={disabled} />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
+
+      {/* Row 3: Check-in | Check-out */}
+      <Row gutter={[8, 0]}>
+         <Col span={6}>
           <Form.Item name="chargeType" label={t("chargeType")} style={ITEM_STYLE}>
             <Select
               options={CHARGE_TYPE_OPTIONS}
             />
           </Form.Item>
         </Col>
-      </Row>
-
-      {/* Row 3: Check-in | Check-out */}
-      <Row gutter={[8, 0]}>
-        <Col span={12}>
+        <Col span={9}>
           <Form.Item
             name="checkInDate"
             label={t("checkInTime")}
@@ -168,7 +191,7 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
             />
           </Form.Item>
         </Col>
-        <Col span={12}>
+        <Col span={9}>
           <Form.Item
             name="checkOutDate"
             label={t("checkOutTime")}

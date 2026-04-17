@@ -261,7 +261,7 @@ export default function ReservationDetailPage({
                 <PriceDisplay amount={servicesTotal} isFallback={false} />
               </div>
               <div className="flex justify-between border-t pt-2">
-                <span>Subtotal</span>
+                <span>{t("booking.subtotal")}</span>
                 <PriceDisplay amount={Number(booking.totalAmount) + servicesTotal} isFallback={false} />
               </div>
               <div className="flex justify-between font-semibold text-base border-t pt-2">
