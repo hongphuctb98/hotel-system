@@ -21,6 +21,8 @@ interface ServiceItemsSectionProps {
   hourlyRatePerHour: number;
   nightsStayed?: number;
   daysStayed?: number;
+  subtotalBeforeTax: number;
+  taxAmount: number;
   totalPayable: number;
   remaining: number;
   discount: number;
@@ -41,6 +43,8 @@ export default function ServiceItemsSection({
   hourlyRatePerHour,
   nightsStayed,
   daysStayed,
+  subtotalBeforeTax,
+  taxAmount,
   totalPayable,
   remaining,
   hoursStayed,
@@ -218,8 +222,14 @@ export default function ServiceItemsSection({
           </div>
         </div>
 
-        {/* Right: total payable + prepaid + remaining */}
+        {/* Right: subtotal → tax → total payable + prepaid + remaining */}
         <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          <SummaryLine label={t("subtotal")}>
+            <PriceDisplay amount={subtotalBeforeTax} />
+          </SummaryLine>
+          <SummaryLine label={t("tax")}>
+            <PriceDisplay amount={taxAmount} />
+          </SummaryLine>
           <SummaryLine label={t("totalPayable")} strong>
             <PriceDisplay amount={totalPayable} />
           </SummaryLine>

@@ -17,26 +17,17 @@ export default function KpiCards() {
   const { format } = useLocaleCurrency();
   const t = useTranslations("dashboard");
 
-  const hasCheckoutsToday   = (stats?.todayExpectedRevenue ?? 0) > 0;
-  const revenueValue        = hasCheckoutsToday
-    ? format(stats?.todayPaidRevenue ?? 0)
-    : format(stats?.periodRevenue ?? 0);
-  const revenueSecondary    = hasCheckoutsToday
-    ? (() => {
-        const pct    = stats?.todayRevenuePercent;
-        const pctStr = pct != null ? ` · ${pct}%` : "";
-        return `${t("scheduledToday")}: ${format(stats!.todayExpectedRevenue)}${pctStr}`;
-      })()
-    : undefined;
-
+  const todayExpected = stats?.todayExpectedRevenue ?? 0;
 
   const cards = [
     {
       title: "dashboard.revenue",
-      value: revenueValue,
+      value: format(stats?.periodRevenue ?? 0),
       icon: <IconCurrencyDollar size={22} />,
       color: "#52c41a",
-      secondaryText: revenueSecondary,
+      secondaryText: todayExpected > 0
+        ? `${t("scheduledToday")}: ${format(todayExpected)}`
+        : undefined,
     },
     {
       title: "dashboard.occupancyRate",

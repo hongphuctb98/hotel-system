@@ -162,7 +162,7 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
             <DatePicker
               showTime={{ format: "HH:mm" }}
               format="DD/MM/YYYY HH:mm"
-              style={{ width: "100%" }}
+              style={{ width: "100%", color: "black" }}
               disabled={disabled}
               disabledDate={(d) => d.isBefore(todayInTimezone(tz), "day")}
             />

@@ -14,14 +14,30 @@ import { prisma } from "@/lib/prisma";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+// In-process cache: timezone is effectively static for a hotel deployment.
+// Invalidated after 10 minutes so a settings change is eventually picked up
+// without requiring a server restart.
+let _tzCache: string | null = null;
+let _tzCachedAt = 0;
+const TZ_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
 export async function getHotelTimezone(): Promise<string> {
+  const now = Date.now();
+  if (_tzCache && now - _tzCachedAt < TZ_CACHE_TTL_MS) return _tzCache;
   try {
     const row = await prisma.hotelSettings.findUnique({ where: { id: "singleton" } });
-    if (row?.timezone) return row.timezone;
+    if (row?.timezone) {
+      _tzCache = row.timezone;
+      _tzCachedAt = now;
+      return _tzCache;
+    }
   } catch {
     // DB unavailable — fall through to env fallback
   }
-  return process.env.HOTEL_TIMEZONE ?? "Asia/Ho_Chi_Minh";
+  const fallback = process.env.HOTEL_TIMEZONE ?? "Asia/Ho_Chi_Minh";
+  _tzCache = fallback;
+  _tzCachedAt = now;
+  return fallback;
 }
 
 /**

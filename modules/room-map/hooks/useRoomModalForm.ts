@@ -5,6 +5,7 @@ import { Form } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { bookingService } from "@/common/services/bookingService";
 import { calculateStayPrice, buildStayPriceInput, countNights } from "@/common/utils/stayPricing";
+import { TAX_RATE } from "@/common/constants/currency";
 import { useTimezone } from "@/providers/TimezoneProvider";
 import { toHotelDayjs, todayInTimezone } from "@/common/utils/clientTimezone";
 import type { Room } from "@/types/room.types";
@@ -64,7 +65,7 @@ export function useRoomModalForm(
   const hoursStayed = (() => {
     if (chargeType === "hourly" && checkInDate && checkOutDate) {
       const minutes = checkOutDate.diff(checkInDate, "minute");
-      return Math.max(0, minutes / 60);
+      return Math.max(0, Math.ceil(minutes / 60)); // round up to next hour
     }
     return 0;
   })();
@@ -112,8 +113,10 @@ export function useRoomModalForm(
     },
     0
   );
-  const totalPayable = stayPrice + serviceTotal + surcharge - discount;
-  const remaining    = totalPayable - prepaid;
+  const subtotalBeforeTax = stayPrice + serviceTotal + surcharge;
+  const taxAmount         = Math.round(subtotalBeforeTax * TAX_RATE);
+  const totalPayable      = subtotalBeforeTax + taxAmount - discount;
+  const remaining         = totalPayable - prepaid;
 
   // chargeType watch — auto-update baseRate and hourly fields for new bookings
   useEffect(() => {
@@ -210,6 +213,8 @@ export function useRoomModalForm(
     surcharge,
     prepaid,
     serviceTotal,
+    subtotalBeforeTax,
+    taxAmount,
     totalPayable,
     remaining,
     // disabled rules

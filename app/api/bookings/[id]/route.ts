@@ -164,7 +164,7 @@ export async function PUT(
       }
 
       if (Object.keys(newValues).length > 0) {
-        await writeAudit({
+        void writeAudit({
           action:     "UPDATE",
           entityType: "BOOKING",
           entityId:   id,

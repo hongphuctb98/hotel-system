@@ -67,7 +67,7 @@ export async function PUT(
     }, { maxWait: 10000, timeout: 15000 });
 
     if (body.roomStatusId && prevRoom && prevRoom.roomStatusId !== body.roomStatusId) {
-      await writeAudit({
+      void writeAudit({
         action:     "UPDATE",
         entityType: "ROOM",
         entityId:   id,

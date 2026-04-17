@@ -43,6 +43,8 @@ export default function RoomDetailModal({ open, room, onClose }: RoomDetailModal
     daysStayed,
     hoursStayed,
     serviceTotal,
+    subtotalBeforeTax,
+    taxAmount,
     totalPayable,
     remaining,
     discount,
@@ -184,6 +186,8 @@ export default function RoomDetailModal({ open, room, onClose }: RoomDetailModal
             hourlyRatePerHour={hourlyRatePerHour}
             nightsStayed={nightsStayed}
             daysStayed={daysStayed}
+            subtotalBeforeTax={subtotalBeforeTax}
+            taxAmount={taxAmount}
             totalPayable={totalPayable}
             remaining={remaining}
             discount={discount}

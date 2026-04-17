@@ -8,6 +8,9 @@
  */
 export const BASE_CURRENCY = "VND" as const;
 
+/** Fixed VAT / service charge rate applied to all invoices (10%). */
+export const TAX_RATE = 0.1;
+
 export const EXCHANGE_RATES: Record<string, number> = {
   USD_TO_VND: 25415,
   VND_TO_USD: 1 / 25415,

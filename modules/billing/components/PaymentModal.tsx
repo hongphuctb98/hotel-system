@@ -8,6 +8,7 @@ import { useInvoiceActions } from "@/modules/billing/hooks/useInvoice";
 import { useTranslations } from "next-intl";
 import { useLocaleCurrency } from "@/common/hooks/useLocaleCurrency";
 import { formatNumberInput, parseNumberInput } from "@/common/utils/numberInput";
+import TextArea from "antd/es/input/TextArea";
 
 interface PaymentModalProps {
   invoiceId: string;
@@ -64,7 +65,7 @@ export default function PaymentModal({
       }
     >
       <p className="mb-4 text-sm text-gray-500">
-        Outstanding: <strong>{format(outstanding)}</strong>
+        {t("billing.outstanding")}: <strong>{format(outstanding)}</strong>
       </p>
       <Form form={form} layout="vertical" initialValues={{ amount: outstanding }}>
         <Form.Item
@@ -73,7 +74,7 @@ export default function PaymentModal({
           rules={[{ required: true }]}
         >
           <Select
-            placeholder="Select payment method"
+            placeholder={t("billing.selectPaymentMethod")}
             options={paymentMethods.map((pm) => ({
               value: pm.id,
               label: pm.name,
@@ -94,7 +95,7 @@ export default function PaymentModal({
           />
         </Form.Item>
         <Form.Item name="reference" label={t("common.note")}>
-          <Input placeholder="e.g. transaction ID" />
+          <TextArea  placeholder={t("common.note")} maxLength={4} />
         </Form.Item>
       </Form>
     </AppModal>

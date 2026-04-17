@@ -253,8 +253,9 @@ export function useRoomModalActions({
   };
 
   const handleViewBilling = () => {
+    // target blank
     if (!booking?.invoiceId) return;
-    router.push(`/${locale}/billing/${booking.invoiceId}`);
+    window.open(`/${locale}/billing/${booking?.invoiceId}`, "_blank");
   };
 
   const handleClose = () => {

@@ -6,6 +6,7 @@ import { buildLocalDayBoundsUTC, hotelLocalDate } from "@/common/utils/hotelDate
 import { generateBookingNumber } from "@/common/utils/bookingNumber";
 import { generateInvoiceNumber } from "@/common/utils/invoiceNumber";
 import { writeAudit } from "@/lib/audit";
+import { TAX_RATE } from "@/common/constants/currency";
 
 const bookingInclude = {
   guest: { include: { guestType: true } },
@@ -210,25 +211,27 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Create invoice ────────────────────────────────────────────────────
-    // Every booking gets an invoice immediately, unpaid. Initial amounts are
-    // estimates (no tax, no services yet); they are finalized at checkout.
-    // All actual payments are recorded later through the Billing flow.
+    // Every booking gets an invoice immediately with tax applied.
+    // Services are 0 at creation; invoice is updated whenever services change
+    // and finalized (with actual services + tax) at checkout.
     {
-      const subtotal = roomTotal + surchargeAmount;
+      const subtotal    = roomTotal + surchargeAmount;
+      const taxAmount   = Math.round(subtotal * TAX_RATE);
+      const totalAmount = subtotal + taxAmount - discountAmount;
       await prisma.invoice.create({
         data: {
           invoiceNumber: await generateInvoiceNumber(prisma),
           bookingId:     booking.id,
           subtotal,
-          taxAmount:     0,
+          taxAmount,
           discountAmount,
-          totalAmount:   subtotal - discountAmount,
+          totalAmount,
           isPaid:        false,
         },
       });
     }
 
-    await writeAudit({
+    void writeAudit({
       action:     "CREATE",
       entityType: "BOOKING",
       entityId:   booking.id,

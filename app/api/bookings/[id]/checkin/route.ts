@@ -107,7 +107,7 @@ export async function POST(
       });
     }
 
-    await writeAudit({
+    void writeAudit({
       action:     "CHECK_IN",
       entityType: "BOOKING",
       entityId:   id,

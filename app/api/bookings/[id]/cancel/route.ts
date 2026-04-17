@@ -53,7 +53,7 @@ export async function POST(
         : []),
     ]);
 
-    await writeAudit({
+    void writeAudit({
       action:     "CANCEL",
       entityType: "BOOKING",
       entityId:   id,

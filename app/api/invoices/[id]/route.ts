@@ -75,7 +75,7 @@ export async function POST(
         });
       }
 
-      await writeAudit({
+      void writeAudit({
         action:     "PAYMENT",
         entityType: "PAYMENT",
         entityId:   payment.id,

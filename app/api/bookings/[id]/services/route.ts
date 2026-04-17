@@ -1,6 +1,35 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ok, notFound, badRequest, serverError } from "@/lib/response";
+import { TAX_RATE } from "@/common/constants/currency";
+
+/**
+ * Recalculate and persist invoice totals for a booking after its service list changes.
+ * Reads the authoritative booking fields + current services to derive subtotal / tax / total.
+ */
+async function syncInvoice(bookingId: string): Promise<void> {
+  const booking = await prisma.booking.findUnique({
+    where:   { id: bookingId },
+    include: { services: true, invoices: { include: { payments: true } } },
+  });
+  if (!booking || booking.invoices.length === 0) return;
+
+  const invoice      = booking.invoices[0];
+  const roomTotal    = Number(booking.totalAmount);
+  const surcharge    = Number(booking.surchargeAmount   ?? 0);
+  const discount     = Number(booking.discountAmount    ?? 0);
+  const servicesTotal = booking.services.reduce((s, sv) => s + Number(sv.totalPrice), 0);
+
+  const subtotal    = roomTotal + servicesTotal + surcharge;
+  const taxAmount   = Math.round(subtotal * TAX_RATE);
+  const totalAmount = subtotal + taxAmount - discount;
+  const paidSoFar   = invoice.payments.reduce((s, p) => s + Number(p.amount), 0);
+
+  await prisma.invoice.update({
+    where: { id: invoice.id },
+    data:  { subtotal, taxAmount, totalAmount, isPaid: paidSoFar >= totalAmount },
+  });
+}
 
 /**
  * PUT — full-sync replacement for a booking's service list.
@@ -74,6 +103,8 @@ export async function PUT(
       }
     });
 
+    await syncInvoice(id);
+
     const updated = await prisma.bookingService.findMany({
       where:   { bookingId: id },
       include: { serviceItem: true },
@@ -143,6 +174,8 @@ export async function POST(
       include: { serviceItem: true },
     });
 
+    await syncInvoice(id);
+
     return ok(service);
   } catch (e) {
     return serverError(e);
@@ -164,6 +197,7 @@ export async function DELETE(
     if (!service) return notFound();
 
     await prisma.bookingService.delete({ where: { id: serviceId } });
+    await syncInvoice(id);
     return ok({ deleted: true });
   } catch (e) {
     return serverError(e);

@@ -31,7 +31,6 @@ export async function GET(req: NextRequest) {
       todayCheckInBookings,
       cleaningRooms,
       periodPayments,
-      todayCheckoutsPaid,
       todayCheckoutsExpected,
       dashboardRoomStatuses,
       checkedOutStatus,
@@ -64,18 +63,9 @@ export async function GET(req: NextRequest) {
         where: { paidAt: { gte: periodStart, lte: todayEnd } },
         select: { paidAt: true, amount: true },
       }),
-      // Today's checkout revenue — already paid (invoice.isPaid = true)
-      prisma.invoice.aggregate({
-        where: {
-          isPaid: true,
-          booking: {
-            checkOutDate: { gte: todayStart, lte: todayEnd },
-            bookingStatus: { code: { in: ["CHECKED_IN", "CHECKED_OUT"] } },
-          },
-        },
-        _sum: { totalAmount: true },
-      }),
-      // Today's checkout revenue — total expected (all active checkouts today)
+      // Today's expected revenue — sum of invoice totals for bookings checking out today.
+      // Uses Invoice.totalAmount (not isPaid) so partial payments are included in the estimate.
+      // Actual collected may exceed this when payments from other bookings also land today.
       prisma.invoice.aggregate({
         where: {
           booking: {
@@ -139,16 +129,11 @@ export async function GET(req: NextRequest) {
       revenueByDay.push({ date: dateStr, revenue: revenueMap[dateStr] ?? 0 });
     }
 
-    // Period revenue total (used by chart)
+    // Actual revenue: sum of real payments received in the period
     const periodRevenue = periodPayments.reduce((sum, p) => sum + Number(p.amount), 0);
 
-    // Today's checkout payment KPI
-    const todayPaidRevenue     = Number(todayCheckoutsPaid._sum.totalAmount     ?? 0);
+    // Estimated revenue today: total invoice amounts for today's checkouts
     const todayExpectedRevenue = Number(todayCheckoutsExpected._sum.totalAmount ?? 0);
-    const todayRevenuePercent  =
-      todayExpectedRevenue > 0
-        ? Math.round((todayPaidRevenue / todayExpectedRevenue) * 1000) / 10
-        : null;
 
     // Room status counts must match the current status shown on room-map cards.
     const dashboardRooms = dashboardRoomsRaw.map(toRoomDTO);
@@ -189,9 +174,7 @@ export async function GET(req: NextRequest) {
 
     return ok({
       periodRevenue,
-      todayPaidRevenue,
       todayExpectedRevenue,
-      todayRevenuePercent,
       totalRooms,
       occupancyRate,
       todayCheckinCount: todayCheckInBookings,

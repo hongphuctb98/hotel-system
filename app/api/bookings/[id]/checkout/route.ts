@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ok, notFound, badRequest, serverError } from "@/lib/response";
 import { generateInvoiceNumber } from "@/common/utils/invoiceNumber";
 import { writeAudit } from "@/lib/audit";
+import { TAX_RATE } from "@/common/constants/currency";
 import { hotelLocalDate } from "@/common/utils/hotelDate";
 
 export async function POST(
@@ -76,7 +77,7 @@ export async function POST(
     const surcharge      = Number(booking.surchargeAmount ?? 0);
     const discount       = Number(booking.discountAmount  ?? 0);
     const subtotal       = roomTotal + servicesTotal + surcharge;
-    const taxAmount      = subtotal * 0.1;
+    const taxAmount      = Math.round(subtotal * TAX_RATE);
     const totalAmount    = subtotal + taxAmount - discount;
 
     // ── Finalize invoice ──────────────────────────────────────────────────
@@ -125,7 +126,7 @@ export async function POST(
       });
     }
 
-    await writeAudit({
+    void writeAudit({
       action:     "CHECK_OUT",
       entityType: "BOOKING",
       entityId:   id,
