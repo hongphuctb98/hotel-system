@@ -20,7 +20,6 @@ export type DashboardStats = {
   periodRevenue: number;
   todayCollected: number;
   yesterdayCollected: number;
-  todayExpectedRevenue: number;
   totalRooms: number;
   occupancyRate: number;
   occupancyRateChange: number | null;

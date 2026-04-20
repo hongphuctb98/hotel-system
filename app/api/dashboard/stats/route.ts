@@ -11,6 +11,8 @@ import { getHotelTimezone, hotelLocalDate, buildLocalDayBoundsUTC } from "@/comm
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+const DASHBOARD_CHECKED_OUT_COLOR = "#b37feb";
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -36,7 +38,6 @@ export async function GET(req: NextRequest) {
       todayCheckInBookings,
       cleaningRooms,
       periodPayments,
-      todayCheckoutsExpected,
       dashboardRoomStatuses,
       checkedOutStatus,
       dashboardRoomsRaw,
@@ -71,18 +72,6 @@ export async function GET(req: NextRequest) {
         where: { paidAt: { gte: periodStart, lte: todayEnd } },
         select: { paidAt: true, amount: true },
       }),
-      // Today's expected revenue — sum of invoice totals for bookings checking out today.
-      // Uses Invoice.totalAmount (not isPaid) so partial payments are included in the estimate.
-      // Actual collected may exceed this when payments from other bookings also land today.
-      prisma.invoice.aggregate({
-        where: {
-          booking: {
-            checkOutDate: { gte: todayStart, lte: todayEnd },
-            bookingStatus: { code: { in: ["CHECKED_IN", "CHECKED_OUT"] } },
-          },
-        },
-        _sum: { totalAmount: true },
-      }),
       // Shared display-status metadata used by room-map / rooms / dashboard
       prisma.roomStatus.findMany({
         where: { code: { in: ROOM_DISPLAY_STATUS_ORDER.filter((code) => code !== "CHECKED_OUT") } },
@@ -110,11 +99,13 @@ export async function GET(req: NextRequest) {
         take: 50,
         orderBy: { checkInDate: "asc" },
       }),
-      // Today's departures (CHECKED_IN, check-out today)
+      // Today's departures — include any non-cancelled booking scheduled to
+      // check out today so hourly/daily same-day stays are counted even before
+      // they transition to CHECKED_IN.
       prisma.booking.findMany({
         where: {
           checkOutDate: { gte: todayStart, lte: todayEnd },
-          bookingStatus: { code: "CHECKED_IN" },
+          bookingStatus: { code: { notIn: ["CANCELLED", "NO_SHOW"] } },
         },
         include: {
           guest: true,
@@ -145,11 +136,12 @@ export async function GET(req: NextRequest) {
           bookingStatus: { code: { in: ["CHECKED_IN", "CHECKED_OUT"] } },
         },
       }),
-      // Yesterday — check-outs (departed yesterday, now CHECKED_OUT)
+      // Yesterday — bookings scheduled to check out yesterday, excluding
+      // cancelled / no-show. Mirrors today's departures logic.
       prisma.booking.count({
         where: {
           checkOutDate: { gte: yesterdayStart, lte: yesterdayEnd },
-          bookingStatus: { code: "CHECKED_OUT" },
+          bookingStatus: { code: { notIn: ["CANCELLED", "NO_SHOW"] } },
         },
       }),
     ]);
@@ -180,9 +172,6 @@ export async function GET(req: NextRequest) {
     const todayCollected = revenueMap[todayStr] ?? 0;
     const yesterdayCollected = revenueMap[yesterdayStr] ?? 0;
 
-    // Estimated checkout revenue today: sum of invoice totals for bookings checking out today
-    const todayExpectedRevenue = Number(todayCheckoutsExpected._sum.totalAmount ?? 0);
-
     // Room status counts must match the current status shown on room-map cards.
     const dashboardRooms = dashboardRoomsRaw.map(toRoomDTO);
     const statusMeta = new Map(
@@ -205,7 +194,7 @@ export async function GET(req: NextRequest) {
       return {
         code,
         name: meta?.name ?? code,
-        color: meta?.color ?? "#888",
+        color: code === "CHECKED_OUT" ? DASHBOARD_CHECKED_OUT_COLOR : meta?.color ?? "#888",
         count: roomStatusCountsMap.get(code) ?? 0,
       };
     });
@@ -250,7 +239,6 @@ export async function GET(req: NextRequest) {
       periodRevenue,
       todayCollected,
       yesterdayCollected,
-      todayExpectedRevenue,
       totalRooms,
       occupancyRate,
       occupancyRateChange: dayOverDay(occupancyRate, yesterdayOccupancyRate),

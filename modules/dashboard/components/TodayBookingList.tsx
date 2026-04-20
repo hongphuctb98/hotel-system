@@ -100,7 +100,7 @@ export default function TodayBookingList() {
   const stats = data?.data;
 
   return (
-    <Card variant="borderless" title={t("todayBookings")}>
+    <Card variant="borderless" title={t("todayBookings")} extra={<a href="/reservations">{t("viewAll")}</a>}>
       <Tabs
         size="small"
         items={[

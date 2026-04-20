@@ -6,7 +6,6 @@ import {
   IconLogin,
   IconLogout,
 } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
 import AppStatisticCard from "@/common/components/ui/AppStatisticCard";
 import { useDashboardStats } from "../hooks/useDashboardStats";
 import { useLocaleCurrency } from "@/common/hooks/useLocaleCurrency";
@@ -15,11 +14,9 @@ export default function KpiCards() {
   const { data, isLoading } = useDashboardStats();
   const stats = data?.data;
   const { format } = useLocaleCurrency();
-  const t = useTranslations("dashboard");
 
   const todayCollected = stats?.todayCollected ?? 0;
   const yesterdayCollected = stats?.yesterdayCollected ?? 0;
-  const todayExpected = stats?.todayExpectedRevenue ?? 0;
 
   // Day-over-day delta
   const revenueDelta = todayCollected - yesterdayCollected;
@@ -38,7 +35,6 @@ export default function KpiCards() {
       value: format(todayCollected),
       icon: <IconCurrencyDollar size={22} />,
       color: "#52c41a",
-      secondaryText: todayExpected > 0 ? `${t("scheduledToday")}: ${format(todayExpected)}` : undefined,
       changeAmount: revenueDeltaFormatted,
       changePercent: revenueDeltaPercent,
     },

@@ -7,6 +7,7 @@ import { generateBookingNumber } from "@/common/utils/bookingNumber";
 import { generateInvoiceNumber } from "@/common/utils/invoiceNumber";
 import { writeAudit } from "@/lib/audit";
 import { TAX_RATE } from "@/common/constants/currency";
+import { buildStayPriceInput, calculateStayPrice } from "@/common/utils/stayPricing";
 
 const bookingInclude = {
   guest: { include: { guestType: true } },
@@ -102,6 +103,18 @@ export async function POST(req: NextRequest) {
           "DATE_RANGE_INVALID"
         );
       }
+    } else if (chargeType === "daily") {
+      // Daily: check-in and check-out must stay on the same hotel-local calendar day
+      const [checkInDay, checkOutDay] = await Promise.all([
+        hotelLocalDate(checkIn),
+        hotelLocalDate(checkOut),
+      ]);
+      if (checkInDay !== checkOutDay) {
+        return badRequest(
+          "For daily bookings, check-in and check-out must be on the same calendar day.",
+          "DATE_RANGE_INVALID"
+        );
+      }
     } else {
       // Nightly: check-out must fall on a later calendar day than check-in
       const [checkInDay, checkOutDay] = await Promise.all([
@@ -141,15 +154,22 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Create ────────────────────────────────────────────────────────────
-    const nights = Math.max(
-      1,
-      Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
+    const baseRate         = Number(body.baseRate        ?? 0);
+    const discountAmount   = Number(body.discountAmount  ?? 0);
+    const surchargeAmount  = Number(body.surchargeAmount ?? 0);
+    const depositAmount    = Number(body.depositAmount   ?? 0);
+    const hourlyRatePerHour = body.hourlyRatePerHour != null ? Number(body.hourlyRatePerHour) : null;
+
+    const hoursStayed = chargeType === "hourly"
+      ? Math.max(0, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60)))
+      : 0;
+
+    const roomTotal = calculateStayPrice(
+      buildStayPriceInput(
+        { chargeType, baseRate, checkInDate: checkIn, checkOutDate: checkOut, hourlyRatePerHour },
+        hoursStayed,
+      )
     );
-    const baseRate        = Number(body.baseRate        ?? 0);
-    const discountAmount  = Number(body.discountAmount  ?? 0);
-    const surchargeAmount = Number(body.surchargeAmount ?? 0);
-    const depositAmount   = Number(body.depositAmount   ?? 0);
-    const roomTotal       = nights * baseRate;
 
     // Generate unique 6-char booking number with collision retry
     let booking;
@@ -170,9 +190,9 @@ export async function POST(req: NextRequest) {
             depositAmount,
             discountAmount,
             surchargeAmount,
-            chargeType:       body.chargeType ?? "nightly",
-            hourlyBlockHours:  body.hourlyBlockHours  != null ? Number(body.hourlyBlockHours)  : null,
-            hourlyRatePerHour: body.hourlyRatePerHour != null ? Number(body.hourlyRatePerHour) : null,
+            chargeType,
+            hourlyBlockHours:  body.hourlyBlockHours != null ? Number(body.hourlyBlockHours) : null,
+            hourlyRatePerHour,
             source:           body.source,
             note:             body.note ?? null,
           },

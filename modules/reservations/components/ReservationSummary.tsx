@@ -126,7 +126,7 @@ export default function ReservationSummary({ checkInFrom, checkInTo }: Props) {
     {
       key: "total",
       title: (
-        <span style={{ fontSize: 12, fontWeight: 600 }}>{t("booking.total")}</span>
+        <span style={{ fontSize: 12, fontWeight: 600 }}>{t("booking.count")}</span>
       ),
       dataIndex: "total",
       align: "center" as const,
@@ -143,7 +143,7 @@ export default function ReservationSummary({ checkInFrom, checkInTo }: Props) {
   const totalRow: RowData = {
     key: "__total__",
     statusId: "",
-    statusName: t("booking.total"),
+    statusName: t("booking.count"),
     statusColor: token.colorBorderSecondary,
     counts: totalCounts,
     total: grandTotal,

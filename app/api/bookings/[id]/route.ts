@@ -82,6 +82,17 @@ export async function PUT(
             "DATE_RANGE_INVALID"
           );
         }
+      } else if (chargeType === "daily") {
+        const [checkInDay, checkOutDay] = await Promise.all([
+          hotelLocalDate(checkIn),
+          hotelLocalDate(checkOut),
+        ]);
+        if (checkInDay !== checkOutDay) {
+          return badRequest(
+            "For daily bookings, check-in and check-out must be on the same calendar day.",
+            "DATE_RANGE_INVALID"
+          );
+        }
       } else {
         const [checkInDay, checkOutDay] = await Promise.all([
           hotelLocalDate(checkIn),
