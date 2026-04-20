@@ -185,7 +185,22 @@
     "exportSheetName": "Reservations",
     "exportFailed": "Export failed",
     "emptyInSelectedDateRange": "No reservations in the selected date range.",
-    "viewFullDetails": "View Full Details"
+    "viewFullDetails": "View Full Details",
+    "errors": {
+      "bookingOverlap": "This room is already booked for the selected dates.",
+      "bookingNotConfirmed": "This booking cannot be checked in from its current status.",
+      "bookingNotCheckedIn": "This booking cannot be checked out from its current status.",
+      "roomNotReady": "This room is not ready to receive guests.",
+      "checkInTooEarly": "This booking cannot be checked in before its scheduled check-in date.",
+      "checkInDatePassed": "This booking has already passed its scheduled check-in date.",
+      "checkOutTooEarly": "This booking cannot be checked out yet.",
+      "checkOutTooEarlyHourly": "This booking cannot be checked out yet. {minutes} minute(s) remaining.",
+      "depositLocked": "The deposit amount cannot be changed after a payment has been recorded.",
+      "checkOutAfterCheckIn": "Check-out time must be after check-in time.",
+      "hourlyMinDuration": "Hourly bookings require at least {hours} hour(s) between check-in and check-out.",
+      "dailySameDayRequired": "Daily bookings must check in and check out on the same day.",
+      "nightlyOvernightRequired": "Nightly bookings require at least one overnight stay."
+    }
   },
   "room": {
     "capacity": "Capacity",

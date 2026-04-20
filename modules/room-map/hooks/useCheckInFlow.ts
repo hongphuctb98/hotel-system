@@ -36,6 +36,8 @@ export function useCheckInFlow(room: Room | null, onSuccess: () => void) {
 
         // Step 2: Update booking (dates, pricing fields, note) in one call
         const bookingUpdates: Record<string, unknown> = {
+          adults:            values.adults         ?? 1,
+          children:          values.children       ?? 0,
           chargeType:        values.chargeType     ?? "nightly",
           baseRate:          values.baseRate,
           discountAmount:    values.discount       ?? 0,
@@ -75,8 +77,8 @@ export function useCheckInFlow(room: Room | null, onSuccess: () => void) {
           bookingStatusId:   confirmedStatus.id,
           checkInDate:       values.checkInDate,
           checkOutDate:      values.checkOutDate,
-          adults:            1,
-          children:          0,
+          adults:            values.adults   ?? 1,
+          children:          values.children ?? 0,
           baseRate:          values.baseRate,
           depositAmount:     values.prepaid        ?? 0,
           discountAmount:    values.discount       ?? 0,
@@ -155,4 +157,3 @@ async function resolveGuest(
   if (!created.data?.id) throw new Error("Failed to create guest");
   return created.data.id;
 }
-

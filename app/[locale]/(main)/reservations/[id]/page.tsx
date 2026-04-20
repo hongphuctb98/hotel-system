@@ -11,8 +11,10 @@ import {
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { use } from "react";
+import { ApiError } from "@/common/services/apiClient";
 import { useTimezone } from "@/providers/TimezoneProvider";
 import { formatInTimezone } from "@/common/utils/clientTimezone";
+import { getBookingApiErrorMessage } from "@/common/utils/bookingApiErrorMessage";
 import AppPageHeader from "@/common/components/ui/AppPageHeader";
 import AppCard from "@/common/components/ui/AppCard";
 import AppTable from "@/common/components/ui/AppTable";
@@ -40,6 +42,11 @@ export default function ReservationDetailPage({
   const { checkIn, checkOut, removeService } = useReservationActions(id);
   const addServiceModal = useDisclosure();
   const editModal = useDisclosure();
+
+  function getErrorMessage(error: Error) {
+    if (error instanceof ApiError) return getBookingApiErrorMessage(error, t);
+    return error.message;
+  }
 
   if (isLoading) {
     return (
@@ -97,7 +104,7 @@ export default function ReservationDetailPage({
           onConfirm={() =>
             removeService.mutate(r.id, {
               onSuccess: () => message.success("Service removed"),
-              onError: (e: Error) => message.error(e.message),
+              onError: (e: Error) => message.error(getErrorMessage(e)),
             })
           }
           okText={t("common.yes")}
@@ -146,8 +153,8 @@ export default function ReservationDetailPage({
                 loading={checkIn.isPending}
                 onClick={() =>
                   checkIn.mutate(undefined, {
-                    onSuccess: () => message.success(t("booking.doCheckIn")),
-                    onError: (e: Error) => message.error(e.message),
+                  onSuccess: () => message.success(t("booking.doCheckIn")),
+                    onError: (e: Error) => message.error(getErrorMessage(e)),
                   })
                 }
               >
@@ -162,8 +169,8 @@ export default function ReservationDetailPage({
                 loading={checkOut.isPending}
                 onClick={() =>
                   checkOut.mutate(undefined, {
-                    onSuccess: () => message.success(t("booking.doCheckOut")),
-                    onError: (e: Error) => message.error(e.message),
+                  onSuccess: () => message.success(t("booking.doCheckOut")),
+                    onError: (e: Error) => message.error(getErrorMessage(e)),
                   })
                 }
               >

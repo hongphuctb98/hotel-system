@@ -42,7 +42,8 @@ export async function POST(
         const remaining = Math.ceil((blockedUntil.getTime() - Date.now()) / 60000);
         return badRequest(
           `Cannot check out: the ${booking.hourlyBlockHours}-hour block has not elapsed yet. ${remaining} minute(s) remaining.`,
-          "CHECKOUT_TOO_EARLY"
+          "CHECKOUT_TOO_EARLY",
+          { remainingMinutes: remaining, minHours: booking.hourlyBlockHours }
         );
       }
     } else {

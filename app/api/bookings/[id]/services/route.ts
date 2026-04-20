@@ -27,7 +27,13 @@ async function syncInvoice(bookingId: string): Promise<void> {
 
   await prisma.invoice.update({
     where: { id: invoice.id },
-    data:  { subtotal, taxAmount, totalAmount, isPaid: paidSoFar >= totalAmount },
+    data:  {
+      subtotal,
+      taxAmount,
+      discountAmount: discount,
+      totalAmount,
+      isPaid: paidSoFar >= totalAmount,
+    },
   });
 }
 

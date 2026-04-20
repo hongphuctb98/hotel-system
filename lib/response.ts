@@ -12,9 +12,9 @@ export function created<T>(data: T) {
   );
 }
 
-export function badRequest(error: string, code?: string) {
-  return NextResponse.json<ApiResponse<never>>(
-    { success: false, error, code },
+export function badRequest<T = never>(error: string, code?: string, data?: T) {
+  return NextResponse.json<ApiResponse<T>>(
+    { success: false, error, code, data },
     { status: 400 }
   );
 }

@@ -90,7 +90,10 @@ export async function POST(req: NextRequest) {
 
     // ── Date ordering ─────────────────────────────────────────────────────
     if (checkIn >= checkOut) {
-      return badRequest("Check-in date must be before check-out date");
+      return badRequest(
+        "Check-in date must be before check-out date",
+        "CHECKOUT_AFTER_CHECKIN_REQUIRED"
+      );
     }
 
     // ── Charge-type date consistency ──────────────────────────────────────
@@ -100,7 +103,8 @@ export async function POST(req: NextRequest) {
       if (checkOut.getTime() - checkIn.getTime() < blockMs) {
         return badRequest(
           `For hourly bookings, check-out must be at least ${body.hourlyBlockHours} hour(s) after check-in.`,
-          "DATE_RANGE_INVALID"
+          "HOURLY_MIN_DURATION_REQUIRED",
+          { minHours: Number(body.hourlyBlockHours) }
         );
       }
     } else if (chargeType === "daily") {
@@ -112,7 +116,7 @@ export async function POST(req: NextRequest) {
       if (checkInDay !== checkOutDay) {
         return badRequest(
           "For daily bookings, check-in and check-out must be on the same calendar day.",
-          "DATE_RANGE_INVALID"
+          "DAILY_SAME_DAY_REQUIRED"
         );
       }
     } else {
@@ -124,7 +128,7 @@ export async function POST(req: NextRequest) {
       if (checkInDay >= checkOutDay) {
         return badRequest(
           "For nightly bookings, check-out must be on a later calendar day than check-in.",
-          "DATE_RANGE_INVALID"
+          "NIGHTLY_OVERNIGHT_REQUIRED"
         );
       }
     }

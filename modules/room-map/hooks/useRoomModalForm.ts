@@ -145,6 +145,8 @@ export function useRoomModalForm(
       return;
     }
 
+    form.resetFields();
+
     if (booking) {
       // Existing booking: source of truth is always booking.* — never read roomType.pricing here
       form.setFieldsValue({
@@ -153,6 +155,8 @@ export function useRoomModalForm(
         phone:            booking.guest.phone     ?? "",
         idNumber:         booking.guest.idNumber  ?? "",
         source:           booking.source          ?? "",
+        adults:           booking.adults          ?? 1,
+        children:         booking.children        ?? 0,
         chargeType:       (booking.chargeType     ?? "nightly") as "nightly" | "hourly" | "daily",
         checkInDate:      toHotelDayjs(booking.checkInDate, tz) ?? undefined,
         checkOutDate:     toHotelDayjs(booking.checkOutDate, tz) ?? undefined,
@@ -182,10 +186,22 @@ export function useRoomModalForm(
 
       // New booking: pre-fill from roomType.pricing defaults (nightly by default)
       form.setFieldsValue({
+        guestId: undefined,
+        customerName: "",
+        phone: "",
+        idNumber: "",
+        source: "",
+        adults: 1,
+        children: 0,
         chargeType: "nightly",
         checkInDate: defaultCheckInDate,
         checkOutDate: defaultCheckOutDate,
         baseRate:   pricing?.nightlyPrice != null ? Number(pricing.nightlyPrice) : (room?.basePrice ? Number(room.basePrice) : 0),
+        note: "",
+        discount: 0,
+        surcharge: 0,
+        prepaid: 0,
+        services: [],
       });
     }
   }, [open, booking?.id, stayMode, persistedServices]); // eslint-disable-line react-hooks/exhaustive-deps

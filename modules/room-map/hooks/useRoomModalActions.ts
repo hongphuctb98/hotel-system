@@ -12,6 +12,7 @@ import { ApiError } from "@/common/services/apiClient";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { useMasterData } from "@/common/hooks/useMasterData";
 import { ROOM_STATUS_CODES } from "@/common/constants/roomStatus";
+import { getBookingApiErrorMessage } from "@/common/utils/bookingApiErrorMessage";
 import { useCheckInFlow } from "./useCheckInFlow";
 import type { Room } from "@/types/room.types";
 import type { FormInstance } from "antd";
@@ -34,6 +35,7 @@ export function useRoomModalActions({
   onClose,
 }: UseRoomModalActionsOptions) {
   const t            = useTranslations("roomMap");
+  const tRoot        = useTranslations();
   const locale       = useLocale();
   const router       = useRouter();
   const queryClient  = useQueryClient();
@@ -150,7 +152,7 @@ export function useRoomModalActions({
         stayMode === "reserved" ? booking?.id : undefined
       );
     } catch (err) {
-      if (err instanceof ApiError) message.error(apiErrorMessage(err, t));
+      if (err instanceof ApiError) message.error(apiErrorMessage(err, t, tRoot));
       else if (err && typeof err === "object" && "errorFields" in err) {
         // form.validateFields rejection — Ant Design handles field-level display; no toast needed
       } else {
@@ -166,6 +168,8 @@ export function useRoomModalActions({
     setIsSavingStay(true);
     try {
       const updates: Record<string, unknown> = {
+        adults:            raw.adults          ?? 1,
+        children:          raw.children        ?? 0,
         chargeType:        raw.chargeType     ?? "nightly",
         baseRate:          raw.baseRate,
         discountAmount:    raw.discount       ?? 0,
@@ -191,7 +195,7 @@ export function useRoomModalActions({
       queryClient.invalidateQueries({ queryKey: ["booking-services", booking.id] });
       message.success(t("saveChangesSuccess"));
     } catch (err) {
-      message.error(err instanceof ApiError ? apiErrorMessage(err, t) : t("errors.saveFailed"));
+      message.error(err instanceof ApiError ? apiErrorMessage(err, t, tRoot) : t("errors.saveFailed"));
     } finally {
       setIsSavingStay(false);
     }
@@ -214,6 +218,8 @@ export function useRoomModalActions({
       });
 
       const updates: Record<string, unknown> = {
+        adults:            values.adults          ?? 1,
+        children:          values.children        ?? 0,
         chargeType:        values.chargeType     ?? "nightly",
         baseRate:          values.baseRate,
         discountAmount:    values.discount       ?? 0,
@@ -241,7 +247,7 @@ export function useRoomModalActions({
       queryClient.invalidateQueries({ queryKey: ["booking-services", booking.id] });
       message.success(t("saveChangesSuccess"));
     } catch (err) {
-      message.error(err instanceof ApiError ? apiErrorMessage(err, t) : t("errors.saveFailed"));
+      message.error(err instanceof ApiError ? apiErrorMessage(err, t, tRoot) : t("errors.saveFailed"));
     } finally {
       setIsSavingStay(false);
     }
@@ -288,18 +294,11 @@ export function useRoomModalActions({
  */
 function apiErrorMessage(
   err: ApiError,
-  t: ReturnType<typeof useTranslations<"roomMap">>
+  t: ReturnType<typeof useTranslations<"roomMap">>,
+  tRoot: ReturnType<typeof useTranslations>
 ): string {
-  switch (err.code) {
-    case "BOOKING_OVERLAP":        return t("errors.bookingOverlap");
-    case "BOOKING_NOT_CONFIRMED":  return t("errors.bookingNotConfirmed");
-    case "BOOKING_NOT_CHECKED_IN": return t("errors.bookingNotCheckedIn");
-    case "ROOM_NOT_READY":         return t("errors.roomNotReady");
-    case "CHECKIN_TOO_EARLY":      return t("errors.checkInTooEarly");
-    case "CHECKIN_DATE_PASSED":    return t("errors.checkInDatePassed");
-    case "CHECKOUT_TOO_EARLY":     return t("errors.checkOutTooEarly");
-    default:                       return err.message || t("checkInFailed");
-  }
+  const translated = getBookingApiErrorMessage(err, tRoot);
+  return translated || err.message || t("checkInFailed");
 }
 
 function getApiErrorMessage(err: unknown, fallback: string): string {

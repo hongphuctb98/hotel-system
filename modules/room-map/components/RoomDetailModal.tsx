@@ -161,6 +161,8 @@ export default function RoomDetailModal({ open, room, onClose }: RoomDetailModal
           layout="vertical"
           size="small"
           initialValues={{
+            adults: 1,
+            children: 0,
             chargeType: "nightly",
             discount:   0,
             surcharge:  0,

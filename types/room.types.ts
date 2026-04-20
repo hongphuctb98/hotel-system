@@ -31,6 +31,8 @@ export type CurrentBooking = {
   guestId: string;
   checkInDate: string;
   checkOutDate: string;
+  adults: number;
+  children: number;
   baseRate: number | null;
   depositAmount: number | null;
   discountAmount: number | null;

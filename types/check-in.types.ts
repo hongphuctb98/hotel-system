@@ -11,6 +11,8 @@ export type CheckInFormValues = {
   phone?: string;
   idNumber?: string;        // CCCD / national ID
   source?: string;
+  adults: number;
+  children: number;
   chargeType: "nightly" | "hourly" | "daily";
   checkInDate: string;
   checkOutDate: string;

@@ -198,6 +198,7 @@ export default function InvoiceDetailPage({
                 columns={serviceColumns}
                 dataSource={booking.services}
                 rowKey="id"
+                scrollable ={false}
                 pagination={false}
                 size="small"
                 maxHeight={320}
@@ -213,6 +214,7 @@ export default function InvoiceDetailPage({
                 columns={paymentColumns}
                 dataSource={invoice.payments}
                 rowKey="id"
+                scrollable ={false}
                 pagination={false}
                 size="small"
                 maxHeight={320}

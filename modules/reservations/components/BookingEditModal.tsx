@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { Modal, Form, InputNumber, Select, Input, Descriptions, App } from "antd";
 import { useTranslations } from "next-intl";
 import dayjs from "dayjs";
+import { ApiError } from "@/common/services/apiClient";
+import { getBookingApiErrorMessage } from "@/common/utils/bookingApiErrorMessage";
 import { useUpdateBooking } from "../hooks/useUpdateBooking";
 import type { Booking } from "@/types/booking.types";
 
@@ -55,8 +57,11 @@ export default function BookingEditModal({ open, onClose, booking }: BookingEdit
       });
       message.success(t("booking.updateSuccess"));
       onClose();
-    } catch {
-      // form validation errors shown inline; API errors surfaced via Ant Design's error message
+    } catch (err) {
+      if (err instanceof ApiError) {
+        message.error(getBookingApiErrorMessage(err, t));
+      }
+      // Ant Design validation rejection is a plain object — field errors are shown inline
     }
   };
 

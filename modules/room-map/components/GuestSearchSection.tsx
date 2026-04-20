@@ -39,7 +39,6 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
   const t = useTranslations("roomMap");
   const tz = useTimezone();
   const [options, setOptions] = useState<GuestOption[]>([]);
-  const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleSearch = useCallback((value: string) => {
@@ -63,7 +62,6 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
 
   const handleSelect = (_value: string, option: GuestOption) => {
     const g = option.guest;
-    setSelectedGuest(g);
     form.setFieldsValue({
       guestId: g.id,
       customerName: `${g.firstName} ${g.lastName}`,
@@ -73,12 +71,9 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
   };
 
   const handleClear = () => {
-    setSelectedGuest(null);
     form.setFieldsValue({ guestId: undefined, phone: "", idNumber: "" });
     setOptions([]);
   };
-
-  const isGuestLocked = !!selectedGuest && !disabled;
 
   return (
     <>

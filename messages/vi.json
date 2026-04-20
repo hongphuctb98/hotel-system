@@ -183,7 +183,22 @@
     "exportSheetName": "Đặt phòng",
     "exportFailed": "Xuất danh sách đặt phòng thất bại",
     "emptyInSelectedDateRange": "Không có đặt phòng nào trong khoảng ngày đã chọn.",
-    "viewFullDetails": "Xem chi tiết đầy đủ"
+    "viewFullDetails": "Xem chi tiết đầy đủ",
+    "errors": {
+      "bookingOverlap": "Phòng này đã được đặt trong khoảng thời gian đã chọn.",
+      "bookingNotConfirmed": "Đặt phòng này không thể nhận khách từ trạng thái hiện tại.",
+      "bookingNotCheckedIn": "Đặt phòng này không thể trả phòng từ trạng thái hiện tại.",
+      "roomNotReady": "Phòng này chưa sẵn sàng để nhận khách.",
+      "checkInTooEarly": "Chưa đến ngày nhận phòng của đặt phòng này.",
+      "checkInDatePassed": "Đặt phòng này đã quá ngày nhận phòng, không thể nhận phòng theo lịch cũ.",
+      "checkOutTooEarly": "Chưa đến thời điểm trả phòng hợp lệ.",
+      "checkOutTooEarlyHourly": "Chưa thể trả phòng. Còn {minutes} phút nữa mới đến thời điểm hợp lệ.",
+      "depositLocked": "Không thể thay đổi tiền đặt cọc sau khi đã ghi nhận thanh toán.",
+      "checkOutAfterCheckIn": "Giờ trả phòng phải sau giờ nhận phòng.",
+      "hourlyMinDuration": "Thuê theo giờ yêu cầu tối thiểu {hours} giờ giữa giờ nhận và giờ trả phòng.",
+      "dailySameDayRequired": "Đặt phòng theo ngày phải nhận và trả trong cùng một ngày.",
+      "nightlyOvernightRequired": "Đặt phòng theo đêm yêu cầu tối thiểu một đêm lưu trú."
+    }
   },
   "room": {
     "capacity": "Sức chứa",
