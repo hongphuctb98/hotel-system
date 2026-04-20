@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Table, InputNumber, Button, App } from "antd";
+import { InputNumber, Button, App } from "antd";
 import { useTranslations } from "next-intl";
 import { useRoomTypePricing } from "../hooks/useRoomTypePricing";
 import type { RoomTypePricing } from "@/types/master.types";
 import AppPageHeader from "@/common/components/ui/AppPageHeader";
+import AppTable from "@/common/components/ui/AppTable";
 
 type Row = RoomTypePricing & { roomType: { id: string; code: string; name: string } };
 
@@ -160,13 +161,14 @@ export default function RoomTypePricingTable() {
   return (
     <div>
       <AppPageHeader title={t("title")} translateTitle={false} />
-      <Table
+      <AppTable
         rowKey="roomTypeId"
         dataSource={records}
         columns={columns}
         loading={isLoading}
         pagination={false}
         size="small"
+        maxHeight={620}
         style={{ marginTop: 16 }}
       />
     </div>

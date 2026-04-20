@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import AppPageHeader from "@/common/components/ui/AppPageHeader";
 import AppTable from "@/common/components/ui/AppTable";
 import AppModal from "@/common/components/ui/AppModal";
+import { booleanSorter } from "@/common/components/ui/table/sorters";
 import { useMasterDataCrud } from "../hooks/useMasterDataCrud";
 import type { MasterDataConfig } from "@/types/master.types";
 
@@ -36,6 +37,7 @@ export default function MasterDataTable<
       title: t("common.status"),
       dataIndex: "isActive",
       width: 100,
+      sorter: booleanSorter<T>((record) => record.isActive),
       render: (val: boolean, record: T) => (
         <Switch
           checked={val}
@@ -48,6 +50,7 @@ export default function MasterDataTable<
       key: "actions",
       title: t("common.actions"),
       width: 120,
+      fixed: "right" as const,
       render: (_: unknown, record: T) => (
         <div className="flex gap-2">
           <Button
@@ -84,6 +87,7 @@ export default function MasterDataTable<
         loading={isLoading}
         pagination={pagination}
         rowKey="id"
+        maxHeight={620}
       />
       <AppModal
         open={modalState.open}

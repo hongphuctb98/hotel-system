@@ -68,6 +68,8 @@ export default function HistoryPage() {
       dataIndex: "createdAt",
       title:     t("common.timestamp"),
       width:     160,
+      sorter:    (a: AuditLogRecord, b: AuditLogRecord) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       render:    (v: string) => (
         <Text style={{ fontSize: 12, whiteSpace: "nowrap" }}>
           {formatDate(v, locale)}{" "}
@@ -81,6 +83,8 @@ export default function HistoryPage() {
       key:       "action",
       dataIndex: "action",
       title:     t("common.action"),
+      sorter:    (a: AuditLogRecord, b: AuditLogRecord) =>
+        a.action.localeCompare(b.action),
       width:     120,
       render:    (v: string) => (
         <Tag color={ACTION_COLORS[v] ?? "default"} style={{ fontSize: 11 }}>

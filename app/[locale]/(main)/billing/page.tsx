@@ -36,12 +36,18 @@ export default function BillingPage() {
     {
       key: "invoiceNumber",
       dataIndex: "invoiceNumber",
+      sorter: (a: Invoice, b: Invoice) => a.invoiceNumber.localeCompare(b.invoiceNumber),
       title: t("billing.invoiceNumber"),
       width: 180,
     },
     {
       key: "booking",
       title: t("booking.guest"),
+      sorter: (a: Invoice, b: Invoice) => {
+        const nameA = a.booking ? `${a.booking.guest.firstName} ${a.booking.guest.lastName}` : "";
+        const nameB = b.booking ? `${b.booking.guest.firstName} ${b.booking.guest.lastName}` : "";
+        return nameA.localeCompare(nameB);
+      },
       render: (_: unknown, r: Invoice) =>
         r.booking
           ? `${r.booking.guest.firstName} ${r.booking.guest.lastName}`
@@ -50,6 +56,11 @@ export default function BillingPage() {
     {
       key: "room",
       title: t("booking.room"),
+      sorter: (a: Invoice, b: Invoice) => {
+        const roomA = a.booking?.room?.number ?? "";
+        const roomB = b.booking?.room?.number ?? "";
+        return roomA.localeCompare(roomB);
+      },
       render: (_: unknown, r: Invoice) => r.booking?.room?.number ?? "—",
       width: 100,
     },
@@ -57,12 +68,14 @@ export default function BillingPage() {
       key: "issuedAt",
       dataIndex: "issuedAt",
       title: t("billing.issuedAt"),
+      sorter: (a: Invoice, b: Invoice) => new Date(a.issuedAt).getTime() - new Date(b.issuedAt).getTime(), 
       render: (v: string) => formatDate(v),
       width: 120,
     },
     {
       key: "totalAmount",
       dataIndex: "totalAmount",
+      sorter: (a: Invoice, b: Invoice) => a.totalAmount - b.totalAmount,
       title: t("billing.total"),
       render: (v: number) => format(v),
       width: 140,
@@ -70,6 +83,7 @@ export default function BillingPage() {
     {
       key: "isPaid",
       dataIndex: "isPaid",
+      sorter: (a: Invoice, b: Invoice) => Number(a.isPaid) - Number(b.isPaid),
       title: t("common.status"),
       render: (v: boolean) => (
         <StatusBadge

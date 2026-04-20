@@ -3,7 +3,6 @@
 import { Button, Descriptions, Spin, Table, Popconfirm, Typography, Tag, App } from "antd";
 import {
   IconArrowLeft,
-  IconEdit,
   IconLogin,
   IconLogout,
   IconPlus,
@@ -16,6 +15,7 @@ import { useTimezone } from "@/providers/TimezoneProvider";
 import { formatInTimezone } from "@/common/utils/clientTimezone";
 import AppPageHeader from "@/common/components/ui/AppPageHeader";
 import AppCard from "@/common/components/ui/AppCard";
+import AppTable from "@/common/components/ui/AppTable";
 import StatusBadge from "@/common/components/ui/StatusBadge";
 import PriceDisplay from "@/common/components/ui/PriceDisplay";
 import { getBookingStatusLabel } from "@/common/utils/bookingStatusLabel";
@@ -228,12 +228,13 @@ export default function ReservationDetailPage({
               </Button>
             }
           >
-            <Table
+            <AppTable
               columns={serviceColumns}
               dataSource={booking.services}
               rowKey="id"
               pagination={false}
               size="small"
+              maxHeight={360}
               summary={() => (
                 <Table.Summary.Row>
                   <Table.Summary.Cell index={0} colSpan={4} align="right">

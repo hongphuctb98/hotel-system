@@ -1,12 +1,13 @@
 "use client";
 
-import { Button, Descriptions, Spin, Table, Tag, Divider } from "antd";
+import { Button, Descriptions, Spin, Tag, Divider } from "antd";
 import { IconArrowLeft, IconCreditCard, IconPrinter } from "@tabler/icons-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { use } from "react";
 import AppPageHeader from "@/common/components/ui/AppPageHeader";
 import AppCard from "@/common/components/ui/AppCard";
+import AppTable from "@/common/components/ui/AppTable";
 import { useInvoice } from "@/modules/billing/hooks/useInvoice";
 import { useHotelSettings } from "@/common/hooks/useHotelSettings";
 import { useDisclosure } from "@/common/hooks/useDisclosure";
@@ -193,12 +194,13 @@ export default function InvoiceDetailPage({
 
           {booking?.services && booking.services.length > 0 && (
             <AppCard title={t("booking.servicesSection")}>
-              <Table
+              <AppTable
                 columns={serviceColumns}
                 dataSource={booking.services}
                 rowKey="id"
                 pagination={false}
                 size="small"
+                maxHeight={320}
               />
             </AppCard>
           )}
@@ -207,12 +209,13 @@ export default function InvoiceDetailPage({
             {invoice.payments.length === 0 ? (
               <p className="text-gray-400 text-sm">{t("billing.noPayments")}</p>
             ) : (
-              <Table
+              <AppTable
                 columns={paymentColumns}
                 dataSource={invoice.payments}
                 rowKey="id"
                 pagination={false}
                 size="small"
+                maxHeight={320}
               />
             )}
           </AppCard>

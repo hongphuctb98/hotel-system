@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePagination } from "./usePagination";
 import type { TablePaginationConfig } from "antd";
 import type { ApiResponse } from "@/types/api.types";
@@ -26,14 +26,16 @@ export function useTableQuery<T, TFilters extends object = Record<string, unknow
 }: UseTableQueryOptions<T, TFilters>) {
   const { page, limit, setPage } = usePagination();
   const [filters, setFilters] = useState<TFilters>(initialFilters);
+  const prevFiltersKeyRef = useRef<string | null>(null);
 
   const activeFilters = externalFilters ?? filters;
   const filtersKey = JSON.stringify(activeFilters);
 
   useEffect(() => {
-    if (page !== 1) {
+    if (prevFiltersKeyRef.current !== null && prevFiltersKeyRef.current !== filtersKey && page !== 1) {
       setPage(1, limit);
     }
+    prevFiltersKeyRef.current = filtersKey;
   }, [filtersKey, limit, page, setPage]);
 
   const { data, isLoading, isFetching, refetch } = useQuery({

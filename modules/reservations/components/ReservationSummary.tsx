@@ -1,7 +1,8 @@
 "use client";
 
-import { Table, Skeleton, theme } from "antd";
+import { Skeleton, theme } from "antd";
 import type { ColumnType } from "antd/es/table";
+import AppTable from "@/common/components/ui/AppTable";
 import { useTranslations } from "next-intl";
 import { useMasterData } from "@/common/hooks/useMasterData";
 import { getBookingStatusLabel } from "@/common/utils/bookingStatusLabel";
@@ -165,12 +166,14 @@ export default function ReservationSummary({ checkInFrom, checkInTo }: Props) {
   return (
     <>
       <div className="w-full lg:w-1/2 lg:max-w-190">
-        <Table<RowData>
+        <AppTable<RowData>
           className="reservation-summary-table"
           columns={columns}
           dataSource={dataSource}
           pagination={false}
           size="small"
+          scrollable={false}
+          stickyHeader={false}
           rowClassName={(row) =>
             row.key === "__total__" ? "font-semibold bg-gray-50" : ""
           }
@@ -178,20 +181,22 @@ export default function ReservationSummary({ checkInFrom, checkInTo }: Props) {
         />
       </div>
       <style jsx global>{`
-        .reservation-summary-table .ant-table {
+        .reservation-summary-table.ant-table-wrapper .ant-table {
           font-size: 12px;
         }
 
-        .reservation-summary-table .ant-table-thead > tr > th {
-          padding: 8px 10px;
+        .reservation-summary-table.ant-table-wrapper .ant-table-thead > tr > th,
+        .reservation-summary-table.ant-table-wrapper .ant-table.ant-table-small .ant-table-thead > tr > th {
+          padding: 2px 4px !important;
           white-space: nowrap;
         }
 
-        .reservation-summary-table .ant-table-tbody > tr > td {
-          padding: 7px 10px;
+        .reservation-summary-table.ant-table-wrapper .ant-table-tbody > tr > td,
+        .reservation-summary-table.ant-table-wrapper .ant-table.ant-table-small .ant-table-tbody > tr > td {
+          padding: 1px 2px !important;
         }
 
-        .reservation-summary-table .ant-table-cell {
+        .reservation-summary-table.ant-table-wrapper .ant-table-cell {
           line-height: 1.2;
         }
       `}</style>

@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import AppTable from "@/common/components/ui/AppTable";
 import StatusBadge from "@/common/components/ui/StatusBadge";
 import PriceDisplay from "@/common/components/ui/PriceDisplay";
+import { booleanSorter, numberSorter, textSorter } from "@/common/components/ui/table/sorters";
 import { useHotelSettings } from "@/common/hooks/useHotelSettings";
 import { useMasterData } from "@/common/hooks/useMasterData";
 import { useConfirm } from "@/common/hooks/useConfirm";
@@ -75,22 +76,26 @@ export default function RoomTable() {
       dataIndex: "number",
       title: t("room.number"),
       width: 100,
+      sorter: textSorter<Room>((r) => r.number),
     },
     {
       key: "floor",
       title: t("room.floor"),
+      sorter: textSorter<Room>((r) => r.floor.name),
       render: (_: unknown, r: Room) => r.floor.name,
       width: 100,
     },
     {
       key: "roomType",
       title: t("room.roomType"),
+      sorter: textSorter<Room>((r) => r.roomType.name),
       render: (_: unknown, r: Room) => r.roomType.name,
       width: 120,
     },
     {
       key: "status",
       title: t("room.status"),
+      sorter: textSorter<Room>((r) => resolveStatusDisplayWithMasterData(r, roomStatuses).label),
       render: (_: unknown, r: Room) => {
         const { label, color } = resolveStatusDisplayWithMasterData(r, roomStatuses);
         return <StatusBadge color={color} label={label} />;
@@ -100,6 +105,7 @@ export default function RoomTable() {
     {
       key: "price",
       title: t("room.effectivePrice"),
+      sorter: numberSorter<Room>((r) => Number(r.basePrice ?? r.roomType.pricing?.nightlyPrice ?? 0)),
       render: (_: unknown, r: Room) => (
         <PriceDisplay
           amount={r.basePrice ?? r.roomType.pricing?.nightlyPrice ?? null}
@@ -111,6 +117,7 @@ export default function RoomTable() {
     {
       key: "amenities",
       title: t("room.amenities"),
+      sorter: numberSorter<Room>((r) => r.amenities.length),
       render: (_: unknown, r: Room) =>
         r.amenities.length > 0
           ? r.amenities.map((a) => <Tag key={a.amenity.id}>{a.amenity.name}</Tag>)
@@ -120,12 +127,25 @@ export default function RoomTable() {
       key: "note",
       dataIndex: "note",
       title: t("room.note"),
+      sorter: textSorter<Room>((r) => r.note ?? ""),
       render: (v: string | null) => v ?? "—",
+    },
+    {
+      key: "isActive",
+      title: t("common.status"),
+      width: 100,
+      sorter: booleanSorter<Room>((r) => r.isActive),
+      render: (_: unknown, r: Room) => (
+        <Tag color={r.isActive ? "success" : "default"}>
+          {r.isActive ? t("common.active") : t("common.inactive")}
+        </Tag>
+      ),
     },
     {
       key: "actions",
       title: t("common.actions"),
       width: 100,
+      fixed: "right" as const,
       render: (_: unknown, r: Room) => (
         <Space size={4}>
           <Button
@@ -230,6 +250,7 @@ export default function RoomTable() {
         dataSource={data}
         columns={columns}
         pagination={pagination}
+        maxHeight={620}
         rowClassName={(r: Room) => (!r.isActive ? "opacity-50" : "")}
       />
 

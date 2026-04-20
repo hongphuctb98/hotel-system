@@ -5,7 +5,6 @@ import {
   Button,
   Descriptions,
   Spin,
-  Table,
   Form,
   Input,
   Select,
@@ -18,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { use } from "react";
 import AppPageHeader from "@/common/components/ui/AppPageHeader";
 import AppCard from "@/common/components/ui/AppCard";
+import AppTable from "@/common/components/ui/AppTable";
 import StatusBadge from "@/common/components/ui/StatusBadge";
 import { useGuest, useGuestActions } from "@/modules/guests/hooks/useGuest";
 import { useDisclosure } from "@/common/hooks/useDisclosure";
@@ -195,13 +195,13 @@ export default function GuestDetailPage({
 
         <div className="lg:col-span-2">
           <AppCard title={t("guest.stayHistory")}>
-            <Table
+            <AppTable
               columns={bookingColumns}
               dataSource={bookings}
               rowKey="id"
               pagination={{ pageSize: 10 }}
               size="small"
-              childrenColumnName="__children"
+              maxHeight={420}
               onRow={(r) => ({
                 onClick: () =>
                   router.push(`/${locale}/reservations/${r.id}`),

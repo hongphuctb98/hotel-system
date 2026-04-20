@@ -1,11 +1,12 @@
 "use client";
 
-import { Button, Space, Tag, Input } from "antd";
+import { Button, Tag, Input } from "antd";
 import { IconEye, IconSearch } from "@tabler/icons-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import AppTable from "@/common/components/ui/AppTable";
 import StatusBadge from "@/common/components/ui/StatusBadge";
+import { textSorter } from "@/common/components/ui/table/sorters";
 import { useGuests } from "../hooks/useGuests";
 import type { Guest } from "@/types/guest.types";
 
@@ -19,23 +20,27 @@ export default function GuestTable() {
     {
       key: "name",
       title: t("guest.lastName"),
+      sorter: textSorter<Guest>((r) => `${r.lastName} ${r.firstName}`),
       render: (_: unknown, r: Guest) => `${r.lastName} ${r.firstName}`,
     },
     {
       key: "phone",
       dataIndex: "phone",
       title: t("guest.phone"),
+      sorter: textSorter<Guest>((r) => r.phone ?? ""),
       render: (v: string | null) => v ?? "—",
     },
     {
       key: "idNumber",
       dataIndex: "idNumber",
       title: t("guest.idNumber"),
+      sorter: textSorter<Guest>((r) => r.idNumber ?? ""),
       render: (v: string | null) => v ?? "—",
     },
     {
       key: "guestType",
       title: t("guest.guestType"),
+      sorter: textSorter<Guest>((r) => r.guestType.name),
       render: (_: unknown, r: Guest) => (
         <StatusBadge color={r.guestType.color} label={r.guestType.name} />
       ),
@@ -45,6 +50,7 @@ export default function GuestTable() {
       key: "tags",
       dataIndex: "tags",
       title: t("guest.tags"),
+      sorter: textSorter<Guest>((r) => (r.tags ?? []).join(", ")),
       render: (tags: string[]) =>
         tags.map((tag) => <Tag key={tag}>{tag}</Tag>),
     },
@@ -52,6 +58,7 @@ export default function GuestTable() {
       key: "actions",
       title: t("common.actions"),
       width: 80,
+      fixed: "right" as const,
       render: (_: unknown, r: Guest) => (
         <Button
           type="text"
@@ -79,6 +86,7 @@ export default function GuestTable() {
         loading={isLoading}
         pagination={pagination}
         rowKey="id"
+        maxHeight={600}
       />
     </div>
   );

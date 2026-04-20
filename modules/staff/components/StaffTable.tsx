@@ -13,6 +13,7 @@ import {
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import AppTable from "@/common/components/ui/AppTable";
+import { booleanSorter, textSorter } from "@/common/components/ui/table/sorters";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { usePermission } from "@/common/hooks/usePermission";
 import { PERMISSIONS } from "@/common/constants/permissions";
@@ -88,6 +89,7 @@ export default function StaffTable() {
     {
       key: "name",
       title: t("name"),
+      sorter: textSorter<StaffMember>((s) => s.name),
       render: (_: unknown, s: StaffMember) => (
         <Space size={8}>
           {s.avatarUrl ? (
@@ -104,6 +106,7 @@ export default function StaffTable() {
       key: "contactEmail",
       dataIndex: "contactEmail",
       title: t("contactEmail"),
+      sorter: textSorter<StaffMember>((s) => s.contactEmail ?? ""),
       render: (v: string | null) => v ?? "—",
       width: 200,
     },
@@ -111,12 +114,14 @@ export default function StaffTable() {
       key: "phone",
       dataIndex: "phone",
       title: t("phone"),
+      sorter: textSorter<StaffMember>((s) => s.phone ?? ""),
       render: (v: string | null) => v ?? "—",
       width: 130,
     },
     {
       key: "role",
       title: t("role"),
+      sorter: textSorter<StaffMember>((s) => s.role ?? ""),
       render: (_: unknown, s: StaffMember) =>
         s.role ? (
           <Tag color={ROLE_COLORS[s.role]}>{s.role}</Tag>
@@ -129,12 +134,14 @@ export default function StaffTable() {
       key: "position",
       dataIndex: "position",
       title: t("position"),
+      sorter: textSorter<StaffMember>((s) => s.position ?? ""),
       render: (v: string | null) => v ?? "—",
       width: 160,
     },
     {
       key: "accountStatus",
       title: t("accountStatus"),
+      sorter: booleanSorter<StaffMember>((s) => s.accountIsActive),
       render: (_: unknown, s: StaffMember) => {
         if (!s.hasAccount) {
           return <Tag color="warning">{t("noAccount")}</Tag>;
@@ -149,6 +156,7 @@ export default function StaffTable() {
     {
       key: "status",
       title: tCommon("status"),
+      sorter: booleanSorter<StaffMember>((s) => s.isActive),
       render: (_: unknown, s: StaffMember) => (
         <Tag color={s.isActive ? "success" : "default"}>
           {s.isActive ? tCommon("active") : tCommon("inactive")}
@@ -160,6 +168,7 @@ export default function StaffTable() {
       key: "actions",
       title: tCommon("actions"),
       width: 140,
+      fixed: "right" as const,
       render: (_: unknown, s: StaffMember) => {
         const isSelf = !!currentUserId && s.userId === currentUserId;
         return (
@@ -255,6 +264,7 @@ export default function StaffTable() {
         dataSource={data}
         columns={columns}
         pagination={pagination}
+        maxHeight={620}
         rowClassName={(s: StaffMember) => (!s.isActive ? "opacity-50" : "")}
       />
 

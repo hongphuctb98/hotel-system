@@ -5,6 +5,7 @@ import { Button, Select, Space, Tag } from "antd";
 import { IconEdit, IconKey } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import AppTable from "@/common/components/ui/AppTable";
+import { booleanSorter, textSorter } from "@/common/components/ui/table/sorters";
 import { useAccounts } from "../hooks/useAccounts";
 import EditAccountModal from "./EditAccountModal";
 import ResetPasswordModal from "@/modules/staff/components/ResetPasswordModal";
@@ -29,7 +30,7 @@ export default function AccountsTable() {
   const t = useTranslations("accounts");
   const tCommon = useTranslations("common");
 
-  const { data, isLoading, pagination, filters, setFilters } = useAccounts();
+  const { data, isLoading, pagination, setFilters } = useAccounts();
 
   const [editTarget, setEditTarget] = useState<StaffMember | null>(null);
   const [editOpen, setEditOpen] = useState(false);
@@ -41,23 +42,27 @@ export default function AccountsTable() {
       key: "name",
       title: t("staffName"),
       dataIndex: "name",
+      sorter: textSorter<StaffMember>((s) => s.name),
       render: (name: string) => <span className="font-medium">{name}</span>,
     },
     {
       key: "accountEmail",
       title: t("accountEmail"),
       dataIndex: "accountEmail",
+      sorter: textSorter<StaffMember>((s) => s.accountEmail ?? ""),
     },
     {
       key: "role",
       title: t("role"),
       dataIndex: "role",
+      sorter: textSorter<StaffMember>((s) => s.role ?? ""),
       render: (role: UserRole | null) =>
         role ? <Tag color={ROLE_COLORS[role]}>{role}</Tag> : null,
     },
     {
       key: "accountStatus",
       title: t("accountStatus"),
+      sorter: booleanSorter<StaffMember>((s) => s.accountIsActive),
       render: (_: unknown, s: StaffMember) =>
         s.accountIsActive ? (
           <Tag color="success">{tCommon("active")}</Tag>
@@ -70,6 +75,7 @@ export default function AccountsTable() {
       key: "actions",
       title: tCommon("actions"),
       width: 100,
+      fixed: "right" as const,
       render: (_: unknown, s: StaffMember) => (
         <Space>
           <Button
@@ -109,6 +115,7 @@ export default function AccountsTable() {
         dataSource={data}
         loading={isLoading}
         pagination={pagination}
+        maxHeight={620}
         rowClassName={(s) => (!s.accountIsActive ? "opacity-50" : "")}
       />
 

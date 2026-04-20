@@ -8,6 +8,7 @@ import dayjs from "dayjs";
 import AppTable from "@/common/components/ui/AppTable";
 import StatusBadge from "@/common/components/ui/StatusBadge";
 import PriceDisplay from "@/common/components/ui/PriceDisplay";
+import { dateSorter, numberSorter, textSorter } from "@/common/components/ui/table/sorters";
 import { useReservations, type BookingFilters } from "../hooks/useReservations";
 import { useMasterData } from "@/common/hooks/useMasterData";
 import { useTimezone } from "@/providers/TimezoneProvider";
@@ -41,6 +42,7 @@ export default function ReservationTable({
       dataIndex: "bookingNumber",
       title: t("booking.bookingNumber"),
       width: 150,
+      sorter: textSorter<Booking>((r) => r.bookingNumber),
       render: (v: string) => (
         <Typography.Text
           copyable={{ text: v, tooltips: [t("common.copy"), t("common.copied")] }}
@@ -53,12 +55,14 @@ export default function ReservationTable({
     {
       key: "guest",
       title: t("booking.guest"),
+      sorter: textSorter<Booking>((r) => `${r.guest.firstName} ${r.guest.lastName}`),
       render: (_: unknown, r: Booking) =>
         `${r.guest.firstName} ${r.guest.lastName}`,
     },
     {
       key: "room",
       title: t("booking.room"),
+      sorter: textSorter<Booking>((r) => `${r.room.number} ${r.room.roomType.name}`),
       render: (_: unknown, r: Booking) =>
         `${r.room.number} · ${r.room.roomType.name}`,
     },
@@ -66,19 +70,22 @@ export default function ReservationTable({
       key: "checkInDate",
       dataIndex: "checkInDate",
       title: t("booking.checkIn"),
+      sorter: dateSorter<Booking>((r) => r.checkInDate),
       render: (v: string) => formatInTimezone(v, tz, "DD/MM/YYYY"),
-      width: 110,
+      width: 120,
     },
     {
       key: "checkOutDate",
       dataIndex: "checkOutDate",
       title: t("booking.checkOut"),
+      sorter: dateSorter<Booking>((r) => r.checkOutDate),
       render: (v: string) => formatInTimezone(v, tz, "DD/MM/YYYY"),
-      width: 110,
+      width: 120,
     },
     {
       key: "status",
       title: t("booking.status"),
+      sorter: textSorter<Booking>((r) => r.bookingStatus.code),
       render: (_: unknown, r: Booking) => (
         <StatusBadge
           color={r.bookingStatus.color}
@@ -91,6 +98,11 @@ export default function ReservationTable({
       key: "paymentStatus",
       title: t("booking.paymentStatus"),
       width: 130,
+      sorter: textSorter<Booking>((r) => {
+        const inv = r.invoices?.[0];
+        if (!inv) return "";
+        return inv.isPaid ? "PAID" : "UNPAID";
+      }),
       render: (_: unknown, r: Booking) => {
         const inv = r.invoices?.[0];
         if (!inv) return <span style={{ color: "#aaa" }}>—</span>;
@@ -105,6 +117,7 @@ export default function ReservationTable({
       key: "totalAmount",
       dataIndex: "totalAmount",
       title: t("booking.total"),
+      sorter: numberSorter<Booking>((r) => r.totalAmount),
       render: (v: number) => <PriceDisplay amount={v} isFallback={false} />,
       width: 130,
     },
@@ -113,6 +126,7 @@ export default function ReservationTable({
       dataIndex: "note",
       title: t("booking.note"),
       width: 160,
+      sorter: textSorter<Booking>((r) => r.note ?? ""),
       render: (v: string | null) =>
         v ? (
           <Tooltip title={v}>
@@ -126,6 +140,7 @@ export default function ReservationTable({
       title: t("common.actions"),
       key: "actions",
       width: 80,
+      fixed: "right" as const,
       align: "center" as const, 
       render: (_: unknown, r: Booking) => (
         <Button
@@ -197,6 +212,7 @@ export default function ReservationTable({
         loading={isLoading}
         pagination={pagination}
         rowKey="id"
+        maxHeight={420}
       />
     </div>
   );
