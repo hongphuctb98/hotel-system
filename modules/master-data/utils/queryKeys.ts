@@ -11,6 +11,10 @@ const ENDPOINT_TO_MASTER_KEY: Record<string, string> = {
   "/api/master/service-items": "service-items",
   "/api/master/guest-types": "guest-types",
   "/api/master/amenities": "amenities",
+  "/api/master/product-categories": "product-categories",
+  "/api/master/products": "products",
+  "/api/master/expense-categories": "expense-categories",
+  "/api/master/expense-items": "expense-items",
 };
 
 export async function invalidateMasterDataQueries(

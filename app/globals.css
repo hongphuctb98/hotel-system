@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --border-color: #e8ecf0;
+  --border-color: #c5ced8;
   --header-bg: #ffffff;
   --sidebar-bg: #ffffff;
 }
 
 [data-theme="dark"] {
-  --border-color: #2d2d3d;
+  --border-color: #49566a;
   --header-bg: #1e1e2e;
   --sidebar-bg: #1e1e2e;
 }

@@ -46,7 +46,7 @@ export default function RoomGrid({ rooms, loading, onRoomClick }: RoomGridProps)
     <div className="space-y-5">
       {roomsByFloor.map((group) => (
         <section key={group.floorId} className="space-y-3">
-          <Typography.Title level={5} className="!mb-0">
+          <Typography.Title level={5} className="mb-0!">
             {group.floorName}
           </Typography.Title>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-6">

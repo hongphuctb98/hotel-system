@@ -19,6 +19,15 @@ export const PERMISSIONS = {
   STAFF_MANAGE: "staff:manage",
   SETTINGS_MANAGE: "settings:manage",
   AUDIT_LOG_VIEW: "audit_log:view",
+  PRODUCTS_VIEW: "products:view",
+  PRODUCTS_MANAGE: "products:manage",
+  INVENTORY_VIEW: "inventory:view",
+  INVENTORY_MANAGE: "inventory:manage",
+  EXPENSES_VIEW: "expenses:view",
+  EXPENSES_CREATE: "expenses:create",
+  EXPENSES_EDIT: "expenses:edit",
+  EXPENSES_DELETE: "expenses:delete",
+  FINANCE_VIEW: "finance:view",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -44,6 +53,15 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.MASTER_DATA_MANAGE,
     PERMISSIONS.STAFF_VIEW,
     PERMISSIONS.AUDIT_LOG_VIEW,
+    PERMISSIONS.PRODUCTS_VIEW,
+    PERMISSIONS.PRODUCTS_MANAGE,
+    PERMISSIONS.INVENTORY_VIEW,
+    PERMISSIONS.INVENTORY_MANAGE,
+    PERMISSIONS.EXPENSES_VIEW,
+    PERMISSIONS.EXPENSES_CREATE,
+    PERMISSIONS.EXPENSES_EDIT,
+    PERMISSIONS.EXPENSES_DELETE,
+    PERMISSIONS.FINANCE_VIEW,
   ],
   RECEPTIONIST: [
     PERMISSIONS.DASHBOARD_VIEW,
@@ -55,6 +73,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.GUEST_VIEW,
     PERMISSIONS.GUEST_EDIT,
     PERMISSIONS.BILLING_VIEW,
+    PERMISSIONS.INVENTORY_VIEW,
   ],
   HOUSEKEEPING: [
     PERMISSIONS.ROOM_MAP_VIEW,

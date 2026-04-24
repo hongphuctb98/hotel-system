@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Switch } from "antd";
+import { Button, Switch, Select } from "antd";
 import { IconPlus, IconEdit, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import AppPageHeader from "@/common/components/ui/AppPageHeader";
@@ -12,11 +12,12 @@ import type { MasterDataConfig } from "@/types/master.types";
 
 interface MasterDataTableProps<T extends { id: string; isActive: boolean }> {
   config: MasterDataConfig<T>;
+  tableType?: "category" | "product";
 }
 
 export default function MasterDataTable<
   T extends { id: string; isActive: boolean }
->({ config }: MasterDataTableProps<T>) {
+>({ config, tableType }: MasterDataTableProps<T>) {
   const t = useTranslations();
   const {
     data,
@@ -28,7 +29,15 @@ export default function MasterDataTable<
     closeModal,
     handleToggleActive,
     handleDelete,
+    isActiveFilter,
+    setIsActiveFilter,
   } = useMasterDataCrud<T>(config.endpoint);
+
+  const filterOptions = [
+    { value: "", label: t("common.all") },
+    { value: "true", label: t("common.active") },
+    { value: "false", label: t("common.inactive") },
+  ];
 
   const columns = [
     ...config.columns,
@@ -76,9 +85,18 @@ export default function MasterDataTable<
       <AppPageHeader
         title={config.titleKey}
         extra={
-          <Button type="primary" icon={<IconPlus size={16} />} onClick={openCreate}>
-            {t("common.add")}
-          </Button>
+          <>
+            <Select
+              style={{ width: 120 }}
+              size="small"
+              options={filterOptions}
+              value={isActiveFilter}
+              onChange={(v) => setIsActiveFilter(v as "" | "true" | "false")}
+            />
+            <Button type="primary" icon={<IconPlus size={16} />} onClick={openCreate}>
+              {t("common.add")}
+            </Button>
+          </>
         }
       />
       <AppTable
@@ -87,7 +105,7 @@ export default function MasterDataTable<
         loading={isLoading}
         pagination={pagination}
         rowKey="id"
-        maxHeight={620}
+        maxHeight={tableType === "category" ? 180 : tableType === "product" ? 300 : undefined}
       />
       <AppModal
         open={modalState.open}

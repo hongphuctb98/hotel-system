@@ -48,7 +48,6 @@ export function useTableQuery<T, TFilters extends object = Record<string, unknow
     current: page,
     pageSize: limit,
     total: data?.meta?.total ?? 0,
-    showSizeChanger: true,
     onChange: setPage,
   };
 

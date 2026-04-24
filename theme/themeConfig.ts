@@ -6,7 +6,7 @@ export const lightTheme: ThemeConfig = {
     colorPrimary: "#1677ff",
     colorBgContainer: "#ffffff",
     colorBgLayout: "#f5f7fa",
-    colorBorder: "#e8ecf0",
+    colorBorder: "#c5ced8",
     borderRadius: 8,
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
     fontSize: 14,
@@ -28,6 +28,10 @@ export const lightTheme: ThemeConfig = {
     Table: {
       headerBg: "#fafafa",
       rowHoverBg: "#f0f7ff",
+      cellPaddingBlockMD: 6,
+      cellPaddingInlineMD: 2,
+      borderColor: "#c5ced8",
+      headerSplitColor: "#b6c2cf",
     },
     Card: {
       paddingLG: 20,
@@ -41,7 +45,7 @@ export const darkTheme: ThemeConfig = {
     colorPrimary: "#4096ff",
     colorBgContainer: "#1e1e2e",
     colorBgLayout: "#12121f",
-    colorBorder: "#2d2d3d",
+    colorBorder: "#49566a",
     borderRadius: 8,
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
     fontSize: 14,
@@ -60,6 +64,10 @@ export const darkTheme: ThemeConfig = {
     },
     Table: {
       headerBg: "#2d2d3d",
+      cellPaddingBlockMD: 4,
+      cellPaddingInlineMD: 2,
+      borderColor: "#49566a",
+      headerSplitColor: "#5a6980",
     },
   },
 };

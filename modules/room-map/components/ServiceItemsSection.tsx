@@ -361,9 +361,15 @@ function ServiceRow({
         {({ getFieldValue }) => {
           const id = getFieldValue(["services", name, "serviceItemId"]);
           const item = serviceItems.find((s) => s.id === id);
+          const inv = item?.linkedProduct?.inventory;
           return (
             <div style={{ textAlign: "right", fontSize: 12 }}>
               <PriceDisplay amount={item?.unitPrice ?? null} />
+              {inv !== undefined && inv !== null && (
+                <div style={{ fontSize: 10, color: inv.quantity <= (inv.reorderLevel ?? 0) && inv.reorderLevel > 0 ? "#f5222d" : "#8c8c8c" }}>
+                  {inv.quantity} {item?.linkedProduct?.unit}
+                </div>
+              )}
             </div>
           );
         }}

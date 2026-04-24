@@ -837,6 +837,204 @@ async function main() {
     }
   }
 
+  // Product Categories
+  const productCategories = [
+    { name: "Amenities" },
+    { name: "F&B" },
+    { name: "Linen" },
+    { name: "Cleaning Supplies" },
+    { name: "Maintenance" },
+  ];
+  for (const pc of productCategories) {
+    await prisma.productCategory.upsert({ where: { name: pc.name }, update: {}, create: pc });
+  }
+
+  const seededProductCategories = await prisma.productCategory.findMany({
+    where: {
+      name: {
+        in: productCategories.map((category) => category.name),
+      },
+    },
+  });
+  const productCategoryByName = Object.fromEntries(
+    seededProductCategories.map((category) => [category.name, category])
+  );
+
+  const products = [
+    { sku: "AMEN-SHAMPOO-30ML", name: "Dầu gội 30ml", unit: "chai", categoryName: "Amenities" },
+    { sku: "AMEN-SOAP-25G", name: "Xà phòng 25g", unit: "bánh", categoryName: "Amenities" },
+    { sku: "AMEN-TOOTHBRUSH", name: "Bàn chải đánh răng", unit: "cây", categoryName: "Amenities" },
+    { sku: "AMEN-TOOTHPASTE", name: "Kem đánh răng mini", unit: "túp", categoryName: "Amenities" },
+    { sku: "AMEN-COMB", name: "Lược mini", unit: "cây", categoryName: "Amenities" },
+
+    { sku: "FB-WATER-500ML", name: "Nước suối 500ml", unit: "chai", categoryName: "F&B" },
+    { sku: "FB-SPARKLING-WATER", name: "Nước khoáng có gas", unit: "chai", categoryName: "F&B" },
+    { sku: "FB-COLA-CAN", name: "Coca-Cola", unit: "lon", categoryName: "F&B" },
+    { sku: "FB-ORANGE-SODA-CAN", name: "Nước cam", unit: "lon", categoryName: "F&B" },
+    { sku: "FB-LEMON-TEA-BOTTLE", name: "Trà chanh đóng chai", unit: "chai", categoryName: "F&B" },
+    { sku: "FB-GREEN-TEA-BOTTLE", name: "Trà xanh đóng chai", unit: "chai", categoryName: "F&B" },
+    { sku: "FB-ENERGY-DRINK", name: "Nước tăng lực", unit: "lon", categoryName: "F&B" },
+    { sku: "FB-BEER-CAN", name: "Bia lon", unit: "lon", categoryName: "F&B" },
+    { sku: "FB-INSTANT-NOODLE", name: "Mì ly", unit: "ly", categoryName: "F&B" },
+    { sku: "FB-INSTANT-PHO", name: "Phở ly", unit: "ly", categoryName: "F&B" },
+    { sku: "FB-POTATO-CHIPS", name: "Snack khoai tây", unit: "gói", categoryName: "F&B" },
+    { sku: "FB-PEANUT", name: "Đậu phộng rang", unit: "gói", categoryName: "F&B" },
+    { sku: "FB-BISCUIT", name: "Bánh quy", unit: "hộp", categoryName: "F&B" },
+    { sku: "FB-INSTANT-COFFEE", name: "Cà phê gói", unit: "gói", categoryName: "F&B" },
+
+    { sku: "LINEN-BATH-TOWEL", name: "Khăn tắm", unit: "cái", categoryName: "Linen" },
+    { sku: "LINEN-HAND-TOWEL", name: "Khăn mặt", unit: "cái", categoryName: "Linen" },
+    { sku: "LINEN-BED-SHEET", name: "Ga giường", unit: "cái", categoryName: "Linen" },
+    { sku: "LINEN-PILLOW-CASE", name: "Vỏ gối", unit: "cái", categoryName: "Linen" },
+
+    { sku: "CLEAN-TISSUE-BOX", name: "Hộp giấy", unit: "hộp", categoryName: "Cleaning Supplies" },
+    { sku: "CLEAN-TOILET-PAPER", name: "Giấy vệ sinh", unit: "cuộn", categoryName: "Cleaning Supplies" },
+    { sku: "CLEAN-TRASH-BAG", name: "Túi rác", unit: "cuộn", categoryName: "Cleaning Supplies" },
+    { sku: "CLEAN-FLOOR-CLEANER", name: "Nước lau sàn", unit: "chai", categoryName: "Cleaning Supplies" },
+
+    { sku: "MAIN-LED-BULB-12W", name: "Bóng đèn LED 12W", unit: "bóng", categoryName: "Maintenance" },
+    { sku: "MAIN-REMOTE-BATTERY", name: "Pin remote", unit: "cấp", categoryName: "Maintenance" },
+    { sku: "MAIN-DOOR-LOCK", name: "Ổ khoa cửa", unit: "bộ", categoryName: "Maintenance" },
+  ];
+
+  for (const productData of products) {
+    const category = productCategoryByName[productData.categoryName];
+    const product = await prisma.product.upsert({
+      where: { sku: productData.sku },
+      update: {
+        name: productData.name,
+        unit: productData.unit,
+        categoryId: category?.id ?? null,
+        isActive: true,
+      },
+      create: {
+        sku: productData.sku,
+        name: productData.name,
+        unit: productData.unit,
+        categoryId: category?.id ?? null,
+      },
+    });
+
+    await prisma.inventory.upsert({
+      where: { productId: product.id },
+      update: {},
+      create: {
+        productId: product.id,
+        quantity: 0,
+        reorderLevel: 0,
+      },
+    });
+  }
+
+  const serviceProducts = [
+    { code: "DRINK_WATER", name: "Nước suối", unitPrice: 15000, unit: "chai", productSku: "FB-WATER-500ML" },
+    { code: "DRINK_SPARKLING_WATER", name: "Nước khoáng có gas", unitPrice: 20000, unit: "chai", productSku: "FB-SPARKLING-WATER" },
+    { code: "DRINK_COLA", name: "Coca-Cola", unitPrice: 25000, unit: "lon", productSku: "FB-COLA-CAN" },
+    { code: "DRINK_ORANGE_SODA", name: "Nước cam lon", unitPrice: 25000, unit: "lon", productSku: "FB-ORANGE-SODA-CAN" },
+    { code: "DRINK_LEMON_TEA", name: "Trà chanh đóng chai", unitPrice: 20000, unit: "chai", productSku: "FB-LEMON-TEA-BOTTLE" },
+    { code: "DRINK_GREEN_TEA", name: "Trà xanh đóng chai", unitPrice: 20000, unit: "chai", productSku: "FB-GREEN-TEA-BOTTLE" },
+    { code: "DRINK_ENERGY", name: "Nước tăng lực", unitPrice: 25000, unit: "lon", productSku: "FB-ENERGY-DRINK" },
+    { code: "BEER_CAN", name: "Bia lon", unitPrice: 30000, unit: "lon", productSku: "FB-BEER-CAN" },
+    { code: "SNACK_INSTANT_NOODLE", name: "Mì ly", unitPrice: 35000, unit: "ly", productSku: "FB-INSTANT-NOODLE" },
+    { code: "SNACK_INSTANT_PHO", name: "Phở ly", unitPrice: 40000, unit: "ly", productSku: "FB-INSTANT-PHO" },
+    { code: "SNACK_POTATO_CHIPS", name: "Snack khoai tây", unitPrice: 25000, unit: "gói", productSku: "FB-POTATO-CHIPS" },
+    { code: "SNACK_PEANUT", name: "Đậu phộng rang", unitPrice: 20000, unit: "gói", productSku: "FB-PEANUT" },
+    { code: "SNACK_BISCUIT", name: "Bánh quy", unitPrice: 30000, unit: "hộp", productSku: "FB-BISCUIT" },
+    { code: "DRINK_INSTANT_COFFEE", name: "Cà phê gói", unitPrice: 15000, unit: "gói", productSku: "FB-INSTANT-COFFEE" },
+  ];
+
+  const seededProducts = await prisma.product.findMany({
+    where: {
+      sku: {
+        in: serviceProducts.map((item) => item.productSku),
+      },
+    },
+  });
+  const productBySku = Object.fromEntries(seededProducts.map((product) => [product.sku, product]));
+
+  for (const serviceData of serviceProducts) {
+    const linkedProduct = productBySku[serviceData.productSku];
+    if (!linkedProduct) continue;
+
+    await prisma.serviceItem.upsert({
+      where: { code: serviceData.code },
+      update: {
+        name: serviceData.name,
+        unitPrice: serviceData.unitPrice,
+        unit: serviceData.unit,
+        linkedProductId: linkedProduct.id,
+        isActive: true,
+      },
+      create: {
+        code: serviceData.code,
+        name: serviceData.name,
+        unitPrice: serviceData.unitPrice,
+        unit: serviceData.unit,
+        linkedProductId: linkedProduct.id,
+      },
+    });
+  }
+
+  // Expense Categories
+  const expenseCategoryDefs = [
+    { name: "Utilities", description: "Electricity, water, internet, waste collection" },
+    { name: "Personnel", description: "Salaries, bonuses, uniforms, staff meals" },
+    { name: "Operations", description: "Amenities, F&B supplies, cleaning chemicals" },
+    { name: "Maintenance", description: "AC service, elevator, plumbing repairs" },
+  ];
+  for (const ec of expenseCategoryDefs) {
+    await prisma.expenseCategory.upsert({ where: { name: ec.name }, update: {}, create: ec });
+  }
+
+  const seededExpenseCategories = await prisma.expenseCategory.findMany({
+    where: { name: { in: expenseCategoryDefs.map((c) => c.name) } },
+  });
+  const expenseCategoryByName = Object.fromEntries(seededExpenseCategories.map((c) => [c.name, c]));
+
+  // Expense Items
+  const expenseItemDefs = [
+    // Utilities
+    { categoryName: "Utilities", name: "Electricity", isRecurring: true, defaultAmount: null },
+    { categoryName: "Utilities", name: "Water", isRecurring: true, defaultAmount: 500000 },
+    { categoryName: "Utilities", name: "Internet", isRecurring: true, defaultAmount: 700000 },
+    { categoryName: "Utilities", name: "Waste Collection", isRecurring: false, defaultAmount: null },
+    // Personnel
+    { categoryName: "Personnel", name: "Monthly Salary", isRecurring: false, defaultAmount: null },
+    { categoryName: "Personnel", name: "Bonus", isRecurring: false, defaultAmount: null },
+    { categoryName: "Personnel", name: "Uniform", isRecurring: false, defaultAmount: null },
+    { categoryName: "Personnel", name: "Staff Meal", isRecurring: false, defaultAmount: null },
+    // Operations
+    { categoryName: "Operations", name: "Amenities", isRecurring: false, defaultAmount: null },
+    { categoryName: "Operations", name: "F&B Supplies", isRecurring: false, defaultAmount: null },
+    { categoryName: "Operations", name: "Cleaning Chemicals", isRecurring: false, defaultAmount: null },
+    // Maintenance
+    { categoryName: "Maintenance", name: "AC Service", isRecurring: false, defaultAmount: null },
+    { categoryName: "Maintenance", name: "Elevator Maintenance", isRecurring: false, defaultAmount: null },
+    { categoryName: "Maintenance", name: "Plumbing Repair", isRecurring: false, defaultAmount: null },
+  ];
+  for (const itemDef of expenseItemDefs) {
+    const category = expenseCategoryByName[itemDef.categoryName];
+    if (!category) continue;
+    const existing = await prisma.expenseItem.findFirst({
+      where: { categoryId: category.id, name: itemDef.name },
+    });
+    if (existing) {
+      await prisma.expenseItem.update({
+        where: { id: existing.id },
+        data: { isRecurring: itemDef.isRecurring, defaultAmount: itemDef.defaultAmount },
+      });
+    } else {
+      await prisma.expenseItem.create({
+        data: {
+          categoryId: category.id,
+          name: itemDef.name,
+          isRecurring: itemDef.isRecurring,
+          defaultAmount: itemDef.defaultAmount,
+        },
+      });
+    }
+  }
+
   // Hotel settings — seed timezone from env, default to Asia/Ho_Chi_Minh
   await prisma.hotelSettings.upsert({
     where: { id: "singleton" },

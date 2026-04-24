@@ -24,7 +24,7 @@ export default function OccupancyTrend() {
     <Card
       variant="outlined"
       styles={{ body: { padding: 16} }}
-      style={{ borderRadius: 12, borderWidth: "0.5px", marginBottom: 24 }}
+      style={{ borderRadius: 12, borderWidth: "0.5px" }}
       title={
         <div>
           <div style={{ fontSize: 14, fontWeight: 600 }}>{t("occupancyTrend")}</div>

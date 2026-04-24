@@ -13,7 +13,7 @@ export default function AppDrawer({
   open,
   onClose,
   children,
-  size = 480,
+  size = "default",
   ...props
 }: AppDrawerProps) {
   return (

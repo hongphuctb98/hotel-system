@@ -11,6 +11,9 @@ export const ROUTES = {
   STAFF: "/staff",
   ACCOUNTS: "/accounts",
   SETTINGS: "/settings",
+  INVENTORY: "/inventory",
+  EXPENSES: "/expenses",
+  FINANCE: "/finance",
   MASTER: {
     FLOORS: "/master-data/floors",
     ROOM_TYPES: "/master-data/room-types",
@@ -21,5 +24,9 @@ export const ROUTES = {
     GUEST_TYPES: "/master-data/guest-types",
     AMENITIES: "/master-data/amenities",
     ROOM_TYPE_PRICING: "/master-data/room-type-pricing",
+    PRODUCT_CATEGORIES: "/master-data/product-categories",
+    PRODUCTS: "/master-data/products",
+    EXPENSE_CATEGORIES: "/master-data/expense-categories",
+    EXPENSE_ITEMS: "/master-data/expense-items",
   },
 } as const;

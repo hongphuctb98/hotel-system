@@ -10,6 +10,7 @@ export type DashboardCharts = {
   occupancyByWeek: { weekLabel: string; occupancyRate: number }[];
   dailyNewBookings: { date: string; count: number }[];
   totalRooms: number;
+  monthlyRevenueVsExpense: { date: string; revenue: number; expense: number }[];
 };
 
 export function useDashboardCharts() {

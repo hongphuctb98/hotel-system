@@ -52,12 +52,13 @@ export default function PriceDisplay({
     displayAmount = numeric * rate;
   }
 
-  const formatted = new Intl.NumberFormat(config.locale, {
+  const raw = new Intl.NumberFormat(config.locale, {
     style: "currency",
     currency: resolvedTarget,
     minimumFractionDigits: resolvedTarget === "VND" ? 0 : 2,
     maximumFractionDigits: resolvedTarget === "VND" ? 0 : 2,
   }).format(displayAmount);
+  const formatted = config.locale === "vi-VN" ? raw.replace(/\./g, ",") : raw;
 
   return (
     <Typography.Text

@@ -3,6 +3,7 @@
 import MasterDataTable from "@/modules/master-data/components/MasterDataTable";
 import type { MasterDataConfig, ServiceItem } from "@/types/master.types";
 import ServiceItemForm from "@/modules/master-data/forms/ServiceItemForm";
+import PriceDisplay from "@/common/components/ui/PriceDisplay";
 
 const config: MasterDataConfig<ServiceItem> = {
   endpoint: "/api/master/service-items",
@@ -15,7 +16,7 @@ const config: MasterDataConfig<ServiceItem> = {
       dataIndex: "unitPrice",
       title: "Unit Price",
       width: 140,
-      render: (v: number) => v?.toLocaleString() ?? "—",
+      render: (v: number) => <PriceDisplay amount={v} isFallback={false} />,
     },
     { key: "unit", dataIndex: "unit", title: "Unit", width: 80, render: (v) => v ?? "—" },
   ],

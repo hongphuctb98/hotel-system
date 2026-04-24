@@ -72,7 +72,7 @@ export default function RoomStatusDonut() {
               <div key={s.code} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span
-                    className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
+                    className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
                     style={{ backgroundColor: s.color }}
                   />
                   <Typography.Text style={{ fontSize: 12 }}>{s.name}</Typography.Text>

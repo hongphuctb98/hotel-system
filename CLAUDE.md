@@ -76,6 +76,7 @@ Key differences from earlier Next.js versions:
 - Client output: `prisma/generated/`
 - Import: `import { PrismaClient } from "@/prisma/generated/client"`
 - Driver adapter: Prisma v7 requires `@prisma/adapter-pg` — see `lib/prisma.ts` for the singleton pattern
+- `lib/prisma.ts` keeps a **shared `pg.Pool`** (`min: 1`, `idleTimeoutMillis: 60000`) in `globalThis` alongside the `PrismaClient` singleton. This prevents cold-start TCP reconnection latency on Docker/Windows. Do not replace the pool with a bare `connectionString`.
 - Always run `npm run db:generate` after changing `prisma/schema.prisma`
 
 ## next-intl v4
@@ -137,6 +138,9 @@ Module directory names do not always match their API route counterparts:
 | `billing/` | `invoices/` |
 | `room-map/` | *(uses `rooms/` API — no dedicated route)* |
 | `master-data/` | `master/` |
+| `expenses/` | `expense-documents/` |
+| `finance/` | `expense-documents/summary` (read-only aggregation) |
+| `inventory/` | `inventory/` |
 
 ### Key design rules
 - **Pages are thin** — they only compose module components and pass no data directly
@@ -157,7 +161,14 @@ Core entities in `prisma/schema.prisma`:
 - **Payment** → linked to Invoice via **PaymentMethod**
 - **HousekeepingTask** → assigned to a Room with status and assignee (User)
 
-8 master-data lookup tables (all CRUD via `/api/master/*`): **Floor**, **RoomType**, **RoomStatus**, **BookingStatus**, **PaymentMethod**, **ServiceItem**, **GuestType**, **Amenity**.
+12 master-data lookup tables (all CRUD via `/api/master/*`): **Floor**, **RoomType**, **RoomStatus**, **BookingStatus**, **PaymentMethod**, **ServiceItem**, **GuestType**, **Amenity**, **ExpenseCategory**, **ExpenseItem**, **ProductCategory**, **Product**.
+
+Expense & inventory entities:
+- **ExpenseDocument** (type: SERVICE | INVENTORY | INVENTORY_ADJUSTMENT) → **ServiceExpenseLine** → **ExpenseItem** → **ExpenseCategory**
+- **ExpenseDocument** → **InventoryReceiptLine** → **Product** → **ProductCategory**
+- **Inventory** — one row per Product, tracks current `quantity` and `reorderLevel`
+- **StockMovement** — immutable ledger of every IN / OUT / ADJUST operation
+- **AuditLog** — append-only record of every write action across all entities (see *Audit logging* below)
 
 All prices are stored in **VND**. `common/constants/currency.ts` exports `BASE_CURRENCY` and `EXCHANGE_RATES` for display-time conversion.
 
@@ -169,13 +180,38 @@ All prices are stored in **VND**. `common/constants/currency.ts` exports `BASE_C
 
 ### Common layer
 - `common/components/ui/` — AppTable, AppModal, AppDrawer, AppCard, AppPageHeader, StatusBadge, **PriceDisplay**, etc.
-- `common/components/form/` — TextField, SelectField, DateField, CurrencyField, etc. (all wrap Ant Design Form.Item)
+- `common/components/form/` — TextField, SelectField, DateField, **CurrencyField**, NumberField, etc. (all wrap Ant Design Form.Item)
 - `common/components/layout/` — MainLayout, AppSidebar, AppHeader, AppBreadcrumb
 - `common/hooks/` — useTableQuery, useMasterData, useLocaleCurrency, useDisclosure, useConfirm, usePagination, usePermission
-- `common/services/` — roomService, bookingService, guestService, invoiceService, masterDataService, apiClient
-- `common/utils/` — currency, date, enumHelpers, queryParams
+- `common/services/` — roomService, bookingService, guestService, invoiceService, masterDataService, expenseDocumentService, inventoryService, apiClient
+- `common/utils/` — currency, date, enumHelpers, queryParams, **numberInput**, **bookingApiErrorMessage**
+- `common/components/ui/table/` — **sorters.ts** exports `textSorter`, `numberSorter`, `dateSorter`, `booleanSorter` helpers for `AppTable` column `sorter` props — use these instead of inline compare functions
 - `common/constants/` — permissions, routes, locale.config, currency
 - **Date library:** `dayjs` (not date-fns or moment) — used throughout for date manipulation and formatting
+
+### Tables & pagination
+
+Always use `AppTable` from `common/components/ui/AppTable.tsx` instead of Ant Design's `Table` directly. It provides sticky headers, horizontal scroll, and a default empty state automatically — do not pass redundant `locale.emptyText` or `scroll.y` unless you need to override the defaults. Key props: `maxHeight` (default `560`), `stickyHeader` (default `true`), `scrollable` (default `true`).
+
+**Default pagination** — `AppTable` automatically applies `pageSize: 20`, `showSizeChanger: true`, and `pageSizeOptions: [10, 20, 50, 100]` to every table. Pass a `pagination` prop only to override specific values (e.g. `current`, `total`, `onChange`). Do not repeat these defaults.
+
+For server-side paginated tables, use `usePagination` from `common/hooks/usePagination.ts`:
+
+```ts
+const { page, limit, setPage } = usePagination(1, 20);
+// limit is the page size; setPage(newPage, newPageSize?) handles both
+
+<AppTable
+  pagination={{
+    current: page,
+    pageSize: limit,
+    total,
+    onChange: setPage,   // Ant passes (page, pageSize) — usePagination handles both
+  }}
+/>
+```
+
+For client-side paginated tables (API returns all rows), pass no `pagination` prop — AppTable defaults handle it automatically.
 
 ### React Query defaults
 Configured in `providers/QueryProvider.tsx`: `staleTime: 5min`, `retry: 1`, `refetchOnWindowFocus: false`. Override per-query as needed. Master data queries use `staleTime: Infinity`.
@@ -204,6 +240,8 @@ All return `ApiResponse<T>` from `types/api.types.ts`, which includes an optiona
 }
 ```
 
+For booking-related errors, use `getBookingApiErrorMessage(err, t)` from `common/utils/bookingApiErrorMessage.ts` — it maps structured API error codes (`BOOKING_OVERLAP`, `CHECKIN_TOO_EARLY`, `CHECKOUT_TOO_EARLY`, etc.) to i18n strings. Always prefer this over inline `switch` on `err.code` for booking actions.
+
 ### Soft-delete conflict handling
 
 Entities use soft delete (`isActive: false`). When creating an entity whose unique key matches a soft-deleted record, the API returns `conflict("...", "ENTITY_INACTIVE_EXISTS", { id })` (HTTP 409). The UI shows `modal.confirm` offering to reactivate via `PUT /api/.../[id]` with `{ isActive: true }`. For an active duplicate, return `conflict("...", "ENTITY_NUMBER_TAKEN")` and set a form field error with `form.setFields`.
@@ -221,6 +259,44 @@ Every Create / Update / Delete / Upload action must:
 5. **Deactivate feedback** — pass `onSuccess`/`onError` callbacks to `mutate()` at the call site; mutation hooks do not have access to `message`.
 6. **Inline destructive actions** — for row/file/image deletes, prefer `await mutation.mutateAsync(...)` inside the click handler, then show `message.success` / `message.error` there. Do not assume invalidation is sufficient feedback; keep loading scoped to the clicked control when possible.
 
+### Audit logging
+
+Every route handler that writes data (POST / PUT / PATCH / DELETE) **must** call `writeAudit` from `lib/audit.ts` after a successful operation. It is fire-and-forget (`void writeAudit(...)`) and never throws.
+
+```ts
+import { writeAudit } from "@/lib/audit";
+
+// CREATE
+void writeAudit({ action: "CREATE", entityType: "EXPENSE_CATEGORY", entityId: item.id, newValues: { name: item.name } });
+
+// UPDATE — capture oldValues before the update, compare after
+void writeAudit({ action: "UPDATE", entityType: "BOOKING", entityId: id, userId: user.sub, oldValues: { statusId: prev.statusId }, newValues: { statusId: updated.statusId } });
+
+// DELETE (soft)
+void writeAudit({ action: "DELETE", entityType: "PRODUCT", entityId: id, oldValues: { isActive: true }, newValues: { isActive: false } });
+```
+
+`userId` comes from `getAuthUser()` → `user.sub`. Pass `null` for routes that don't require auth. `entityType` uses SCREAMING_SNAKE_CASE matching the Prisma model name.
+
+### Number inputs
+
+For `InputNumber` components that display money values, use the helpers from `common/utils/numberInput.ts`:
+
+```ts
+import { formatNumberInput, parseNumberInput } from "@/common/utils/numberInput";
+
+<InputNumber
+  formatter={(v) => formatNumberInput(v, {})}          // "150,000"
+  parser={(v) => parseNumberInput(v) as number}
+/>
+// With currency prefix:
+formatter={(v) => formatNumberInput(v, { prefix: "VND" })}  // "VND 150,000"
+```
+
+For Form.Item wrappers, use `CurrencyField` from `common/components/form/CurrencyField.tsx` — it wires `formatNumberInput`/`parseNumberInput` automatically.
+
+**VND formatting quirk:** `vi-VN` locale uses `.` as thousands separator. The project normalizes this to `,` everywhere by calling `.replace(/\./g, ",")` after `Intl.NumberFormat.format()`. This fix exists in `PriceDisplay.tsx`, `useLocaleCurrency.ts`, and `currency.ts`. Do not introduce raw `toLocaleString("vi-VN")` for monetary values in new code.
+
 ### Price display
 
 Use `<PriceDisplay amount={value} isFallback={boolean} />` from `common/components/ui/PriceDisplay.tsx` for all monetary values in new code. It handles locale-aware formatting and VND→USD conversion via `EXCHANGE_RATES`. When an entity has an optional price override that falls back to a parent type's price, set `isFallback={entityPrice == null}` — this renders the amount in muted gray to signal to staff that the price is inherited.
@@ -228,7 +304,7 @@ Use `<PriceDisplay amount={value} isFallback={boolean} />` from `common/componen
 Do not call `useLocaleCurrency().format()` in new components; it has no fallback-styling support.
 
 ### Master data CRUD
-All 8 master data pages use the generic `MasterDataTable<T>` component driven by a `MasterDataConfig<T>` object. To add a new master data entity: create API routes, add a config object and form component, create a page that passes the config to `MasterDataTable`.
+All 12 master data pages use the generic `MasterDataTable<T>` component driven by a `MasterDataConfig<T>` object. To add a new master data entity: create API routes, add a config object and form component, create a page that passes the config to `MasterDataTable`.
 - Because `MasterDataConfig<T>` contains `columns.render` and `FormComponent`, the page must be `"use client"`.
 
 ### Auth flow

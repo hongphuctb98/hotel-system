@@ -71,7 +71,7 @@ export default function PaymentMethodDonut() {
                 <div key={m.methodName} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span
-                      className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
+                      className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
                       style={{ backgroundColor: m.color }}
                     />
                     <Typography.Text style={{ fontSize: 12 }}>{m.methodName}</Typography.Text>

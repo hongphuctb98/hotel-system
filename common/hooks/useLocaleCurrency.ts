@@ -13,12 +13,14 @@ export function useLocaleCurrency() {
 
   dayjs.locale(config.dayjsLocale);
 
-  const format = (amount: number) =>
-    new Intl.NumberFormat(config.locale, {
+  const format = (amount: number) => {
+    const raw = new Intl.NumberFormat(config.locale, {
       style: "currency",
       currency: config.currency,
       minimumFractionDigits: appLocale === "vi" ? 0 : 2,
     }).format(amount);
+    return config.locale === "vi-VN" ? raw.replace(/\./g, ",") : raw;
+  };
 
   const formatDate = (date: string | Date | null | undefined, fmt = "DD/MM/YYYY") => {
     if (!date) return "-";

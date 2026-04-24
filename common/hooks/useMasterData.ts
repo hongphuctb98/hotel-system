@@ -46,6 +46,24 @@ export function useMasterData() {
     staleTime: Infinity,
   });
 
+  const productCategories = useQuery({
+    queryKey: ["master", "product-categories"],
+    queryFn: () => masterDataService.productCategories({ isActive: true }),
+    staleTime: Infinity,
+  });
+
+  const products = useQuery({
+    queryKey: ["master", "products"],
+    queryFn: () => masterDataService.products({ isActive: true }),
+    staleTime: Infinity,
+  });
+
+  const expenseCategories = useQuery({
+    queryKey: ["master", "expense-categories"],
+    queryFn: () => masterDataService.expenseCategories({ isActive: true }),
+    staleTime: Infinity,
+  });
+
   const isLoading =
     floors.isLoading ||
     roomTypes.isLoading ||
@@ -60,6 +78,9 @@ export function useMasterData() {
     paymentMethods: paymentMethods.data?.data ?? [],
     serviceItems: serviceItems.data?.data ?? [],
     guestTypes: guestTypes.data?.data ?? [],
+    productCategories: productCategories.data?.data ?? [],
+    products: products.data?.data ?? [],
+    expenseCategories: expenseCategories.data?.data ?? [],
     isLoading,
   };
 }

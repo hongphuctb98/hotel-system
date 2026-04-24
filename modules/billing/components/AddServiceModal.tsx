@@ -1,9 +1,11 @@
 "use client";
 
-import { Form, Select, InputNumber, DatePicker, Input, Button } from "antd";
+import { useState } from "react";
+import { Form, Select, InputNumber, DatePicker, Input, Button, Typography } from "antd";
 import AppModal from "@/common/components/ui/AppModal";
 import { useMasterData } from "@/common/hooks/useMasterData";
 import { useReservationActions } from "@/modules/reservations/hooks/useReservation";
+import { ApiError } from "@/common/services/apiClient";
 import { useTranslations } from "next-intl";
 import dayjs from "dayjs";
 
@@ -22,22 +24,39 @@ export default function AddServiceModal({
   const [form] = Form.useForm();
   const { serviceItems } = useMasterData();
   const { addService } = useReservationActions(bookingId);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+
+  const selectedService = serviceItems.find((s) => s.id === selectedServiceId);
+  const linkedProduct = selectedService?.linkedProduct;
 
   const handleServiceChange = (id: string) => {
+    setSelectedServiceId(id);
     const item = serviceItems.find((s) => s.id === id);
     if (item) form.setFieldValue("unitPrice", Number(item.unitPrice));
   };
 
   const handleSubmit = async () => {
     const values = await form.validateFields();
-    await addService.mutateAsync({
-      ...values,
-      serviceDate: values.serviceDate
-        ? dayjs(values.serviceDate).toISOString()
-        : undefined,
-    });
-    form.resetFields();
-    onClose();
+    try {
+      await addService.mutateAsync({
+        ...values,
+        serviceDate: values.serviceDate
+          ? dayjs(values.serviceDate).toISOString()
+          : undefined,
+      });
+      form.resetFields();
+      setSelectedServiceId(null);
+      onClose();
+    } catch (err) {
+      if (err instanceof ApiError && err.code === "INSUFFICIENT_STOCK") {
+        const data = err.data as { available: number };
+        const unit = linkedProduct?.unit ?? "";
+        form.setFields([{
+          name: "quantity",
+          errors: [t("inventory.insufficientStockError", { n: data?.available ?? 0, unit })],
+        }]);
+      }
+    }
   };
 
   return (
@@ -76,6 +95,14 @@ export default function AddServiceModal({
             onChange={handleServiceChange}
           />
         </Form.Item>
+        {linkedProduct?.inventory && (
+          <Typography.Text type="secondary" className="block -mt-3 mb-3 text-xs">
+            {t("inventory.availableHint", {
+              n: linkedProduct.inventory.quantity,
+              unit: linkedProduct.unit,
+            })}
+          </Typography.Text>
+        )}
         <div className="grid grid-cols-2 gap-4">
           <Form.Item
             name="quantity"

@@ -26,6 +26,12 @@ import {
   IconReportMoneyFilled,
   IconClipboardList,
   IconActivityHeartbeat,
+  IconBuildingWarehouse,
+  IconCategory,
+  IconFirewallCheck,
+  IconReportMoney,
+  IconCalendarDollar,
+  IconCashRegister,
 } from "@tabler/icons-react";
 import { navigationConfig, type NavItem } from "@/configs/navigation.config";
 import { usePermission } from "@/common/hooks/usePermission";
@@ -39,6 +45,10 @@ const ICON_MAP: Record<string, React.ElementType> = {
   guests: IconUsers,
   housekeeping: IconVacuumCleaner,
   billing: IconReceipt,
+  inventory: IconBuildingWarehouse,
+  expenses: IconCalendarDollar,
+  finance: IconReportMoney,
+  history: IconActivityHeartbeat,
   staff: IconIdBadge2,
   accounts: IconUserStar,
   settings: IconSettings,
@@ -52,15 +62,22 @@ const ICON_MAP: Record<string, React.ElementType> = {
   "master-guest-types": IconFriends,
   "master-amenities": IconSparkles,
   "master-room-type-pricing": IconReportMoneyFilled,
-  history: IconActivityHeartbeat,
+  "master-product-categories": IconCategory,
+  "master-products": IconFirewallCheck,
+  "master-expense-items": IconCashRegister,
 };
 
 function buildMenuItems(
   items: NavItem[],
   t: (key: string) => string,
   hasPermission: (p?: string, roles?: string[]) => boolean,
-  locale: string
-): { key: string; icon?: React.ReactNode; label: React.ReactNode; children?: unknown[] }[] {
+  locale: string,
+): {
+  key: string;
+  icon?: React.ReactNode;
+  label: React.ReactNode;
+  children?: unknown[];
+}[] {
   return items
     .filter((item) => hasPermission(item.permission, item.roles))
     .map((item) => {
@@ -88,7 +105,7 @@ function buildMenuItems(
 function getActiveKeys(
   items: NavItem[],
   pathname: string,
-  locale: string
+  locale: string,
 ): { selectedKey: string; openKeys: string[] } {
   for (const item of items) {
     const fullHref = `/${locale}${item.href ?? ""}`;
@@ -97,7 +114,7 @@ function getActiveKeys(
     }
     if (item.children) {
       const child = item.children.find(
-        (c) => c.href && pathname.startsWith(`/${locale}${c.href}`)
+        (c) => c.href && pathname.startsWith(`/${locale}${c.href}`),
       );
       if (child) return { selectedKey: child.key, openKeys: [item.key] };
     }
@@ -112,7 +129,11 @@ export default function AppSidebar({ collapsed }: { collapsed: boolean }) {
   const { role } = useAuthRole();
   const { hasPermission } = usePermission(role);
 
-  const { selectedKey, openKeys } = getActiveKeys(navigationConfig, pathname, locale);
+  const { selectedKey, openKeys } = getActiveKeys(
+    navigationConfig,
+    pathname,
+    locale,
+  );
   const menuItems = buildMenuItems(navigationConfig, t, hasPermission, locale);
 
   return (

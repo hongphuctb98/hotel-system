@@ -31,7 +31,7 @@ export default function RoomStatusOverview() {
             <div key={s.code} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span
-                  className="inline-block w-3 h-3 rounded-full flex-shrink-0"
+                  className="inline-block w-3 h-3 rounded-full shrink-0"
                   style={{ backgroundColor: s.color }}
                 />
                 <Typography.Text>{s.name}</Typography.Text>

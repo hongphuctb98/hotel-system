@@ -2,15 +2,17 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { App } from "antd";
 import { apiClient } from "@/common/services/apiClient";
 import { useConfirm } from "@/common/hooks/useConfirm";
-import { message } from "antd";
+import { usePagination } from "@/common/hooks/usePagination";
 import { invalidateMasterDataQueries } from "../utils/queryKeys";
 
 export function useMasterDataCrud<T extends { id: string; isActive: boolean }>(
   endpoint: string
 ) {
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
   const { confirm } = useConfirm();
   const queryKey = ["master-crud", endpoint];
 
@@ -19,13 +21,16 @@ export function useMasterDataCrud<T extends { id: string; isActive: boolean }>(
     record: T | null;
   }>({ open: false, record: null });
 
-  const [page, setPage] = useState(1);
-  const limit = 20;
+  const { page, limit, setPage } = usePagination();
+  const [isActiveFilter, setIsActiveFilter] = useState<"" | "true" | "false">("true");
 
   const { data, isLoading } = useQuery({
-    queryKey: [...queryKey, page],
-    queryFn: () =>
-      apiClient.get<T[]>(`${endpoint}?page=${page}&limit=${limit}`),
+    queryKey: [...queryKey, page, limit, isActiveFilter],
+    queryFn: () => {
+      const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+      if (isActiveFilter !== "") qs.set("isActive", isActiveFilter);
+      return apiClient.get<T[]>(`${endpoint}?${qs}`);
+    },
   });
 
   const createMutation = useMutation({
@@ -72,7 +77,6 @@ export function useMasterDataCrud<T extends { id: string; isActive: boolean }>(
     current: page,
     pageSize: limit,
     total: data?.meta?.total ?? 0,
-    showSizeChanger: false,
     onChange: setPage,
   };
 
@@ -88,5 +92,7 @@ export function useMasterDataCrud<T extends { id: string; isActive: boolean }>(
     handleDelete,
     createMutation,
     updateMutation,
+    isActiveFilter,
+    setIsActiveFilter,
   };
 }

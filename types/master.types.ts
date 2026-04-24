@@ -63,6 +63,13 @@ export type ServiceItem = {
   unitPrice: number;
   unit?: string | null;
   isActive: boolean;
+  linkedProductId?: string | null;
+  linkedProduct?: {
+    id: string;
+    name: string;
+    unit: string;
+    inventory?: { quantity: number; reorderLevel: number } | null;
+  } | null;
 };
 
 export type GuestType = {
@@ -79,6 +86,57 @@ export type Amenity = {
   name: string;
   icon?: string | null;
   isActive: boolean;
+};
+
+export type ProductCategory = {
+  id: string;
+  name: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Product = {
+  id: string;
+  name: string;
+  sku?: string | null;
+  unit: string;
+  categoryId?: string | null;
+  category?: ProductCategory | null;
+  linkedServiceItem?: { id: string; name: string; code: string } | null;
+  isActive: boolean;
+  inventory?: {
+    quantity: number;
+    reorderLevel: number;
+    lastStocktakeAt?: string | null;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ExpenseCategory = {
+  id: string;
+  name: string;
+  description?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ExpenseItem = {
+  id: string;
+  categoryId: string;
+  category?: ExpenseCategory | null;
+  name: string;
+  description?: string | null;
+  isActive: boolean;
+  isRecurring: boolean;
+  defaultVendor?: string | null;
+  defaultAmount?: number | null;
+  defaultPaymentMethodId?: string | null;
+  defaultPaymentMethod?: PaymentMethod | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type MasterDataConfig<T> = {

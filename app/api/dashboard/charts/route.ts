@@ -35,6 +35,10 @@ export async function GET(_req: NextRequest) {
     const week8Str = dayjs.tz(todayStr, tz).subtract(55, "day").format("YYYY-MM-DD");
     const week8Start = dayjs.tz(week8Str, tz).startOf("day").toDate();
 
+    // Current month bounds (for revenue vs expense chart)
+    const monthStartStr = dayjs.tz(todayStr, tz).startOf("month").format("YYYY-MM-DD");
+    const monthStart = dayjs.tz(monthStartStr, tz).startOf("day").toDate();
+
     const [
       totalRooms,
       checkinCheckoutBookings,
@@ -43,6 +47,8 @@ export async function GET(_req: NextRequest) {
       paymentMethodPayments,
       occupancyBookings,
       newBookingsRaw,
+      monthPayments,
+      monthExpenseDocs,
     ] = await Promise.all([
       prisma.room.count({ where: { isActive: true } }),
 
@@ -109,6 +115,22 @@ export async function GET(_req: NextRequest) {
       prisma.booking.findMany({
         where: { createdAt: { gte: day30Start, lte: todayEnd } },
         select: { createdAt: true },
+      }),
+
+      // Payments received this month (for daily revenue line)
+      prisma.payment.findMany({
+        where: { paidAt: { gte: monthStart, lte: todayEnd } },
+        select: { paidAt: true, amount: true },
+      }),
+
+      // Expense documents dated this month (for daily expense line)
+      prisma.expenseDocument.findMany({
+        where: { documentDate: { gte: monthStart, lte: todayEnd }, isActive: true },
+        select: {
+          documentDate: true,
+          serviceLines: { select: { amount: true } },
+          inventoryLines: { select: { lineTotal: true } },
+        },
       }),
     ]);
 
@@ -213,6 +235,31 @@ export async function GET(_req: NextRequest) {
       dailyNewBookings.push({ date: dateStr, count: createdMap[dateStr] ?? 0 });
     }
 
+    // ── 6. Monthly daily revenue vs expenses ─────────────────────────────
+    const monthRevMap: Record<string, number> = {};
+    for (const p of monthPayments) {
+      const dayKey = dayjs(p.paidAt).tz(tz).format("YYYY-MM-DD");
+      monthRevMap[dayKey] = (monthRevMap[dayKey] ?? 0) + Number(p.amount);
+    }
+    const monthExpMap: Record<string, number> = {};
+    for (const doc of monthExpenseDocs) {
+      const dayKey = dayjs(doc.documentDate).tz(tz).format("YYYY-MM-DD");
+      const docTotal =
+        doc.serviceLines.reduce((s, l) => s + l.amount, 0) +
+        doc.inventoryLines.reduce((s, l) => s + l.lineTotal, 0);
+      monthExpMap[dayKey] = (monthExpMap[dayKey] ?? 0) + docTotal;
+    }
+    const monthlyRevenueVsExpense: { date: string; revenue: number; expense: number }[] = [];
+    const daysElapsed = dayjs.tz(todayStr, tz).date();
+    for (let i = 0; i < daysElapsed; i++) {
+      const dateStr = dayjs.tz(monthStartStr, tz).add(i, "day").format("YYYY-MM-DD");
+      monthlyRevenueVsExpense.push({
+        date: dateStr,
+        revenue: monthRevMap[dateStr] ?? 0,
+        expense: monthExpMap[dateStr] ?? 0,
+      });
+    }
+
     return ok({
       checkinCheckoutByDay,
       revenueAndBookingsByRoomType,
@@ -220,6 +267,7 @@ export async function GET(_req: NextRequest) {
       occupancyByWeek,
       dailyNewBookings,
       totalRooms,
+      monthlyRevenueVsExpense,
     });
   } catch (e) {
     return serverError(e);

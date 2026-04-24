@@ -130,7 +130,7 @@ export default function ReservationTable({
       render: (v: string | null) =>
         v ? (
           <Tooltip title={v}>
-            <span className="block truncate max-w-[140px]">{v}</span>
+            <span className="block truncate max-w-35">{v}</span>
           </Tooltip>
         ) : (
           <span style={{ color: "#aaa" }}>—</span>
