@@ -393,7 +393,7 @@
     "documents": "Tài liệu",
     "documentType": "Loại tài liệu",
     "documentName": "Tên tệp",
-    "showInactive": "Hiển thị nhân viên không hoạt động",
+    "showInactive": "Nhân viên không hoạt động",
     "filterByRole": "Lọc theo vai trò",
     "allRoles": "Tất cả vai trò",
     "tabs": {

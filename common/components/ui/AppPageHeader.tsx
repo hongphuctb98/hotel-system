@@ -20,7 +20,7 @@ export default function AppPageHeader({
   const displayTitle = translateTitle ? t(title) : title;
 
   return (
-    <div className="flex items-center justify-between mb-6">
+    <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
       <div>
         <Typography.Title level={4} style={{ margin: 0 }}>
          {displayTitle}

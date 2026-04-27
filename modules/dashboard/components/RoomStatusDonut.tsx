@@ -1,8 +1,14 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { Card, Skeleton, Typography } from "antd";
 import { useTranslations } from "next-intl";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Cell, Pie, PieChart, Tooltip } from "recharts";
+
+const ResponsiveContainer = dynamic(
+  () => import("recharts").then((m) => m.ResponsiveContainer),
+  { ssr: false },
+);
 import { useDashboardStats } from "../hooks/useDashboardStats";
 
 export default function RoomStatusDonut() {

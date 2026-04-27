@@ -1,15 +1,29 @@
 "use client";
 
-import { Form, InputNumber, Select, Button, Space, Input } from "antd";
+import {
+  Form,
+  InputNumber,
+  Select,
+  Button,
+  Space,
+  Input,
+  Row,
+  Col,
+} from "antd";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import PriceDisplay from "@/common/components/ui/PriceDisplay";
-import { formatNumberInput, parseNumberInput } from "@/common/utils/numberInput";
+import {
+  formatNumberInput,
+  parseNumberInput,
+} from "@/common/utils/numberInput";
 import type { ServiceItem } from "@/types/master.types";
 
 // Grid: Service (auto) | Qty (58px) | Unit Price (96px) | Total (96px) | Delete (28px)
-const GRID = "1fr 58px 96px 96px 28px";
-const GRID_NO_DELETE = "1fr 58px 96px 96px";
+// const GRID = "1fr 58px 96px 96px 28px";
+// const GRID_NO_DELETE = "1fr 58px 96px 96px";
+const GRID = "1fr 28px 96px 96px 28px";
+const GRID_NO_DELETE = "1fr 28px 96px 96px";
 
 interface ServiceItemsSectionProps {
   serviceItems: ServiceItem[];
@@ -55,7 +69,10 @@ export default function ServiceItemsSection({
 
   const serviceOptions = serviceItems
     .filter((s) => s.isActive)
-    .map((s) => ({ value: s.id, label: `${s.name}${s.unit ? ` (${s.unit})` : ""}` }));
+    .map((s) => ({
+      value: s.id,
+      label: `${s.name}${s.unit ? ` (${s.unit})` : ""}`,
+    }));
 
   const colHeader: React.CSSProperties = {
     fontSize: 11,
@@ -69,61 +86,70 @@ export default function ServiceItemsSection({
       {/* Always-registered hidden fields — keeps values in form store for API submission
           and ensures validateFields() / getFieldsValue() include them regardless of
           which chargeType block is currently rendered. */}
-      <Form.Item name="baseRate"          hidden noStyle><InputNumber /></Form.Item>
-      <Form.Item name="hourlyRatePerHour" hidden noStyle><InputNumber /></Form.Item>
-      <Form.Item name="hourlyBlockHours"  hidden noStyle><InputNumber /></Form.Item>
+      <Form.Item name="baseRate" hidden noStyle>
+        <InputNumber />
+      </Form.Item>
+      <Form.Item name="hourlyRatePerHour" hidden noStyle>
+        <InputNumber />
+      </Form.Item>
+      <Form.Item name="hourlyBlockHours" hidden noStyle>
+        <InputNumber />
+      </Form.Item>
 
       {/* Pricing display — read-only for all charge types; edit via master data */}
-      <div
-        style={{
-          background: "#fafafa",
-          border: "1px solid #f0f0f0",
-          borderRadius: 4,
-          padding: "6px 12px",
-          marginBottom: 8,
-          display: "flex",
-          // flexDirection: "column",
-          gap: 24,
-        }}
+      <Row
+      style={{
+        background: "#fafafa",
+        border: "1px solid #f0f0f0",
+        borderRadius: 4,
+        padding: "6px 12px",
+        marginBottom: 8,
+      }}
       >
-        {chargeType === "nightly" && (
-          <>
-            <PriceRow label={t("ratePerNight")} amount={baseRate} />
-            {(nightsStayed ?? 0) > 0 && (
+        <Col span={12} xs={24} sm={24} md={12} lg={12} xl={12}>
+          {chargeType === "nightly" && (
+            <>
+              <PriceRow label={t("ratePerNight")} amount={baseRate} />
+              {(nightsStayed ?? 0) > 0 && (
+                <PriceRow
+                  label={t("nightsStayed")}
+                  text={`${nightsStayed} ${t("nightsSuffix")}`}
+                  divided
+                />
+              )}
+            </>
+          )}
+          {chargeType === "daily" && (
+            <>
+              <PriceRow label={t("dailyRate")} amount={baseRate} />
+              {(daysStayed ?? 0) > 0 && (
+                <PriceRow
+                  label={t("daysStayed")}
+                  text={`${daysStayed} ${t("dayUseSuffix")}`}
+                  divided
+                />
+              )}
+            </>
+          )}
+          {chargeType === "hourly" && (
+            <>
+              <PriceRow label={t("blockPrice")} amount={baseRate} />
               <PriceRow
-                label={t("nightsStayed")}
-                text={`${nightsStayed} ${t("nightsSuffix")}`}
+                label={t("ratePerHour")}
+                amount={hourlyRatePerHour}
                 divided
               />
-            )}
-          </>
-        )}
-        {chargeType === "daily" && (
-          <>
-            <PriceRow label={t("dailyRate")} amount={baseRate} />
-            {(daysStayed ?? 0) > 0 && (
-              <PriceRow
-                label={t("daysStayed")}
-                text={`${daysStayed} ${t("dayUseSuffix")}`}
-                divided
-              />
-            )}
-          </>
-        )}
-        {chargeType === "hourly" && (
-          <>
-            <PriceRow label={t("blockPrice")} amount={baseRate} />
-            <PriceRow label={t("ratePerHour")} amount={hourlyRatePerHour} divided />
-            {(hoursStayed ?? 0) > 0 && (
-              <PriceRow
-                label={t("hoursStayed")}
-                text={`${hoursStayed!.toFixed(1)} ${t("hrsSuffix")}`}
-                divided
-              />
-            )}
-          </>
-        )}
-      </div>
+              {(hoursStayed ?? 0) > 0 && (
+                <PriceRow
+                  label={t("hoursStayed")}
+                  text={`${hoursStayed!.toFixed(1)} ${t("hrsSuffix")}`}
+                  divided
+                />
+              )}
+            </>
+          )}
+        </Col>
+      </Row>
 
       {/* Table header */}
       <div
@@ -136,9 +162,15 @@ export default function ServiceItemsSection({
         }}
       >
         <span style={colHeader}>{t("service")}</span>
-        <span style={{ ...colHeader, textAlign: "center" }}>{t("quantity")}</span>
-        <span style={{ ...colHeader, textAlign: "right" }}>{t("unitPrice")}</span>
-        <span style={{ ...colHeader, textAlign: "right" }}>{t("lineTotal")}</span>
+        <span style={{ ...colHeader, textAlign: "center" }}>
+          {t("quantity")}
+        </span>
+        <span style={{ ...colHeader, textAlign: "right" }}>
+          {t("unitPrice")}
+        </span>
+        <span style={{ ...colHeader, textAlign: "right" }}>
+          {t("lineTotal")}
+        </span>
         {!disabled && <span />}
       </div>
 
@@ -162,7 +194,12 @@ export default function ServiceItemsSection({
                 size="small"
                 icon={<IconPlus size={12} />}
                 onClick={() => add({ serviceItemId: undefined, quantity: 1 })}
-                style={{ padding: "2px 0", height: "auto", fontSize: 12, marginTop: 2 }}
+                style={{
+                  padding: "2px 0",
+                  height: "auto",
+                  fontSize: 12,
+                  marginTop: 2,
+                }}
               >
                 {t("addService")}
               </Button>
@@ -172,26 +209,30 @@ export default function ServiceItemsSection({
       </Form.List>
 
       {/* Summary block */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "0 24px",
-          borderTop: "1px solid #f0f0f0",
-          marginTop: 8,
-          paddingTop: 8,
-        }}
+      <Row
+        gutter={[30, {xs: 8, sm: 8, md: 16, lg: 16, xl: 16, xxl: 16}]}
       >
         {/* Left: stay price + service total + surcharge + discount */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+        <Col span={12} xs={24} sm={24} md={12} lg={12} xl={12}>
           <SummaryLine label={stayPriceLabel}>
             <PriceDisplay amount={stayPrice} />
           </SummaryLine>
           <SummaryLine label={t("serviceTotal")}>
             <PriceDisplay amount={serviceTotal} />
           </SummaryLine>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-            <span style={{ fontSize: 12, color: "#595959", whiteSpace: "nowrap" }}>{t("surcharge")}</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 8,
+            }}
+          >
+            <span
+              style={{ fontSize: 12, color: "#595959", whiteSpace: "nowrap" }}
+            >
+              {t("surcharge")}
+            </span>
             <Space.Compact size="small">
               <Form.Item name="surcharge" noStyle>
                 <InputNumber<number>
@@ -202,11 +243,31 @@ export default function ServiceItemsSection({
                   parser={(value) => parseNumberInput(value)}
                 />
               </Form.Item>
-              <Input value="₫" readOnly style={{ width: 32, textAlign: "center", color: "#8c8c8c", cursor: "default" }} />
+              <Input
+                value="₫"
+                readOnly
+                style={{
+                  width: 32,
+                  textAlign: "center",
+                  color: "#8c8c8c",
+                  cursor: "default",
+                }}
+              />
             </Space.Compact>
           </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-            <span style={{ fontSize: 12, color: "#595959", whiteSpace: "nowrap" }}>{t("discount")}</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 8,
+            }}
+          >
+            <span
+              style={{ fontSize: 12, color: "#595959", whiteSpace: "nowrap" }}
+            >
+              {t("discount")}
+            </span>
             <Space.Compact size="small">
               <Form.Item name="discount" noStyle>
                 <InputNumber<number>
@@ -217,13 +278,22 @@ export default function ServiceItemsSection({
                   parser={(value) => parseNumberInput(value)}
                 />
               </Form.Item>
-              <Input value="₫" readOnly style={{ width: 32, textAlign: "center", color: "#8c8c8c", cursor: "default" }} />
+              <Input
+                value="₫"
+                readOnly
+                style={{
+                  width: 32,
+                  textAlign: "center",
+                  color: "#8c8c8c",
+                  cursor: "default",
+                }}
+              />
             </Space.Compact>
           </div>
-        </div>
+        </Col>
 
         {/* Right: subtotal → tax → total payable + prepaid + remaining */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+        <Col  span={12} xs={24} sm={24} md={12} lg={12} xl={12}>
           <SummaryLine label={t("subtotal")}>
             <PriceDisplay amount={subtotalBeforeTax} />
           </SummaryLine>
@@ -233,8 +303,19 @@ export default function ServiceItemsSection({
           <SummaryLine label={t("totalPayable")} strong>
             <PriceDisplay amount={totalPayable} />
           </SummaryLine>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-            <span style={{ fontSize: 12, color: "#595959", whiteSpace: "nowrap" }}>{t("prepaid")}</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 8,
+            }}
+          >
+            <span
+              style={{ fontSize: 12, color: "#595959", whiteSpace: "nowrap" }}
+            >
+              {t("prepaid")}
+            </span>
             <Space.Compact size="small">
               <Form.Item name="prepaid" noStyle>
                 <InputNumber<number>
@@ -244,14 +325,23 @@ export default function ServiceItemsSection({
                   parser={(value) => parseNumberInput(value)}
                 />
               </Form.Item>
-              <Input value="₫" readOnly style={{ width: 32, textAlign: "center", color: "#8c8c8c", cursor: "default" }} />
+              <Input
+                value="₫"
+                readOnly
+                style={{
+                  width: 32,
+                  textAlign: "center",
+                  color: "#8c8c8c",
+                  cursor: "default",
+                }}
+              />
             </Space.Compact>
           </div>
           <SummaryLine label={t("remaining")} warn={remaining > 0}>
             <PriceDisplay amount={remaining} />
           </SummaryLine>
-        </div>
-      </div>
+        </Col>
+      </Row>
     </>
   );
 }
@@ -281,10 +371,11 @@ function PriceRow({
       }}
     >
       <span style={{ color: "#8c8c8c" }}>{label}</span>
-      {text !== undefined
-        ? <span style={{ color: "#262626", fontWeight: 500 }}>{text}</span>
-        : <PriceDisplay amount={amount ?? 0} />
-      }
+      {text !== undefined ? (
+        <span style={{ color: "#262626", fontWeight: 500 }}>{text}</span>
+      ) : (
+        <PriceDisplay amount={amount ?? 0} />
+      )}
     </div>
   );
 }
@@ -341,7 +432,9 @@ function ServiceRow({
       }}
     >
       {/* Preserves the DB row ID for existing services — required by the full-sync PUT */}
-      <Form.Item name={[name, "id"]} hidden noStyle><Input /></Form.Item>
+      <Form.Item name={[name, "id"]} hidden noStyle>
+        <Input />
+      </Form.Item>
 
       <Form.Item name={[name, "serviceItemId"]} noStyle>
         <Select
@@ -353,7 +446,12 @@ function ServiceRow({
       </Form.Item>
 
       <Form.Item name={[name, "quantity"]} noStyle initialValue={1}>
-        <InputNumber size="small" min={1} style={{ width: "100%" }} disabled={disabled} />
+        <InputNumber
+          size="small"
+          min={1}
+          style={{ width: "100%" }}
+          disabled={disabled}
+        />
       </Form.Item>
 
       {/* Unit price — read-only from master data */}
@@ -366,7 +464,16 @@ function ServiceRow({
             <div style={{ textAlign: "right", fontSize: 12 }}>
               <PriceDisplay amount={item?.unitPrice ?? null} />
               {inv !== undefined && inv !== null && (
-                <div style={{ fontSize: 10, color: inv.quantity <= (inv.reorderLevel ?? 0) && inv.reorderLevel > 0 ? "#f5222d" : "#8c8c8c" }}>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color:
+                      inv.quantity <= (inv.reorderLevel ?? 0) &&
+                      inv.reorderLevel > 0
+                        ? "#f5222d"
+                        : "#8c8c8c",
+                  }}
+                >
                   {inv.quantity} {item?.linkedProduct?.unit}
                 </div>
               )}

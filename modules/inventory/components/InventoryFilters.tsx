@@ -30,7 +30,7 @@ export default function InventoryFiltersBar({
         value={filters.categoryId ?? ""}
         options={categoryOptions}
         onChange={(v) => onChange({ ...filters, categoryId: v || undefined })}
-        style={{ width: 180 }}
+        style={{ width: 165 }}
       />
 
       <Input.Search

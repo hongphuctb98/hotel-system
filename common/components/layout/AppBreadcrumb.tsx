@@ -13,6 +13,12 @@ const SEGMENT_KEYS: Record<string, string> = {
   guests: "nav.guests",
   housekeeping: "nav.housekeeping",
   billing: "nav.billing",
+  inventory: "nav.inventory",
+  expenses: "nav.expenses",
+  finance: "nav.finance",
+  history: "nav.history",
+  accounts: "nav.accounts",
+  settings: "nav.settings",
   staff: "nav.staff",
   "master-data": "nav.masterData.title",
   floors: "nav.masterData.floors",
@@ -23,6 +29,11 @@ const SEGMENT_KEYS: Record<string, string> = {
   "service-items": "nav.masterData.serviceItems",
   "guest-types": "nav.masterData.guestTypes",
   amenities: "nav.masterData.amenities",
+  "room-type-pricing": "nav.masterData.roomTypePricing",
+  "product-categories": "nav.masterData.productCategories",
+  products: "nav.masterData.products",
+  "expense-categories": "nav.masterData.expenseCategories",
+  "expense-items": "nav.masterData.expenseItems",
   new: "common.add",
   edit: "common.edit",
 };
@@ -53,16 +64,23 @@ export default function AppBreadcrumb() {
     const labelKey = SEGMENT_KEYS[seg];
     const label = labelKey ? t(labelKey) : seg;
     const isLast = visibleIdx === visibleSegments.length - 1;
+    const isDynamic = !labelKey;
+
+    const text = isDynamic
+      ? <span className="max-w-32 truncate inline-block align-middle" title={label}>{label}</span>
+      : label;
 
     return {
       key: href,
-      title: isLast ? label : <Link href={href}>{label}</Link>,
+      title: isLast ? text : <Link href={href}>{text}</Link>,
     };
   });
 
   return (
-    <Breadcrumb
-      items={[{ key: "home", title: t("nav.home") }, ...items]}
-    />
+    <div className="hidden md:block">
+      <Breadcrumb
+        items={[{ key: "home", title: t("nav.home") }, ...items]}
+      />
+    </div>
   );
 }

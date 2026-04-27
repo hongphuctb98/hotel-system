@@ -3,7 +3,13 @@
 import { Card, Skeleton, Typography } from "antd";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
-import { Bar, Cell, ComposedChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import dynamic from "next/dynamic";
+import { Bar, Cell, ComposedChart, ReferenceLine, Tooltip, XAxis, YAxis } from "recharts";
+
+const ResponsiveContainer = dynamic(
+  () => import("recharts").then((m) => m.ResponsiveContainer),
+  { ssr: false },
+);
 import { useDashboardCharts } from "../hooks/useDashboardCharts";
 
 const BAR_COLOR         = "#378ADD";

@@ -119,16 +119,19 @@ export default function AppHeader({
 
   return (
     <div className="flex items-center justify-between h-full px-4">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
         <Button
           type="text"
+          className="shrink-0"
           icon={<IconMenu2 size={18} />}
           onClick={onToggle}
         />
-        <AppBreadcrumb />
+        <div className="min-w-0 overflow-hidden">
+          <AppBreadcrumb />
+        </div>
       </div>
-
-      <Space size="middle">
+      {/* space responsive */}
+      <Space size="small">
         <Space size={4}>
           <Button
             size="small"
@@ -145,7 +148,6 @@ export default function AppHeader({
             EN
           </Button>
         </Space>
-
         <Button
           type="text"
           icon={isDark ? <IconSun size={18} /> : <IconMoon size={18} />}

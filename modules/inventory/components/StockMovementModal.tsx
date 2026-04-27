@@ -95,6 +95,7 @@ export default function StockMovementModal({ open, item, onClose }: StockMovemen
       okText={t("movementModal.submit")}
       confirmLoading={mutation.isPending}
       destroyOnHidden
+      style={{top:20}}
     >
       {item && (
         <div className="mb-4 p-3 bg-gray-50 rounded">

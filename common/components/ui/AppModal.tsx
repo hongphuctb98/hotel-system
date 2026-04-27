@@ -1,7 +1,9 @@
 "use client";
 
-import { Modal } from "antd";
+import { Modal, Grid } from "antd";
 import type { ModalProps } from "antd";
+
+const { useBreakpoint } = Grid;
 
 interface AppModalProps extends ModalProps {
   open: boolean;
@@ -14,8 +16,12 @@ export default function AppModal({
   onClose,
   children,
   footer = null,
+  width,
   ...props
 }: AppModalProps) {
+  const screens = useBreakpoint();
+  const resolvedWidth = !screens.md ? "calc(100vw - 32px)" : width;
+
   return (
     <Modal
       open={open}
@@ -23,6 +29,7 @@ export default function AppModal({
       footer={footer}
       destroyOnHidden
       centered
+      width={resolvedWidth}
       {...props}
     >
       {children}

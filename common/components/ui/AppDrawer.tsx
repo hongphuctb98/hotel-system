@@ -1,7 +1,9 @@
 "use client";
 
-import { Drawer } from "antd";
+import { Drawer, Grid } from "antd";
 import type { DrawerProps } from "antd";
+
+const { useBreakpoint } = Grid;
 
 interface AppDrawerProps extends DrawerProps {
   open: boolean;
@@ -14,13 +16,18 @@ export default function AppDrawer({
   onClose,
   children,
   size = "default",
+  width,
   ...props
 }: AppDrawerProps) {
+  const screens = useBreakpoint();
+  const customWidth = !screens.md ? "100%" : width;
+
   return (
     <Drawer
       open={open}
       onClose={onClose}
-      size={size}
+      size={customWidth ? undefined : size}
+      styles={customWidth ? { wrapper: { width: customWidth } } : undefined}
       destroyOnHidden
       {...props}
     >

@@ -1,8 +1,11 @@
 "use client";
 
-import { Table } from "antd";
+import { Table, Grid } from "antd";
 import type { TableProps, TablePaginationConfig } from "antd";
+import type { ColumnType } from "antd/es/table";
 import EmptyState from "./EmptyState";
+
+const { useBreakpoint } = Grid;
 
 const DEFAULT_PAGINATION: TablePaginationConfig = {
   pageSize: 20,
@@ -15,6 +18,10 @@ interface AppTableProps<T> extends TableProps<T> {
   maxHeight?: number;
   stickyHeader?: boolean;
   scrollable?: boolean;
+  responsiveHideColumns?: {
+    below: "md" | "lg";
+    columns: string[];
+  };
 }
 
 export default function AppTable<T extends object>({
@@ -22,13 +29,30 @@ export default function AppTable<T extends object>({
   locale,
   scroll,
   pagination,
+  columns,
   maxHeight = 560,
   stickyHeader = true,
   scrollable = true,
+  responsiveHideColumns,
   ...props
 }: AppTableProps<T>) {
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
+
   const resolvedPagination =
     pagination === false ? false : { ...DEFAULT_PAGINATION, ...(pagination ?? {}) };
+
+  let resolvedColumns = columns;
+  if (responsiveHideColumns && columns) {
+    const shouldHide =
+      responsiveHideColumns.below === "md" ? isMobile : !screens.lg;
+    if (shouldHide) {
+      const hiddenSet = new Set(responsiveHideColumns.columns);
+      resolvedColumns = (columns as ColumnType<T>[]).filter(
+        (col) => !col.dataIndex || !hiddenSet.has(col.dataIndex as string),
+      );
+    }
+  }
 
   return (
     <Table
@@ -36,9 +60,10 @@ export default function AppTable<T extends object>({
       locale={{ emptyText: <EmptyState />, ...locale }}
       sticky={stickyHeader}
       scroll={scrollable ? { x: "max-content", y: maxHeight, ...scroll } : scroll}
-      size="middle"
+      size={isMobile ? "small" : "middle"}
       childrenColumnName="__children"
       pagination={resolvedPagination}
+      columns={resolvedColumns}
       {...props}
     />
   );

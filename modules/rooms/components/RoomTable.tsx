@@ -2,14 +2,33 @@
 
 import { useState } from "react";
 import dayjs from "dayjs";
-import { App, Button, DatePicker, Select, Space, Switch, Tag } from "antd";
-import { IconEdit, IconHistory, IconPlus, IconTrash } from "@tabler/icons-react";
+import {
+  App,
+  Button,
+  DatePicker,
+  Flex,
+  Row,
+  Select,
+  Space,
+  Switch,
+  Tag,
+} from "antd";
+import {
+  IconEdit,
+  IconHistory,
+  IconPlus,
+  IconTrash,
+} from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import AppTable from "@/common/components/ui/AppTable";
 import StatusBadge from "@/common/components/ui/StatusBadge";
 import PriceDisplay from "@/common/components/ui/PriceDisplay";
-import { booleanSorter, numberSorter, textSorter } from "@/common/components/ui/table/sorters";
+import {
+  booleanSorter,
+  numberSorter,
+  textSorter,
+} from "@/common/components/ui/table/sorters";
 import { useHotelSettings } from "@/common/hooks/useHotelSettings";
 import { useMasterData } from "@/common/hooks/useMasterData";
 import { useConfirm } from "@/common/hooks/useConfirm";
@@ -95,9 +114,14 @@ export default function RoomTable() {
     {
       key: "status",
       title: t("room.status"),
-      sorter: textSorter<Room>((r) => resolveStatusDisplayWithMasterData(r, roomStatuses).label),
+      sorter: textSorter<Room>(
+        (r) => resolveStatusDisplayWithMasterData(r, roomStatuses).label,
+      ),
       render: (_: unknown, r: Room) => {
-        const { label, color } = resolveStatusDisplayWithMasterData(r, roomStatuses);
+        const { label, color } = resolveStatusDisplayWithMasterData(
+          r,
+          roomStatuses,
+        );
         return <StatusBadge color={color} label={label} />;
       },
       width: 130,
@@ -105,7 +129,9 @@ export default function RoomTable() {
     {
       key: "price",
       title: t("room.effectivePrice"),
-      sorter: numberSorter<Room>((r) => Number(r.basePrice ?? r.roomType.pricing?.nightlyPrice ?? 0)),
+      sorter: numberSorter<Room>((r) =>
+        Number(r.basePrice ?? r.roomType.pricing?.nightlyPrice ?? 0),
+      ),
       render: (_: unknown, r: Room) => (
         <PriceDisplay
           amount={r.basePrice ?? r.roomType.pricing?.nightlyPrice ?? null}
@@ -120,7 +146,9 @@ export default function RoomTable() {
       sorter: numberSorter<Room>((r) => r.amenities.length),
       render: (_: unknown, r: Room) =>
         r.amenities.length > 0
-          ? r.amenities.map((a) => <Tag key={a.amenity.id}>{a.amenity.name}</Tag>)
+          ? r.amenities.map((a) => (
+              <Tag key={a.amenity.id}>{a.amenity.name}</Tag>
+            ))
           : "—",
     },
     {
@@ -179,13 +207,13 @@ export default function RoomTable() {
 
   return (
     <>
-      <div
+      <Flex
+        justify="space-between"
+        align="center"
+        wrap
+        gap={16}
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
           marginBottom: 16,
-          gap: 8,
         }}
       >
         <Space wrap>
@@ -195,7 +223,9 @@ export default function RoomTable() {
             onChange={(d) =>
               setFilters((prev) => ({
                 ...prev,
-                date: d ? d.format("YYYY-MM-DD") : todayInTimezone(tz).format("YYYY-MM-DD"),
+                date: d
+                  ? d.format("YYYY-MM-DD")
+                  : todayInTimezone(tz).format("YYYY-MM-DD"),
               }))
             }
             allowClear={false}
@@ -204,7 +234,7 @@ export default function RoomTable() {
           <Select
             allowClear
             placeholder={t("room.floor")}
-            style={{ width: 150 }}
+            style={{ width: 160 }}
             options={floors.map((f) => ({ value: f.id, label: f.name }))}
             onChange={(v) => setFilters((prev) => ({ ...prev, floorId: v }))}
             value={filters.floorId}
@@ -221,7 +251,10 @@ export default function RoomTable() {
             allowClear
             placeholder={t("room.status")}
             style={{ width: 160 }}
-            options={roomStatuses.map((rs) => ({ value: rs.id, label: rs.name }))}
+            options={roomStatuses.map((rs) => ({
+              value: rs.id,
+              label: rs.name,
+            }))}
             onChange={(v) => setFilters((prev) => ({ ...prev, statusId: v }))}
             value={filters.statusId}
           />
@@ -238,11 +271,15 @@ export default function RoomTable() {
         </Space>
 
         {canManage && (
-          <Button type="primary" icon={<IconPlus size={16} />} onClick={handleCreate}>
+          <Button
+            type="primary"
+            icon={<IconPlus size={16} />}
+            onClick={handleCreate}
+          >
             {t("room.createTitle")}
           </Button>
         )}
-      </div>
+      </Flex>
 
       <AppTable
         rowKey="id"

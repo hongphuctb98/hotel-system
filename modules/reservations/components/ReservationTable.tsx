@@ -179,7 +179,7 @@ export default function ReservationTable({
         <Select
           allowClear
           placeholder={t("room.roomType")}
-          style={{ minWidth: 160 }}
+          style={{ minWidth: 130 }}
           value={filters.roomTypeId}
           onChange={(v) => updateFilter({ roomTypeId: v ?? undefined })}
           options={roomTypes.map((rt) => ({ value: rt.id, label: rt.name }))}

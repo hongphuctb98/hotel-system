@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { App, Avatar, Button, Select, Space, Switch, Tag } from "antd";
+import { App, Avatar, Button, Select, Space, Switch, Tag, Flex } from "antd";
 import {
   IconEdit,
   IconKey,
@@ -217,20 +217,14 @@ export default function StaffTable() {
 
   return (
     <>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          marginBottom: 16,
-          gap: 8,
-        }}
+      <Flex justify="space-between" align="center" wrap gap={16} style={{ marginBottom: 16 }}
+       
       >
         <Space wrap>
           <Select
             allowClear
             placeholder={t("filterByRole")}
-            style={{ width: 160 }}
+            style={{ width: 140 }}
             options={ROLE_OPTIONS}
             onChange={(v) => setFilters((prev) => ({ ...prev, role: v }))}
             value={filters.role}
@@ -256,7 +250,7 @@ export default function StaffTable() {
             {t("createTitle")}
           </Button>
         )}
-      </div>
+      </Flex>
 
       <AppTable
         rowKey="id"

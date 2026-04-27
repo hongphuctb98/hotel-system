@@ -122,7 +122,13 @@ function getActiveKeys(
   return { selectedKey: "", openKeys: [] };
 }
 
-export default function AppSidebar({ collapsed }: { collapsed: boolean }) {
+export default function AppSidebar({
+  collapsed,
+  onMenuClick,
+}: {
+  collapsed: boolean;
+  onMenuClick?: () => void;
+}) {
   const t = useTranslations();
   const pathname = usePathname();
   const locale = useLocale();
@@ -154,6 +160,7 @@ export default function AppSidebar({ collapsed }: { collapsed: boolean }) {
         defaultOpenKeys={openKeys}
         items={menuItems as never}
         inlineCollapsed={collapsed}
+        onClick={onMenuClick}
         style={{ border: "none", flex: 1, overflowY: "auto" }}
       />
     </div>

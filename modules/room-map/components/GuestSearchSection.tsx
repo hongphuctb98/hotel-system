@@ -80,8 +80,8 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
       <Form.Item name="guestId" hidden><Input /></Form.Item>
 
       {/* Row 1: Customer Name (wide) | Phone | CCCD */}
-      <Row gutter={[8, 0]}>
-        <Col span={10}>
+      <Row gutter={{sm: 8, md: 16, lg: 24, xl: 24}} >
+        <Col span={10} xs={24} sm={24} md={10} lg={10} xl={10}>
           <Form.Item
             name="customerName"
             label={t("customerName")}
@@ -102,7 +102,7 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
               </Button>
             </div>
         </Col>
-        <Col span={7}>
+        <Col span={7} xs={24} sm={24} md={7} lg={7} xl={7}>
           <Form.Item
             name="phone"
             label={t("phone")}
@@ -112,7 +112,7 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
             <Input />
           </Form.Item>
         </Col>
-        <Col span={7}>
+        <Col span={7} xs={24} sm={24} md={7} lg={7} xl={7}>
           <Form.Item
             name="idNumber"
             label={t("idNumber")}
@@ -124,13 +124,13 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
       </Row>
 
       {/* Row 2: Source | Adults / Children */}
-      <Row gutter={[8, 0]}>
-        <Col span={14}>
+      <Row gutter={{sm: 8, md: 16, lg: 24, xl: 24}} >
+        <Col span={14} xs={24} sm={24} md={14} lg={14} xl={14}>
           <Form.Item name="source" label={t("source")} style={ITEM_STYLE}>
             <Input  />
           </Form.Item>
         </Col>
-        <Col span={10}>
+        <Col span={10} xs={24} sm={24} md={10} lg={10} xl={10}>
           <Row gutter={[8, 0]}>
             <Col span={12}>
               <Form.Item
@@ -156,15 +156,15 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
       </Row>
 
       {/* Row 3: Check-in | Check-out */}
-      <Row gutter={[8, 0]}>
-         <Col span={6}>
+      <Row gutter={{sm: 8, md: 16, lg: 24, xl: 24}} >
+         <Col span={6} xs={24} sm={24} md={6} lg={6} xl={6}>
           <Form.Item name="chargeType" label={t("chargeType")} style={ITEM_STYLE}>
             <Select
               options={CHARGE_TYPE_OPTIONS}
             />
           </Form.Item>
         </Col>
-        <Col span={9}>
+        <Col span={9} xs={24} sm={24} md={9} lg={9} xl={9}>
           <Form.Item
             name="checkInDate"
             label={t("checkInTime")}
@@ -186,7 +186,7 @@ export default function GuestSearchSection({ form, disabled, checkOutDateDisable
             />
           </Form.Item>
         </Col>
-        <Col span={9}>
+        <Col span={9} xs={24} sm={24} md={9} lg={9} xl={9}>
           <Form.Item
             name="checkOutDate"
             label={t("checkOutTime")}

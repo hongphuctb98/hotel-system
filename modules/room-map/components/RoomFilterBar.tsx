@@ -27,6 +27,7 @@ export default function RoomFilterBar({ filters, onChange }: RoomFilterBarProps)
     <Space wrap>
       <DatePicker
         format="DD/MM/YYYY"
+        
         value={filters.date ? dayjs(filters.date) : dayjs()}
         onChange={(d) =>
           onChange({ ...filters, date: d ? d.format("YYYY-MM-DD") : dayjs().format("YYYY-MM-DD") })
@@ -37,7 +38,7 @@ export default function RoomFilterBar({ filters, onChange }: RoomFilterBarProps)
       <Select
         allowClear
         placeholder={t("room.floor")}
-        style={{ width: 140 }}
+        style={{ width: 160 }}
         value={filters.floorId}
         onChange={(v) => onChange({ ...filters, floorId: v })}
         options={floors.map((f) => ({ value: f.id, label: f.name }))}
