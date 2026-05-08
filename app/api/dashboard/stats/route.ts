@@ -49,6 +49,7 @@ export async function GET(req: NextRequest) {
       yesterdayOccupied,
       yesterdayCheckins,
       yesterdayCheckouts,
+      tenantBillPayments,
     ] = await Promise.all([
       // Total active rooms
       prisma.room.count({ where: { isActive: true } }),
@@ -144,12 +145,21 @@ export async function GET(req: NextRequest) {
           bookingStatus: { code: { notIn: ["CANCELLED", "NO_SHOW"] } },
         },
       }),
+      // Long-term rental payments in the revenue period
+      prisma.tenantBillPayment.findMany({
+        where: { paymentDate: { gte: periodStart, lte: todayEnd } },
+        select: { paymentDate: true, amount: true },
+      }),
     ]);
 
-    // Build revenueByDay: group period payments by hotel-local date
+    // Build revenueByDay: group period payments by hotel-local date (short-term + long-term)
     const revenueMap: Record<string, number> = {};
     for (const p of periodPayments) {
       const dayKey = dayjs(p.paidAt).tz(tz).format("YYYY-MM-DD");
+      revenueMap[dayKey] = (revenueMap[dayKey] ?? 0) + Number(p.amount);
+    }
+    for (const p of tenantBillPayments) {
+      const dayKey = dayjs(p.paymentDate).tz(tz).format("YYYY-MM-DD");
       revenueMap[dayKey] = (revenueMap[dayKey] ?? 0) + Number(p.amount);
     }
     // Fill in all days in the period (including zeros)
@@ -165,8 +175,10 @@ export async function GET(req: NextRequest) {
       return Math.round(((today - yesterday) / yesterday) * 100);
     }
 
-    // Actual revenue: sum of real payments received in the period (for chart)
-    const periodRevenue = periodPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+    // Actual revenue: sum of real payments received in the period (short-term + long-term)
+    const periodRevenue =
+      periodPayments.reduce((sum, p) => sum + Number(p.amount), 0) +
+      tenantBillPayments.reduce((sum, p) => sum + Number(p.amount), 0);
 
     // Money actually collected today and yesterday — derived from revenueMap already built above
     const todayCollected = revenueMap[todayStr] ?? 0;

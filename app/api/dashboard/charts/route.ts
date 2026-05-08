@@ -49,6 +49,8 @@ export async function GET(_req: NextRequest) {
       newBookingsRaw,
       monthPayments,
       monthExpenseDocs,
+      tenantBillPayments30d,
+      monthTenantBillPayments,
     ] = await Promise.all([
       prisma.room.count({ where: { isActive: true } }),
 
@@ -132,6 +134,19 @@ export async function GET(_req: NextRequest) {
           inventoryLines: { select: { lineTotal: true } },
         },
       }),
+      // Long-term rental payments in last 30 days (for payment method breakdown)
+      prisma.tenantBillPayment.findMany({
+        where: { paymentDate: { gte: day30Start, lte: todayEnd } },
+        select: {
+          amount: true,
+          paymentMethod: { select: { code: true, name: true } },
+        },
+      }),
+      // Long-term rental payments this month (for monthly revenue vs expense)
+      prisma.tenantBillPayment.findMany({
+        where: { paymentDate: { gte: monthStart, lte: todayEnd } },
+        select: { paymentDate: true, amount: true },
+      }),
     ]);
 
     // ── 1. Check-in vs Check-out trend (last 30 days) ─────────────────────
@@ -177,7 +192,7 @@ export async function GET(_req: NextRequest) {
     const methodAmount: Record<string, number> = {};
     const methodCount: Record<string, number> = {};
     const methodCodeByName: Record<string, string> = {};
-    for (const p of paymentMethodPayments) {
+    for (const p of [...paymentMethodPayments, ...tenantBillPayments30d]) {
       const name = p.paymentMethod?.name ?? "Other";
       const code = p.paymentMethod?.code ?? "OTHER";
       methodAmount[name] = (methodAmount[name] ?? 0) + Number(p.amount);
@@ -239,6 +254,10 @@ export async function GET(_req: NextRequest) {
     const monthRevMap: Record<string, number> = {};
     for (const p of monthPayments) {
       const dayKey = dayjs(p.paidAt).tz(tz).format("YYYY-MM-DD");
+      monthRevMap[dayKey] = (monthRevMap[dayKey] ?? 0) + Number(p.amount);
+    }
+    for (const p of monthTenantBillPayments) {
+      const dayKey = dayjs(p.paymentDate).tz(tz).format("YYYY-MM-DD");
       monthRevMap[dayKey] = (monthRevMap[dayKey] ?? 0) + Number(p.amount);
     }
     const monthExpMap: Record<string, number> = {};

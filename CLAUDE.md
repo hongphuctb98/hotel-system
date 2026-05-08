@@ -94,6 +94,18 @@ Key differences from earlier Next.js versions:
 - `Statistic` — `valueStyle` is deprecated. Use `styles.content` instead.
 - `Space` — `direction` is deprecated. Use `orientation` instead.
 - `List` is deprecated. Prefer `div`, `Flex`, `Space`, `Card`, `Table`, or custom markup.
+- **`InputNumber.addonAfter`** is deprecated. Replace with `Space.Compact` + a nested `noStyle` `Form.Item`:
+  ```tsx
+  <Form.Item label="Electricity Rate">
+    <Space.Compact style={{ width: "100%" }}>
+      <Form.Item name="electricityRate" noStyle rules={[...]}>
+        <InputNumber style={{ width: "100%" }} formatter={...} parser={...} />
+      </Form.Item>
+      <Input readOnly value="VND/kWh" style={{ width: "auto", minWidth: 72, textAlign: "center", cursor: "default" }} tabIndex={-1} />
+    </Space.Compact>
+  </Form.Item>
+  ```
+  For money fields, use `CurrencyField` from `common/components/form/CurrencyField.tsx` which already implements this pattern internally.
 - When touching older UI files, expect Ant Design v6 deprecation warnings and update the callsite instead of suppressing the warning.
 - **`message` / `modal` / `notification` must come from `App.useApp()`** — never import and call the static versions. `<App>` wraps the tree in `providers/AntdProvider.tsx`.
 
@@ -141,6 +153,7 @@ Module directory names do not always match their API route counterparts:
 | `expenses/` | `expense-documents/` |
 | `finance/` | `expense-documents/summary` (read-only aggregation) |
 | `inventory/` | `inventory/` |
+| `long-term/` | `leases/`, `tenant-bills/`, `long-term/fee-items`, `long-term/rate-plans`, `long-term/meter-readings` |
 
 ### Key design rules
 - **Pages are thin** — they only compose module components and pass no data directly
@@ -170,24 +183,49 @@ Expense & inventory entities:
 - **StockMovement** — immutable ledger of every IN / OUT / ADJUST operation
 - **AuditLog** — append-only record of every write action across all entities (see *Audit logging* below)
 
+Long-term rental entities:
+- **LeaseContract** — links Guest + Room; holds start/end dates, rent amount, deposit, occupants count, status (`ACTIVE` | `EXPIRED` | `TERMINATED`). Lease activation sets room status to `RENTED_LONG_TERM`; termination reverts to `AVAILABLE` if still `RENTED_LONG_TERM`.
+- **LongTermFeeItem** — module-local master data (METERED or FIXED); `code`, `name`, `unit`. Seeded with ELECTRICITY/WATER/INTERNET. Lives at `/api/long-term/fee-items` — **not** in the global `/api/master/` namespace.
+- **LongTermRatePlan** — versioned pricing; `effectiveFrom`. Each plan has `LongTermRatePlanItem` rows (one per fee item, `unitPrice` in VND). Bill generation picks the plan with the highest `effectiveFrom ≤ billing period start`. Lives at `/api/long-term/rate-plans`.
+- **LongTermMeterReading** — generic meter readings per `(leaseId, feeItemId, readingMonth)`; `previousReading`, `currentReading`, `consumption` as `Decimal(10,3)` (display to 1 decimal). Only METERED fee items may have readings. Lives at `/api/long-term/meter-readings` (includes a `/summary` endpoint that groups by `(leaseId, readingMonth)` — use that for the UI list).
+- **TenantBill** — monthly bill per lease; `totalAmount`, `totalPaid`, `dueDate`, status (`DRAFT` → `PENDING` → `PARTIAL` | `PAID`); `isOverdue` computed on read. `PARTIAL`/`PAID` bills are immutable (cannot regenerate).
+- **TenantBillLine** — `category` enum (`RENT | METERED_FEE | FIXED_FEE | OTHER`) + nullable `feeItemId`. Display label comes from `LongTermFeeItem.name` for METERED_FEE/FIXED_FEE, or free-text `label` for RENT/OTHER.
+- **TenantBillPayment** — individual payments against a bill, linked via **PaymentMethod**
+- **Attachment** — polymorphic file attachment (`entityType: string`, `entityId: string` — no FK). Used for lease contract documents (`entityType="LEASE_CONTRACT"`) and tenant bill documents (`entityType="TENANT_BILL"`). Files stored via `lib/storage.ts` (`StorageDriver` interface, local + S3 implementations)
+
+Key long-term helpers:
+- `lib/leaseValidation.ts` → `findBookingConflict(roomId, leaseStart, leaseEnd)` — checks for active bookings that overlap a lease period (used when creating/activating a lease to prevent room conflicts)
+- `common/utils/leaseProration.ts` → `calculateProratedRent(monthlyRent, startDate, endDate, billingMonth)` — pro-rates rent for partial first/last months; always server-side, never client-side
+- `lib/email.ts` → `sendMail(to, subject, html)` — nodemailer wrapper, returns `{ sent, error? }`. Requires `SMTP_HOST` env var; silently skips if unconfigured. Templates live in `lib/emailTemplates/`.
+
 All prices are stored in **VND**. `common/constants/currency.ts` exports `BASE_CURRENCY` and `EXCHANGE_RATES` for display-time conversion.
 
 ### Navigation config
 `configs/navigation.config.ts` exports `navigationConfig: NavItem[]`. Each item has `key`, `labelKey` (i18n key), `href`, `permission`, optional `roles`, optional `children`. The sidebar reads this at runtime; adding a new page means adding an entry here.
 
 ### Permissions
-`common/constants/permissions.ts` defines `PERMISSIONS` constants and `ROLE_PERMISSIONS` map (ADMIN → all, MANAGER → most, RECEPTIONIST → operational, HOUSEKEEPING → limited). `usePermission()` hook reads role from the `user_role` cookie.
+`common/constants/permissions.ts` defines `PERMISSIONS` constants and `ROLE_PERMISSIONS` map (ADMIN → all, MANAGER → most, RECEPTIONIST → operational, HOUSEKEEPING → limited).
+
+`usePermission(role)` returns `{ hasPermission, role, permissions }` — call `hasPermission(PERMISSIONS.X)` as a function:
+
+```ts
+const { role } = useAuthRole();           // returns { role, userId }
+const { hasPermission } = usePermission(role);
+const canCreate = hasPermission(PERMISSIONS.LONG_TERM_CREATE);
+```
+
+Do not call `usePermission(role)(PERMISSIONS.X)` directly — it is not callable. Do not pass the full `AuthRoleContextValue` object to `usePermission`; destructure `role` first.
 
 ### Common layer
 - `common/components/ui/` — AppTable, AppModal, AppDrawer, AppCard, AppPageHeader, StatusBadge, **PriceDisplay**, etc.
 - `common/components/form/` — TextField, SelectField, DateField, **CurrencyField**, NumberField, etc. (all wrap Ant Design Form.Item)
 - `common/components/layout/` — MainLayout, AppSidebar, AppHeader, AppBreadcrumb
-- `common/hooks/` — useTableQuery, useMasterData, useLocaleCurrency, useDisclosure, useConfirm, usePagination, usePermission
-- `common/services/` — roomService, bookingService, guestService, invoiceService, masterDataService, expenseDocumentService, inventoryService, apiClient
-- `common/utils/` — currency, date, enumHelpers, queryParams, **numberInput**, **bookingApiErrorMessage**
+- `common/hooks/` — useTableQuery, useMasterData, useLocaleCurrency, useDisclosure, useConfirm, usePagination, usePermission, **useTimezone** (hotel's configured timezone from `TimezoneProvider`)
+- `common/services/` — roomService, bookingService, guestService, invoiceService, masterDataService, expenseDocumentService, inventoryService, **leaseService**, **tenantBillService**, **feeItemService**, **meterReadingService**, **ratePlanService**, apiClient
+- `common/utils/` — currency, date, enumHelpers, queryParams, **numberInput**, **bookingApiErrorMessage**, **apiErrorMessage** (generic), **longTermApiErrorMessage**, **leaseProration**
 - `common/components/ui/table/` — **sorters.ts** exports `textSorter`, `numberSorter`, `dateSorter`, `booleanSorter` helpers for `AppTable` column `sorter` props — use these instead of inline compare functions
 - `common/constants/` — permissions, routes, locale.config, currency
-- **Date library:** `dayjs` (not date-fns or moment) — used throughout for date manipulation and formatting
+- **Date library:** `dayjs` (not date-fns or moment) — used throughout. Standard display formats: `"DD/MM/YYYY HH:mm"` for datetime, `"DD/MM/YYYY"` for date-only. Do not invent per-module formats.
 
 ### Tables & pagination
 
@@ -240,11 +278,22 @@ All return `ApiResponse<T>` from `types/api.types.ts`, which includes an optiona
 }
 ```
 
-For booking-related errors, use `getBookingApiErrorMessage(err, t)` from `common/utils/bookingApiErrorMessage.ts` — it maps structured API error codes (`BOOKING_OVERLAP`, `CHECKIN_TOO_EARLY`, `CHECKOUT_TOO_EARLY`, etc.) to i18n strings. Always prefer this over inline `switch` on `err.code` for booking actions.
+For booking-related errors, use `getBookingApiErrorMessage(err, t)` from `common/utils/bookingApiErrorMessage.ts`. For long-term rental errors, use `getLongTermApiErrorMessage(err, t)` from `common/utils/longTermApiErrorMessage.ts`. Both delegate to the generic `getApiErrorMessage(err, t, keyPrefix, knownCodes)` from `common/utils/apiErrorMessage.ts` — use that directly when adding a new module's error codes rather than duplicating the switch logic.
 
 ### Soft-delete conflict handling
 
 Entities use soft delete (`isActive: false`). When creating an entity whose unique key matches a soft-deleted record, the API returns `conflict("...", "ENTITY_INACTIVE_EXISTS", { id })` (HTTP 409). The UI shows `modal.confirm` offering to reactivate via `PUT /api/.../[id]` with `{ isActive: true }`. For an active duplicate, return `conflict("...", "ENTITY_NUMBER_TAKEN")` and set a form field error with `form.setFields`.
+
+### Form surface
+
+| Use case | Surface |
+|----------|---------|
+| Create / edit a single entity, ≤ 10 fields | `AppDrawer` |
+| Quick confirmation or single-field action | `AppModal` |
+| Complex entity with many sections, images, or relations | Dedicated page |
+| Small operation (payment, stock movement, note) | Ant Design `Modal` (simpler, no header nav) |
+
+Never nest two drawers — use a modal for the child. All action buttons go in the footer (right-aligned); never at the top of the form. Use `useConfirm()` for confirmations; never `window.confirm`.
 
 ### UX standards for API-interacting actions
 
@@ -289,11 +338,11 @@ import { formatNumberInput, parseNumberInput } from "@/common/utils/numberInput"
   formatter={(v) => formatNumberInput(v, {})}          // "150,000"
   parser={(v) => parseNumberInput(v) as number}
 />
-// With currency prefix:
-formatter={(v) => formatNumberInput(v, { prefix: "VND" })}  // "VND 150,000"
 ```
 
-For Form.Item wrappers, use `CurrencyField` from `common/components/form/CurrencyField.tsx` — it wires `formatNumberInput`/`parseNumberInput` automatically.
+Do **not** use `formatNumberInput(v, { prefix: "VND" })` — the `prefix` option causes addonBefore which is also deprecated. For a currency suffix, use `Space.Compact` with a `readOnly` `Input` instead (see Ant Design v6 section above).
+
+For Form.Item wrappers, use `CurrencyField` from `common/components/form/CurrencyField.tsx` — it wires `formatNumberInput`/`parseNumberInput` automatically and renders the currency label as a `Space.Compact` addon `Input` (not `addonAfter` on `InputNumber`).
 
 **VND formatting quirk:** `vi-VN` locale uses `.` as thousands separator. The project normalizes this to `,` everywhere by calling `.replace(/\./g, ",")` after `Intl.NumberFormat.format()`. This fix exists in `PriceDisplay.tsx`, `useLocaleCurrency.ts`, and `currency.ts`. Do not introduce raw `toLocaleString("vi-VN")` for monetary values in new code.
 
@@ -310,6 +359,8 @@ All 12 master data pages use the generic `MasterDataTable<T>` component driven b
 ### Auth flow
 Login → `POST /api/auth/login` → sets `access_token` (httpOnly, 1d) + `refresh_token` (httpOnly, 7d) + `user_role` (readable, 1d) cookies. `apiClient.ts` auto-retries with `POST /api/auth/refresh` on 401; refresh also reissues all three cookies with the same lifetimes. The `proxy.ts` redirects unauthenticated requests to `/{locale}/login`.
 
+In route handlers, use `getAuthUser()` when auth is optional (returns `null` if absent), or `requireAuth()` when auth is mandatory (throws `Error("Unauthorized")`). Both are in `lib/auth.ts`. **`requireAuth()` takes zero arguments** — it reads cookies internally via Next.js `cookies()`. Do not pass `req` to it.
+
 ### RBAC / role propagation
 
 The protected layout (`app/[locale]/(main)/layout.tsx`) verifies the session using `getAuthUser()` from `lib/auth.ts` (JWT verification via `access_token` — **not** the readable `user_role` cookie). If the token is absent or invalid it redirects to `/{locale}/login`. The verified `role` is passed into `MainLayout` as a prop.
@@ -317,6 +368,19 @@ The protected layout (`app/[locale]/(main)/layout.tsx`) verifies the session usi
 `MainLayout` wraps the entire protected UI in `<AuthRoleProvider role={role}>` (`providers/AuthRoleProvider.tsx`). Client components that need the role call `useAuthRole()` to get it from context, then pass it to `usePermission(role)`.
 
 **Do not read `document.cookie` for role in client components.** Do not pass `initialRole` through individual page props. The context is the single source of truth for role within the protected layout tree.
+
+### Responsive UI
+
+The app targets desktop/tablet primarily; mobile must not be broken. Breakpoints follow Tailwind (`sm` = 640px, `md` = 768px, `lg` = 1024px).
+
+- **`MainLayout`** — below `md`: sidebar replaced by an Ant Design `Drawer` (hamburger opens it; selecting a menu item auto-closes it). At `md`: sidebar force-collapsed (icon-only). At `lg`+: full sidebar with toggle.
+- **`AppDrawer`** — auto full-width (`100%`) below `md`; passes through caller width at `md`+. No per-call override needed.
+- **`AppModal`** — auto `calc(100vw - 32px)` below `md`; passes through caller width at `md`+.
+- **`AppTable`** — auto `size="small"` on mobile. Accepts `responsiveHideColumns?: { below: "md" | "lg"; columns: string[] }` to hide columns by name at a given breakpoint.
+- Two-column form grids: prefer Ant Design `Row`/`Col` with responsive spans over Tailwind grid. Small inputs (short values) use `Col xs={24} sm={12}` (2-per-row at sm+); full-width inputs use `Col xs={24}`. Tailwind `className="grid grid-cols-1 sm:grid-cols-2 gap-4"` is acceptable for plain HTML elements.
+- Never replace tables with stacked card lists — use `AppTable`'s horizontal scroll instead.
+
+Full detail in `openspec/ui-standards.md` → *Responsive Standards*.
 
 ## OpenSpec
 
@@ -329,6 +393,12 @@ The protected layout (`app/[locale]/(main)/layout.tsx`) verifies the session usi
 node -e "const i = require('./node_modules/@tabler/icons-react'); console.log('IconName' in i)"
 ```
 
+Navigation icons are mapped in `ICON_MAP` inside `common/components/layout/AppSidebar.tsx`, keyed by `NavItem.key`. Do **not** add icon references to `configs/navigation.config.ts` — that file is server-safe and must not import React components.
+
+### File uploads
+
+Use `apiClient.upload(url, formData)` from `common/services/apiClient.ts` for multipart uploads — do not set `Content-Type` manually (the browser sets the boundary). The `Attachment` model is used for polymorphic file attachments (no foreign key — just `entityType` string + `entityId` string). Files are stored via `lib/storage.ts` (`StorageDriver` interface with local disk and S3 implementations). Use `storage.upload(key, buffer, mimeType)` → returns a URL; use `urlToKey(url)` to derive the storage key before deleting.
+
 ## Environment Variables
 
 ```
@@ -337,6 +407,13 @@ JWT_ACCESS_SECRET     Min 32 chars — generate with: openssl rand -base64 32
 JWT_REFRESH_SECRET    Min 32 chars — generate with: openssl rand -base64 32
 NEXT_PUBLIC_APP_URL   http://localhost:3000
 NODE_ENV              development
+
+# Optional — email (tenant bill approval notifications)
+SMTP_HOST             SMTP server hostname
+SMTP_PORT             587 (default) or 465 for SSL
+SMTP_USER             SMTP username
+SMTP_PASS             SMTP password
+SMTP_FROM             noreply@hotel.com (default)
 ```
 
 The Docker container credentials are set in `docker-compose.yml` (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`).

@@ -22,7 +22,7 @@ export default function ExpenseItemForm({ initialValues, onSuccess, endpoint }: 
   const t = useTranslations();
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
-  const { modal } = App.useApp();
+  const { modal, message } = App.useApp();
   const { expenseCategories, paymentMethods } = useMasterData();
   const [isRecurring, setIsRecurring] = useState(initialValues?.isRecurring ?? false);
 
@@ -46,6 +46,7 @@ export default function ExpenseItemForm({ initialValues, onSuccess, endpoint }: 
         await apiClient.post(endpoint, payload);
       }
       await invalidateMasterDataQueries(queryClient, endpoint);
+      message.success(t("common.saveSuccess"));
       onSuccess();
     } catch (err) {
       if (err instanceof ApiError && err.code === "EXPENSE_ITEM_INACTIVE_EXISTS") {
@@ -56,13 +57,14 @@ export default function ExpenseItemForm({ initialValues, onSuccess, endpoint }: 
           onOk: async () => {
             await apiClient.put(`${endpoint}/${data.id}`, { isActive: true });
             await invalidateMasterDataQueries(queryClient, endpoint);
+            message.success(t("common.saveSuccess"));
             onSuccess();
           },
         });
       } else if (err instanceof ApiError && err.code === "EXPENSE_ITEM_NAME_TAKEN") {
         form.setFields([{ name: "name", errors: [t("expenseItems.nameTaken")] }]);
       } else {
-        throw err;
+        message.error(err instanceof ApiError ? err.message : t("common.error"));
       }
     }
   };

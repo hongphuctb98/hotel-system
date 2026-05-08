@@ -18,7 +18,7 @@ export default function ExpenseCategoryForm({ initialValues, onSuccess, endpoint
   const t = useTranslations();
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
-  const { modal } = App.useApp();
+  const { modal, message } = App.useApp();
 
   const handleSubmit = async (values: { name: string; description?: string }) => {
     try {
@@ -28,6 +28,7 @@ export default function ExpenseCategoryForm({ initialValues, onSuccess, endpoint
         await apiClient.post(endpoint, values);
       }
       await invalidateMasterDataQueries(queryClient, endpoint);
+      message.success(t("common.saveSuccess"));
       onSuccess();
     } catch (err) {
       if (err instanceof ApiError && err.code === "EXPENSE_CATEGORY_INACTIVE_EXISTS") {
@@ -38,13 +39,14 @@ export default function ExpenseCategoryForm({ initialValues, onSuccess, endpoint
           onOk: async () => {
             await apiClient.put(`${endpoint}/${data.id}`, { isActive: true });
             await invalidateMasterDataQueries(queryClient, endpoint);
+            message.success(t("common.saveSuccess"));
             onSuccess();
           },
         });
       } else if (err instanceof ApiError && err.code === "EXPENSE_CATEGORY_NAME_TAKEN") {
         form.setFields([{ name: "name", errors: [t("expenseCategories.nameTaken")] }]);
       } else {
-        throw err;
+        message.error(err instanceof ApiError ? err.message : t("common.error"));
       }
     }
   };

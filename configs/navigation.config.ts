@@ -89,6 +89,47 @@ export const navigationConfig: NavItem[] = [
     roles: ["ADMIN", "MANAGER"],
   },
   {
+    key: "long-term",
+    labelKey: "nav.longTerm.title",
+    icon: undefined,
+    dividerBefore: true,
+    permission: PERMISSIONS.LONG_TERM_VIEW,
+    children: [
+      {
+        key: "long-term-leases",
+        labelKey: "nav.longTerm.leases",
+        href: ROUTES.LONG_TERM.LEASES,
+        permission: PERMISSIONS.LONG_TERM_VIEW,
+      },
+      {
+        key: "long-term-bills",
+        labelKey: "nav.longTerm.bills",
+        href: ROUTES.LONG_TERM.BILLS,
+        permission: PERMISSIONS.LONG_TERM_VIEW,
+      },
+      {
+        key: "long-term-meter-readings",
+        labelKey: "nav.longTerm.meterReadings",
+        href: ROUTES.LONG_TERM.METER_READINGS,
+        permission: PERMISSIONS.LONG_TERM_VIEW,
+      },
+      {
+        key: "long-term-fee-items",
+        labelKey: "nav.longTerm.feeItems",
+        href: ROUTES.LONG_TERM.FEE_ITEMS,
+        permission: PERMISSIONS.UTILITY_RATE_VIEW,
+        roles: ["ADMIN", "MANAGER"],
+      },
+      {
+        key: "long-term-rate-plans",
+        labelKey: "nav.longTerm.ratePlans",
+        href: ROUTES.LONG_TERM.RATE_PLANS,
+        permission: PERMISSIONS.UTILITY_RATE_VIEW,
+        roles: ["ADMIN", "MANAGER"],
+      },
+    ],
+  },
+  {
     key: "history",
     labelKey: "nav.history",
     icon: undefined,

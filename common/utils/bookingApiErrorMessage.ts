@@ -16,6 +16,8 @@ export function getBookingApiErrorMessage(err: ApiError, t: TranslateFn): string
   switch (err.code) {
     case "BOOKING_OVERLAP":
       return t("booking.errors.bookingOverlap");
+    case "ROOM_HAS_LEASE":
+      return t("booking.errors.roomHasLease");
     case "BOOKING_NOT_CONFIRMED":
       return t("booking.errors.bookingNotConfirmed");
     case "BOOKING_NOT_CHECKED_IN":

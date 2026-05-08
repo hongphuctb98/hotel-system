@@ -80,7 +80,7 @@ export default function RoomDetailModal({ open, room, onClose }: RoomDetailModal
       width="min(920px, 95vw)"
       styles={{
         header: { paddingBottom: 8 },
-        body:   { padding: "0 8px 4px", overflowY: "auto", maxHeight: "calc(90vh - 110px)" },
+        body:   { padding: "0 8px 4px", overflowY: "auto",overflowX: "hidden", maxHeight: "calc(90vh - 110px)" },
         footer: { padding: "8px 16px" },
       }}
       title={

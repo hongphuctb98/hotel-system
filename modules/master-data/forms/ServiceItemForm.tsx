@@ -1,6 +1,6 @@
 "use client";
 
-import { Form, Button, Typography } from "antd";
+import { Form, Button, Typography, App } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import TextField from "@/common/components/form/TextField";
@@ -25,6 +25,7 @@ export default function ServiceItemForm({
   const t = useTranslations();
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
   const { products } = useMasterData();
 
   const linkedProductId = Form.useWatch("linkedProductId", form);
@@ -44,12 +45,13 @@ export default function ServiceItemForm({
         await apiClient.post(endpoint, payload);
       }
       await invalidateMasterDataQueries(queryClient, endpoint);
+      message.success(t("common.saveSuccess"));
       onSuccess();
     } catch (err) {
       if (err instanceof ApiError && err.code === "PRODUCT_ALREADY_LINKED") {
         form.setFields([{ name: "linkedProductId", errors: [t("products.serviceItemAlreadyLinked")] }]);
       } else {
-        throw err;
+        message.error(err instanceof ApiError ? err.message : t("common.error"));
       }
     }
   };

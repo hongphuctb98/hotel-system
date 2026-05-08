@@ -157,6 +157,37 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ── Lease conflict check ──────────────────────────────────────────────
+    // Condition A: active lease overlaps the booking window
+    const activeLeaseConflict = await prisma.leaseContract.findFirst({
+      where: {
+        roomId: body.roomId,
+        isActive: true,
+        status: "ACTIVE",
+        startDate: { lt: checkOut },
+        OR: [{ endDate: null }, { endDate: { gt: checkIn } }],
+      },
+    });
+
+    if (activeLeaseConflict) {
+      return conflict("This room has an active long-term lease for the selected dates", "ROOM_HAS_LEASE");
+    }
+
+    // Condition B: 14-day buffer for pending/active lease
+    const bufferDate = new Date(checkOut.getTime() + 14 * 24 * 60 * 60 * 1000);
+    const upcomingLeaseConflict = await prisma.leaseContract.findFirst({
+      where: {
+        roomId: body.roomId,
+        isActive: true,
+        status: { in: ["PENDING", "ACTIVE"] },
+        startDate: { gt: checkIn, lt: bufferDate },
+      },
+    });
+
+    if (upcomingLeaseConflict) {
+      return conflict("This room has an upcoming long-term lease within 14 days of the requested checkout", "ROOM_HAS_LEASE");
+    }
+
     // ── Create ────────────────────────────────────────────────────────────
     const baseRate         = Number(body.baseRate        ?? 0);
     const discountAmount   = Number(body.discountAmount  ?? 0);

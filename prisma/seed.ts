@@ -93,6 +93,7 @@ async function main() {
     { code: "CLEANING", name: "Đang dọn phòng", color: "#fa8c16", isSellable: false },
     { code: "MAINTENANCE", name: "Bảo trì", color: "#f5222d", isSellable: false },
     { code: "OUT_OF_SERVICE", name: "Ngưng khai thác", color: "#8c8c8c", isSellable: false },
+    { code: "RENTED_LONG_TERM", name: "Cho thuê dài hạn", color: "#9254de", isSellable: false },
   ];
   for (const rs of roomStatuses) {
     await prisma.roomStatus.upsert({
@@ -994,10 +995,10 @@ async function main() {
   // Expense Items
   const expenseItemDefs = [
     // Utilities
-    { categoryName: "Utilities", name: "Electricity", isRecurring: true, defaultAmount: null },
-    { categoryName: "Utilities", name: "Water", isRecurring: true, defaultAmount: 500000 },
-    { categoryName: "Utilities", name: "Internet", isRecurring: true, defaultAmount: 700000 },
-    { categoryName: "Utilities", name: "Waste Collection", isRecurring: false, defaultAmount: null },
+    // { categoryName: "Utilities", name: "Electricity", isRecurring: true, defaultAmount: null },
+    // { categoryName: "Utilities", name: "Water", isRecurring: true, defaultAmount: 500000 },
+    // { categoryName: "Utilities", name: "Internet", isRecurring: true, defaultAmount: 700000 },
+    // { categoryName: "Utilities", name: "Waste Collection", isRecurring: false, defaultAmount: null },
     // Personnel
     { categoryName: "Personnel", name: "Monthly Salary", isRecurring: false, defaultAmount: null },
     { categoryName: "Personnel", name: "Bonus", isRecurring: false, defaultAmount: null },
@@ -1033,6 +1034,20 @@ async function main() {
         },
       });
     }
+  }
+
+  // Long-term fee items (Phase 2 defaults)
+  const feeItemDefaults = [
+    { code: "ELECTRICITY", name: "Electricity", type: "METERED" as const, unit: "kWh" },
+    { code: "WATER",       name: "Water",       type: "METERED" as const, unit: "m³"  },
+    { code: "INTERNET",    name: "Internet",    type: "FIXED"   as const, unit: "month" },
+  ];
+  for (const fi of feeItemDefaults) {
+    await prisma.longTermFeeItem.upsert({
+      where: { code: fi.code },
+      update: { name: fi.name, unit: fi.unit },
+      create: fi,
+    });
   }
 
   // Hotel settings — seed timezone from env, default to Asia/Ho_Chi_Minh

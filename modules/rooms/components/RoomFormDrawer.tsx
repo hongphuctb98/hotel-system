@@ -178,6 +178,7 @@ export default function RoomFormDrawer({ open, onClose, room }: RoomFormDrawerPr
       open={open}
       onClose={handleClose}
       title={isEdit ? t("room.editTitle") : t("room.createTitle")}
+      width={500}
       extra={
         <Space>
           <Button onClick={handleClose}>{t("common.cancel")}</Button>

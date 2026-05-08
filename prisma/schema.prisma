@@ -177,9 +177,10 @@ model PaymentMethod {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  payments              Payment[]
-  expenseDocuments      ExpenseDocument[]
-  defaultForExpenseItems ExpenseItem[]    @relation("ExpenseItemDefaultPayment")
+  payments               Payment[]
+  expenseDocuments       ExpenseDocument[]
+  defaultForExpenseItems ExpenseItem[]      @relation("ExpenseItemDefaultPayment")
+  tenantBillPayments     TenantBillPayment[]
 
   @@map("payment_methods")
 }
@@ -248,9 +249,10 @@ model Room {
   floor      Floor         @relation(fields: [floorId], references: [id])
   roomType   RoomType      @relation(fields: [roomTypeId], references: [id])
   roomStatus RoomStatus    @relation(fields: [roomStatusId], references: [id])
-  amenities  RoomAmenity[]
-  images     RoomImage[]
-  bookings   Booking[]
+  amenities      RoomAmenity[]
+  images         RoomImage[]
+  bookings       Booking[]
+  leaseContracts LeaseContract[]
 
   @@map("rooms")
 }
@@ -295,8 +297,9 @@ model Guest {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  guestType GuestType @relation(fields: [guestTypeId], references: [id])
-  bookings  Booking[]
+  guestType      GuestType       @relation(fields: [guestTypeId], references: [id])
+  bookings       Booking[]
+  leaseContracts LeaseContract[]
 
   @@map("guests")
 }
@@ -611,4 +614,195 @@ model InventoryReceiptLine {
   @@index([documentId])
   @@index([productId])
   @@map("inventory_receipt_lines")
+}
+
+// ─── LONG-TERM RENTAL ─────────────────────────────────────────────────────────
+
+enum LeaseContractStatus {
+  PENDING
+  ACTIVE
+  TERMINATED
+  EXPIRED
+}
+
+enum TenantBillStatus {
+  DRAFT
+  PENDING
+  PARTIAL
+  PAID
+}
+
+enum TenantBillLineCategory {
+  RENT
+  METERED_FEE
+  FIXED_FEE
+  OTHER
+}
+
+enum LongTermFeeItemType {
+  METERED
+  FIXED
+}
+
+model LongTermFeeItem {
+  id        String              @id @default(cuid())
+  code      String              @unique
+  name      String
+  type      LongTermFeeItemType
+  unit      String?
+  isActive  Boolean             @default(true)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  ratePlanItems LongTermRatePlanItem[]
+  meterReadings LongTermMeterReading[]
+  billLines     TenantBillLine[]
+
+  @@map("long_term_fee_items")
+}
+
+model LongTermRatePlan {
+  id            String   @id @default(cuid())
+  label         String
+  effectiveFrom DateTime
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  items LongTermRatePlanItem[]
+
+  @@map("long_term_rate_plans")
+}
+
+model LongTermRatePlanItem {
+  id          String @id @default(cuid())
+  ratePlanId  String
+  feeItemId   String
+  unitPrice   Int
+
+  ratePlan LongTermRatePlan @relation(fields: [ratePlanId], references: [id])
+  feeItem  LongTermFeeItem  @relation(fields: [feeItemId], references: [id])
+
+  @@unique([ratePlanId, feeItemId])
+  @@map("long_term_rate_plan_items")
+}
+
+model LongTermMeterReading {
+  id              String          @id @default(cuid())
+  leaseId         String
+  feeItemId       String
+  readingMonth    String
+  previousReading Decimal         @db.Decimal(10, 3)
+  currentReading  Decimal         @db.Decimal(10, 3)
+  consumption     Decimal         @db.Decimal(10, 3)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  lease   LeaseContract   @relation(fields: [leaseId], references: [id])
+  feeItem LongTermFeeItem @relation(fields: [feeItemId], references: [id])
+
+  @@unique([leaseId, feeItemId, readingMonth])
+  @@map("long_term_meter_readings")
+}
+
+model LeaseContract {
+  id                String              @id @default(cuid())
+  roomId            String
+  guestId           String
+  status            LeaseContractStatus @default(PENDING)
+  startDate         DateTime
+  endDate           DateTime?
+  monthlyRent       Int
+  depositAmount     Int
+  depositPaid       Boolean             @default(false)
+  paymentDueDay     Int                 @default(10)
+  occupants         Int                 @default(1)
+  terminationDate   DateTime?
+  terminationReason String?
+  notes             String?
+  isActive          Boolean             @default(true)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  room          Room                   @relation(fields: [roomId], references: [id])
+  guest         Guest                  @relation(fields: [guestId], references: [id])
+  bills         TenantBill[]
+  meterReadings LongTermMeterReading[]
+
+  @@index([roomId, status, startDate, endDate])
+  @@map("lease_contracts")
+}
+
+model Attachment {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  url        String
+  name       String
+  mimeType   String?
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@map("attachments")
+}
+
+model TenantBill {
+  id           String           @id @default(cuid())
+  leaseId      String
+  billingMonth String
+  status       TenantBillStatus @default(DRAFT)
+  totalAmount  Int
+  totalPaid    Int              @default(0)
+  dueDate      DateTime
+  approvedAt   DateTime?
+  approvedById String?
+  emailSent    Boolean          @default(false)
+  emailSentAt  DateTime?
+  notes        String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  lease    LeaseContract      @relation(fields: [leaseId], references: [id])
+  lines    TenantBillLine[]
+  payments TenantBillPayment[]
+
+  @@unique([leaseId, billingMonth])
+  @@map("tenant_bills")
+}
+
+model TenantBillLine {
+  id        String                  @id @default(cuid())
+  billId    String
+  type      String?
+  category  TenantBillLineCategory?
+  feeItemId String?
+  label     String
+  quantity  Int                     @default(1)
+  unitPrice Int
+  amount    Int
+  isPending Boolean                 @default(false)
+  sortOrder Int                     @default(0)
+
+  bill    TenantBill       @relation(fields: [billId], references: [id])
+  feeItem LongTermFeeItem? @relation(fields: [feeItemId], references: [id])
+
+  @@map("tenant_bill_lines")
+}
+
+model TenantBillPayment {
+  id              String   @id @default(cuid())
+  billId          String
+  amount          Int
+  paymentDate     DateTime
+  paymentMethodId String
+  receiptImageUrl String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  bill          TenantBill    @relation(fields: [billId], references: [id])
+  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+
+  @@map("tenant_bill_payments")
 }

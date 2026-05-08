@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc)"
+      "Bash(npx tsc)",
+      "Bash(mkdir*)",
+      "Bash(npm*)",
+      "Bash(npx*)",
+      "Bash(node *)",
+      "Bash(openspec instructions *)",
+      "Bash(grep -v \"^$\\\\|\\\\.next/\")",
+      "Bash(openspec status *)",
+      "Bash(openspec new *)"
     ]
-  }
+  },
+  "permissionMode": "bypassPermissions"
 }

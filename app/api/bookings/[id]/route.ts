@@ -199,6 +199,36 @@ export async function PUT(
           "BOOKING_OVERLAP"
         );
       }
+
+      // Condition A: active lease overlap
+      const activeLeaseConflict = await prisma.leaseContract.findFirst({
+        where: {
+          roomId: effectiveRoomId,
+          isActive: true,
+          status: "ACTIVE",
+          startDate: { lt: effectiveCheckOut },
+          OR: [{ endDate: null }, { endDate: { gt: effectiveCheckIn } }],
+        },
+      });
+
+      if (activeLeaseConflict) {
+        return conflict("This room has an active long-term lease for the selected dates", "ROOM_HAS_LEASE");
+      }
+
+      // Condition B: 14-day buffer for pending/active lease
+      const bufferDate = new Date(effectiveCheckOut.getTime() + 14 * 24 * 60 * 60 * 1000);
+      const upcomingLeaseConflict = await prisma.leaseContract.findFirst({
+        where: {
+          roomId: effectiveRoomId,
+          isActive: true,
+          status: { in: ["PENDING", "ACTIVE"] },
+          startDate: { gt: effectiveCheckIn, lt: bufferDate },
+        },
+      });
+
+      if (upcomingLeaseConflict) {
+        return conflict("This room has an upcoming long-term lease within 14 days of the requested checkout", "ROOM_HAS_LEASE");
+      }
     }
 
     const effectiveCheckInDate = new Date(body.checkInDate ?? prev.checkInDate);

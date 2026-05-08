@@ -1,10 +1,10 @@
 "use client";
 
-import { Form, Button, ColorPicker } from "antd";
+import { Form, Button, ColorPicker, App } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import TextField from "@/common/components/form/TextField";
-import { apiClient } from "@/common/services/apiClient";
+import { apiClient, ApiError } from "@/common/services/apiClient";
 import { invalidateMasterDataQueries } from "../utils/queryKeys";
 
 interface SimpleCodeNameFormProps {
@@ -23,15 +23,21 @@ export default function SimpleCodeNameForm({
   const t = useTranslations();
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
 
   const handleSubmit = async (values: Record<string, unknown>) => {
-    if (initialValues?.id) {
-      await apiClient.put(`${endpoint}/${initialValues.id}`, values);
-    } else {
-      await apiClient.post(endpoint, values);
+    try {
+      if (initialValues?.id) {
+        await apiClient.put(`${endpoint}/${initialValues.id}`, values);
+      } else {
+        await apiClient.post(endpoint, values);
+      }
+      await invalidateMasterDataQueries(queryClient, endpoint);
+      message.success(t("common.saveSuccess"));
+      onSuccess();
+    } catch (err) {
+      message.error(err instanceof ApiError ? err.message : t("common.error"));
     }
-    await invalidateMasterDataQueries(queryClient, endpoint);
-    onSuccess();
   };
 
   return (

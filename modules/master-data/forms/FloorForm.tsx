@@ -1,12 +1,12 @@
 "use client";
 
-import { Form, Button } from "antd";
+import { Form, Button, App } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import TextField from "@/common/components/form/TextField";
 import NumberField from "@/common/components/form/NumberField";
 import TextAreaField from "@/common/components/form/TextAreaField";
-import { apiClient } from "@/common/services/apiClient";
+import { apiClient, ApiError } from "@/common/services/apiClient";
 import type { Floor } from "@/types/master.types";
 import { invalidateMasterDataQueries } from "../utils/queryKeys";
 
@@ -20,15 +20,21 @@ export default function FloorForm({ initialValues, onSuccess, endpoint }: FloorF
   const t = useTranslations();
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
 
   const handleSubmit = async (values: Partial<Floor>) => {
-    if (initialValues?.id) {
-      await apiClient.put(`${endpoint}/${initialValues.id}`, values);
-    } else {
-      await apiClient.post(endpoint, values);
+    try {
+      if (initialValues?.id) {
+        await apiClient.put(`${endpoint}/${initialValues.id}`, values);
+      } else {
+        await apiClient.post(endpoint, values);
+      }
+      await invalidateMasterDataQueries(queryClient, endpoint);
+      message.success(t("common.saveSuccess"));
+      onSuccess();
+    } catch (err) {
+      message.error(err instanceof ApiError ? err.message : t("common.error"));
     }
-    await invalidateMasterDataQueries(queryClient, endpoint);
-    onSuccess();
   };
 
   return (

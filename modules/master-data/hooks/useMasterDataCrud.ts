@@ -3,7 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { App } from "antd";
-import { apiClient } from "@/common/services/apiClient";
+import { useTranslations } from "next-intl";
+import { apiClient, ApiError } from "@/common/services/apiClient";
 import { useConfirm } from "@/common/hooks/useConfirm";
 import { usePagination } from "@/common/hooks/usePagination";
 import { invalidateMasterDataQueries } from "../utils/queryKeys";
@@ -14,6 +15,7 @@ export function useMasterDataCrud<T extends { id: string; isActive: boolean }>(
   const queryClient = useQueryClient();
   const { message } = App.useApp();
   const { confirm } = useConfirm();
+  const t = useTranslations();
   const queryKey = ["master-crud", endpoint];
 
   const [modalState, setModalState] = useState<{
@@ -37,7 +39,10 @@ export function useMasterDataCrud<T extends { id: string; isActive: boolean }>(
     mutationFn: (body: Partial<T>) => apiClient.post(endpoint, body),
     onSuccess: async () => {
       await invalidateMasterDataQueries(queryClient, endpoint);
-      message.success("Saved successfully");
+      message.success(t("common.saveSuccess"));
+    },
+    onError: (err) => {
+      message.error(err instanceof ApiError ? err.message : t("common.error"));
     },
   });
 
@@ -46,7 +51,10 @@ export function useMasterDataCrud<T extends { id: string; isActive: boolean }>(
       apiClient.put(`${endpoint}/${id}`, body),
     onSuccess: async () => {
       await invalidateMasterDataQueries(queryClient, endpoint);
-      message.success("Updated successfully");
+      message.success(t("common.saveSuccess"));
+    },
+    onError: (err) => {
+      message.error(err instanceof ApiError ? err.message : t("common.error"));
     },
   });
 
@@ -54,7 +62,10 @@ export function useMasterDataCrud<T extends { id: string; isActive: boolean }>(
     mutationFn: (id: string) => apiClient.delete(`${endpoint}/${id}`),
     onSuccess: async () => {
       await invalidateMasterDataQueries(queryClient, endpoint);
-      message.success("Deleted");
+      message.success(t("common.deleteSuccess"));
+    },
+    onError: (err) => {
+      message.error(err instanceof ApiError ? err.message : t("common.error"));
     },
   });
 

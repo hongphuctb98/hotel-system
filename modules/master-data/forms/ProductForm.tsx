@@ -20,7 +20,7 @@ export default function ProductForm({ initialValues, onSuccess, endpoint }: Prod
   const t = useTranslations();
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
-  const { modal } = App.useApp();
+  const { modal, message } = App.useApp();
   const { productCategories } = useMasterData();
 
   const categoryOptions = productCategories.map((c) => ({ value: c.id, label: c.name }));
@@ -39,6 +39,7 @@ export default function ProductForm({ initialValues, onSuccess, endpoint }: Prod
         await apiClient.post(endpoint, payload);
       }
       await invalidateMasterDataQueries(queryClient, endpoint);
+      message.success(t("common.saveSuccess"));
       onSuccess();
     } catch (err) {
       if (err instanceof ApiError && err.code === "PRODUCT_SKU_INACTIVE_EXISTS") {
@@ -49,13 +50,14 @@ export default function ProductForm({ initialValues, onSuccess, endpoint }: Prod
           onOk: async () => {
             await apiClient.put(`${endpoint}/${data.id}`, { isActive: true });
             await invalidateMasterDataQueries(queryClient, endpoint);
+            message.success(t("common.saveSuccess"));
             onSuccess();
           },
         });
       } else if (err instanceof ApiError && err.code === "PRODUCT_SKU_TAKEN") {
         form.setFields([{ name: "sku", errors: [t("products.skuTaken")] }]);
       } else {
-        throw err;
+        message.error(err instanceof ApiError ? err.message : t("common.error"));
       }
     }
   };

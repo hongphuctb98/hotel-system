@@ -106,7 +106,7 @@ export default function ServiceItemsSection({
         marginBottom: 8,
       }}
       >
-        <Col span={12} xs={24} sm={24} md={12} lg={12} xl={12}>
+        <Col span={12} xs={24} sm={24} md={12} lg={24} xl={24} style={{ display: "flex", gap: 12 }}>
           {chargeType === "nightly" && (
             <>
               <PriceRow label={t("ratePerNight")} amount={baseRate} />

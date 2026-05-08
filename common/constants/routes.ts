@@ -14,6 +14,13 @@ export const ROUTES = {
   INVENTORY: "/inventory",
   EXPENSES: "/expenses",
   FINANCE: "/finance",
+  LONG_TERM: {
+    LEASES: "/long-term/leases",
+    BILLS: "/long-term/bills",
+    METER_READINGS: "/long-term/meter-readings",
+    FEE_ITEMS: "/long-term/fee-items",
+    RATE_PLANS: "/long-term/rate-plans",
+  },
   MASTER: {
     FLOORS: "/master-data/floors",
     ROOM_TYPES: "/master-data/room-types",

@@ -32,6 +32,11 @@ import {
   IconReportMoney,
   IconCalendarDollar,
   IconCashRegister,
+  IconKey,
+  IconWritingSign,
+  IconFileInvoice,
+  IconGauge,
+  IconCoin,
 } from "@tabler/icons-react";
 import { navigationConfig, type NavItem } from "@/configs/navigation.config";
 import { usePermission } from "@/common/hooks/usePermission";
@@ -65,6 +70,12 @@ const ICON_MAP: Record<string, React.ElementType> = {
   "master-product-categories": IconCategory,
   "master-products": IconFirewallCheck,
   "master-expense-items": IconCashRegister,
+  "long-term": IconKey,
+  "long-term-leases": IconWritingSign,
+  "long-term-bills": IconFileInvoice,
+  "long-term-meter-readings": IconGauge,
+  "long-term-fee-items": IconCoin,
+  "long-term-rate-plans": IconReportMoneyFilled,
 };
 
 function buildMenuItems(
